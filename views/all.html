@@ -1,0 +1,31 @@
+
+
+<h1>
+	Converstations
+</h1>
+<div id="mails">
+<ul>
+</ul>
+</div>
+<script>
+var mails;
+
+	$(function() {
+
+		$.ajax({
+			  url: '/conversation/all',
+			  data: {},
+			  success: function( data ) {
+					
+					$.each(data, function( index, value ) {
+						  $("#mails ul").append('<li><a href="/gui/conversation/'+value.id+'">'+value.subject+"</a></li>");
+					});
+					
+				},
+			  dataType: "json"
+			});
+		
+	})
+	
+
+</script>

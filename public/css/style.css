@@ -1,0 +1,20 @@
+body {
+	background: lightslategrey;
+}
+
+.container {
+	background: whitesmoke;
+}
+
+h1 {
+	color: grey;
+}
+
+#mails {
+	margin-left: 20px;
+}
+
+#footer {
+	margin: 20px;
+	text-align: center;
+}
