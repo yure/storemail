@@ -1,31 +1,73 @@
+<input id="domain" type="hidden" value="<% domain %>" />
 
-
-<h1>
-	Converstations
-</h1>
+<h1>Converstations from <% domain %></h1>
 <div id="mails">
-<ul>
-</ul>
+	<ul>
+	</ul>
 </div>
-<script>
-var mails;
 
+<div class="replay">
+	<h2>Start new conversation</h2>
+	<form role="form" id="replay-form">
+		<div class="form-group">
+			<label>Conversation id</label> <input class="form-control" type="text" name="id" />
+		</div>
+
+		<div class="form-group">
+			<label>Email address</label> <input class="form-control" type="text" name="sender" />
+		</div>
+
+		<div class="form-group">
+			<label>Message</label>
+			<textarea name="body" class="form-control" rows="" cols=""></textarea>
+		</div>
+
+		<div class="form-group">
+			<label>Recipients</label> <input class="form-control" type="text" name="recipients" />
+		</div>
+
+		<button id="replay-btn" type="submit" class="btn btn-default">Replay</button>
+	</form>
+</div>
+
+<script>
+	var mails;
+	var domain = $("#domain").val();
 	$(function() {
 
-		$.ajax({
-			  url: '/conversation/all',
-			  data: {},
-			  success: function( data ) {
-					
-					$.each(data, function( index, value ) {
-						  $("#mails ul").append('<li><a href="/gui/conversation/'+value.id+'">'+value.subject+"</a></li>");
-					});
-					
-				},
-			  dataType: "json"
+		update_con();
+
+		$("#replay-form").submit(function() {
+				var message = $("#replay-form").serialize();
+			   $.ajax({
+			           type: "POST",
+			           url: '/'+domain+'/conversation/'+$('input[name=id]').val()+'/message',
+			           data: message,
+			           success: function(data)
+			           {
+			               update_con();
+			           }
+			         });
+			
+			    return false; // avoid to execute the actual submit of the form.
 			});
-		
+
 	})
 	
+	function update_con() {
+		$.ajax({
+			url : '/' + domain + '/conversation/all',
+			data : {},
+			success : function(data) {
 
+				$.each(data, function(index, value) {
+					$("#mails ul").append(
+							'<li><a href="/'+domain+'/gui/conversation/'+value.id+'">'
+									+ value.subject + "</a></li>");
+				});
+
+			},
+			dataType : "json"
+		});
+	}
 </script>

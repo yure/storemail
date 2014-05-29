@@ -1,69 +1,149 @@
 
 <input id="con-id" type="hidden" value="<% id %>" />
+<input id="domain" type="hidden" value="<% domain %>" />
 <h1>
-	That is all!
+	Conversation <% subject %>
 </h1>
-<h2>Conversation</h2>
-<div id="mails"></div>
-<div class="replay">
-<h2>Replay</h2>
-<form role="form" id="replay-form">
- 	<div class="form-group">
-		<label >Email address</label>
-		<input class="form-control" type="text" name="from_email" />
+
+<div class="row">
+
+	<div class="col-md-3">
+		<% IF subject %>
+		<form role="form" id="conversation-subject-form">
+			<div class="form-group">
+				<label>Subject</label> <input class="form-control" type="text" name="subject" />
+				<button id="replay-btn" type="submit" class="btn btn-default">Set</button>
+			</div>
+		</form>
+		<% END %>
+		<form role="form" id="conversation-user-form" name="add_user">
+			<div class="form-group">
+				<h3>Add user</h3>
+				<label>Name</label> <input class="form-control" type="text" name="name" /> <label>Email</label> <input class="form-control" type="text" name="email" />
+				<button id="replay-btn" type="submit" class="btn btn-default">Add</button>
+			</div>
+		</form>
+		<div ><ul id="users" style="padding-left: 15px;"></ul></div>
 	</div>
+
+	<div class="col-md-9">
+		<h2>Conversation</h2>
+		
+		<div class="replay">
+			<h2>Replay</h2>
+			<form role="form" id="replay-form">
+				<input type="hidden" name="send_copy" value="1" />
+				
+				<div class="form-group">
+					<label>Senders email address</label> <input class="form-control" type="text" name="sender_email"  />
+				</div>
+
+				<div class="form-group">
+					<label>Message</label>
+					<textarea name="body" class="form-control" rows="" cols=""></textarea>
+				</div>
+
+			
+				<button id="replay-btn" type="submit" class="btn btn-default">Send</button>
+
+			</form>
+		</div>
+
+		<div id="mails"></div>
 	
- 	<div class="form-group">
-		<label >Message</label>
-		<textarea name="body" class="form-control" rows="" cols=""></textarea>
 	</div>
-	
-	<button id="replay-btn" type="submit" class="btn btn-default">Replay</button>
-</form>
+
 </div>
+
 
 <script type="text/javascript">
 <!--
 	var mails;
 	var conId = $("#con-id").val()
+	var domain = $("#domain").val();
 	$(function() {
 
-			update_con();
-			
-			// this is the id of the form
-			$("#replay-form").submit(function() {
-			
-			    $.ajax({
-			           type: "POST",
-			           url: '/conversation/'+conId,
-			           data: $("#replay-form").serialize(), // serializes the form's elements.
-			           success: function(data)
-			           {
-			               update_con();
-			           }
-			         });
-			
-			    return false; // avoid to execute the actual submit of the form.
-			});
-			
-			
-	})
-	
-	function update_con() {
-	$("#mails").html("");
-		$.ajax({
-				  url: '/conversation/'+conId,
-				  data: {},
-				  success: function( data ) {
-						$("h1").html(data.subject);
-						$.each(data.messages, function( index, value ) {
-							  $("#mails").append("<p><h3>Mail from "+value.from_email+"</h3><p>"+value.body+"</p>");
-						});
-						
-					},
-				  dataType: "json"
-				});
-	}
+		update_con();
 
+		$("#replay-form").submit(function() {
+			var message = $("#replay-form").serialize();
+			$.ajax({
+				type : "POST",
+				url : '/' + domain + '/conversation/' + conId + '/message',
+				data : message,
+				dataType : "json",
+				success: function(data) {
+					update_con();
+				},
+			});
+
+			return false; // avoid to execute the actual submit of the form.
+		});
+
+		$("#conversation-subject-form").submit(function() {
+			var data = $(this).serialize();
+			$.ajax({
+				type : "POST",
+				url : '/' + domain + '/conversation/' + conId,
+				data : data,
+				dataType : "json",
+				success : function(data) {
+					update_con();
+				}
+			});
+
+			return false; // avoid to execute the actual submit of the form.
+		});
+
+		$("#conversation-user-form").submit(function() {
+			var data = $(this).serialize();
+			$.ajax({
+				type : "POST",
+				url : '/' + domain + '/conversation/' + conId,
+				data : data,
+				dataType : "json",
+				success : function(data) {
+					update_con();
+				}
+			});
+
+			return false; // avoid to execute the actual submit of the form.
+		});
+
+	})
+
+	function update_con() {
+		$("#mails").html("");
+		$("#users").html("");
+		$.ajax({
+			url : '/' + domain + '/conversation/' + conId,
+			data : {},
+			dataType : "json",
+			success : function(data) {
+				if (data) {
+					$("h1").html(data.subject);
+					if (data.subject){
+						$("#conversation-subject-form").hide();
+					}
+					$.each(data.messages, function(index, value) {
+						$("#mails").append(
+								"<p><h3>Mail from " + value.sender
+										+ "</h3><pre>" + value.body
+										+ "</pre><p>");
+					});
+					$.each(data.users, function(index, value) {
+						$("#users").append(
+								"<li><b>" + value.name
+										+ "</b>, <br />" + value.email
+										+ "</li>");
+					});
+
+				} else {
+					alert("No data!");
+				}
+			}
+		});
+		
+	}
 //-->
 </script>

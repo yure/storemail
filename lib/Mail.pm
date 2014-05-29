@@ -2,10 +2,11 @@ package Mail;
 use Dancer ':syntax';
 
 use Dancer::Plugin::Ajax;
-use Dancer::Plugin::DBIC qw(schema resultset rset);
+
 use DBI;
 
 use Mail::GUI;
+use Mail::Message;
 
 our $VERSION = '0.1';
 
@@ -14,10 +15,10 @@ get '**' => sub {
 	pass;
 };
 
-get '/' => sub {
-	my @drivers = map "$_\n", DBI->available_drivers;
-    return to_dumper \@drivers;
-};
+  
+use Dancer::Plugin::DBIC qw(schema resultset rset);
+
+prefix '/:domain';
 
 
 get '/message/all' => sub {
@@ -27,37 +28,81 @@ get '/message/all' => sub {
 
 
 get '/message/:id' => sub {
-    my $message = schema->resultset('Message')->find(params->{id});
+    my $message = schema->resultset('Message')->find(param('id'));
     return to_json {$message->get_columns};
 };
 
 
 get '/conversation/all' => sub {
-    my @conversations = schema->resultset('Conversation')->search()->all;
+    my @conversations = schema->resultset('Conversation')->search({domain => param('domain')})->all;
     return to_json [map { {$_->get_columns} } @conversations];
 };
 
 
+
 get '/conversation/:id' => sub {
-    my $conversation = schema->resultset('Conversation')->find(params->{id});
+    my $conversation = schema->resultset('Conversation')->find(param('id')."@".param('domain'));
+    
+    unless($conversation){
+	    $conversation = schema->resultset('Conversation')->create({
+	    	id => param('id')."@".param('domain'),
+	    	domain => param('domain'),
+	    });
+    }
     return to_json {
     	subject => $conversation->subject,
-    	messages => [map { {$_->get_columns} } $conversation->messages]
-    };
+    	users => [map { {$_->get_columns} } $conversation->users],
+    	messages =>  [map { {$_->get_columns} } $conversation->messages],
+    };    	
+};
+
+
+get '/conversation/:id/users' => sub {
+    my $conversation = schema->resultset('Conversation')->find(param('id')."@".param('domain'));
+    
+    unless($conversation){
+	    $conversation = schema->resultset('Conversation')->create({
+	    	id => param('id')."@".param('domain'),
+	    	domain => param('domain'),
+	    });
+    }
+    return to_json {
+    	users => [map { {$_->get_columns} } $conversation->users],
+    };    	
 };
 
 
 post '/conversation/:id' => sub {
-	my $form_data = params("body");
-    my $message = schema->resultset('Message')->create({
-    	conversation_id => params->{id},
-    	from_email => $form_data->{from_email},
-    	body => $form_data->{body},
-    });
+    my $conversation = schema->resultset('Conversation')->find(param('id')."@".param('domain'));
+    my $return = 1;
     
-    return to_json {
-    	error => undef
-    };
+    unless($conversation){
+	    $conversation = schema->resultset('Conversation')->create({
+	    	id => param('id')."@".param('domain'),
+	    	domain => param('domain'),
+	    });
+    }
+
+	# Add user    
+    if(param('email')){
+    	$return = $conversation->add_user( param('email'), param('name') ) ;
+    }
+
+	# Set subject
+    if(param('subject')){
+    	return 0 if $conversation->subject;
+    	$return = $conversation->subject( param('subject') ) ;
+    	$conversation->update;
+    }
+    
+    return $return;
 };
+
+
+post '/conversation/:id/message' => sub {
+    content_type('application/json');
+    return to_json Mail::Message::new_message(params);
+};
+
 
 true;

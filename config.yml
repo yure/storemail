@@ -37,3 +37,4 @@ plugins:
         mysql_enable_utf8: 1
   'Ajax':
     content_type: 'application/json'
+

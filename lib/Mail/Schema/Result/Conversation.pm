@@ -25,9 +25,9 @@ __PACKAGE__->table("conversation");
 
 =head2 id
 
-  data_type: 'integer'
-  is_auto_increment: 1
+  data_type: 'varchar'
   is_nullable: 0
+  size: 45
 
 =head2 domain
 
@@ -41,15 +41,29 @@ __PACKAGE__->table("conversation");
   is_nullable: 1
   size: 45
 
+=head2 date
+
+  data_type: 'timestamp'
+  datetime_undef_if_invalid: 1
+  default_value: current_timestamp
+  is_nullable: 0
+
 =cut
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  { data_type => "varchar", is_nullable => 0, size => 45 },
   "domain",
   { data_type => "varchar", is_nullable => 1, size => 45 },
   "subject",
   { data_type => "varchar", is_nullable => 1, size => 45 },
+  "date",
+  {
+    data_type => "timestamp",
+    datetime_undef_if_invalid => 1,
+    default_value => \"current_timestamp",
+    is_nullable => 0,
+  },
 );
 
 =head1 PRIMARY KEY
@@ -81,10 +95,46 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
+=head2 users
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-05-21 10:02:51
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:MmiUBV7mBLDQvvy4H0BHTg
+Type: has_many
 
+Related object: L<Mail::Schema::Result::User>
+
+=cut
+
+__PACKAGE__->has_many(
+  "users",
+  "Mail::Schema::Result::User",
+  { "foreign.conversation_id" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
+
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-05-28 11:40:35
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:IuaazjlKzQBtsA8oC0L0sA
+
+
+sub add_user {
+	my ($self, $email, $name) = @_;
+	my $user = $self->search_related('users', { email => $email} );
+	return 0 if $user->count;
+	
+	$self->create_related('users', { email => $email, name => $name});
+	return 1;
+}
+
+
+sub recipients {
+	my ($self, $user_sender, $args) = @_;
+	
+	my @recipients; 
+    for my $user ($self->users){    	
+    	push @recipients, {$user->get_columns} unless (!$args->{send_copy} and ($user->email eq $user_sender->email));
+    }
+	
+	return \@recipients;
+}
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

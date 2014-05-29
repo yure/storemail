@@ -31,11 +31,12 @@ __PACKAGE__->table("message");
 
 =head2 conversation_id
 
-  data_type: 'integer'
+  data_type: 'varchar'
   is_foreign_key: 1
   is_nullable: 0
+  size: 45
 
-=head2 from_email
+=head2 sender
 
   data_type: 'varchar'
   is_nullable: 0
@@ -53,14 +54,25 @@ __PACKAGE__->table("message");
   default_value: current_timestamp
   is_nullable: 0
 
+=head2 sender_email
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 45
+
+=head2 recipients
+
+  data_type: 'text'
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
   "id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "conversation_id",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
-  "from_email",
+  { data_type => "varchar", is_foreign_key => 1, is_nullable => 0, size => 45 },
+  "sender",
   { data_type => "varchar", is_nullable => 0, size => 45 },
   "body",
   { data_type => "text", is_nullable => 1 },
@@ -71,6 +83,10 @@ __PACKAGE__->add_columns(
     default_value => \"current_timestamp",
     is_nullable => 0,
   },
+  "sender_email",
+  { data_type => "varchar", is_nullable => 1, size => 45 },
+  "recipients",
+  { data_type => "text", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -103,8 +119,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-05-21 10:02:51
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:yYHr9lGYUP+LeIXcCsVhpQ
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-05-28 09:26:14
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:qi9nfq5pfhkPGu/nh85W/A
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
