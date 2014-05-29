@@ -46,6 +46,6 @@ plugins:
  
         host: 'smtp.mandrillapp.com'
         port: 587
-        sasl_username: 'info@informa.si'
-        sasl_password: 'KA69aaCMxEMbtTyHyVUZuw'
+        sasl_username: 'grega.pompe@informa.si'
+        sasl_password: 'Iamtj2dZBLZ71vZ3trKOHw'
 #        redirect_address: "grega.pompe@informa.si"

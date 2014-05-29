@@ -1,4 +1,4 @@
-package Mail::GUI;
+package Servicator::GUI;
 use Dancer ':syntax';
 
 use Dancer::Plugin::Ajax;

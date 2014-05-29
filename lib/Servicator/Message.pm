@@ -1,12 +1,11 @@
-package Mail::Message;
+package Servicator::Message;
 use Dancer ':syntax';
 
 our $VERSION = '0.1';
 
 use Dancer::Plugin::DBIC qw(schema resultset rset);
-use Mail::IMAPClient;
 
-use Mail::Email;
+use Servicator::Email;
 
 
 
@@ -35,7 +34,7 @@ sub new_message{
     
     
     # Send email to all recipients
-    Mail::Email::send_mail( 
+    Servicator::Email::send_mail( 
     	sender => $user_sender->name." <".$arg{id}."@".$arg{domain}.">",
     	recipients => $conversation->recipients($user_sender, {send_copy => $arg{send_copy}}), 
     	subject => $arg{domain}." Message no. ".$arg{id}, 

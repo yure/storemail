@@ -1,12 +1,12 @@
 use utf8;
-package Mail::Schema::Result::Message;
+package Servicator::Schema::Result::Message;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
 
 =head1 NAME
 
-Mail::Schema::Result::Message
+Servicator::Schema::Result::Message
 
 =cut
 
@@ -107,20 +107,20 @@ __PACKAGE__->set_primary_key("id");
 
 Type: belongs_to
 
-Related object: L<Mail::Schema::Result::Conversation>
+Related object: L<Servicator::Schema::Result::Conversation>
 
 =cut
 
 __PACKAGE__->belongs_to(
   "conversation",
-  "Mail::Schema::Result::Conversation",
+  "Servicator::Schema::Result::Conversation",
   { id => "conversation_id" },
   { is_deferrable => 1, on_delete => "RESTRICT", on_update => "RESTRICT" },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-05-28 09:26:14
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:qi9nfq5pfhkPGu/nh85W/A
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-05-29 13:09:23
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:hMGGzMpI9EOjTbzfNB3nlQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

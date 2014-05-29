@@ -1,8 +1,9 @@
 use Dancer ':script';
 
-use Mail;
+use Mail::IMAPClient;
 use Dancer::Plugin::DBIC qw(schema resultset rset);
-use Mail::Email;
+use Servicator::Email;
+use Servicator::Message;
 use MIME::QuotedPrint::Perl;
 use Encode qw(decode);
 
@@ -58,7 +59,7 @@ while(1){
 	
 			#$imap->subject($mail_id)
 	
-			Mail::Message::new_message(
+			Servicator::Message::new_message(
 				id           => $conv_id,
 				domain       => $domain,
 				sender_email => $user_sender->email,
@@ -92,7 +93,7 @@ sub extract_body {
 	
 	# Remove all from breake text on 
 	my $from = '';
-	my $to = substr(Mail::Email::email_break_text, 0, -1); # Decoding can loose last char...
+	my $to = substr(Servicator::Email::email_break_text, 0, -1); # Decoding can loose last char...
 	($wanted) = $body =~ /$from(.*?)$to/s;
 	if($wanted){
 		$wanted = remove_gmail_code($wanted);
@@ -118,12 +119,19 @@ sub remove_gmail_code {
 	my $body = shift;
 	my $clean_body;
 	my $gmail_id;
+	
+	# Check if gmail format
+	my $first_row;
+	($first_row) = $body =~ /(--.{28}?)\n/s;
+	return $body unless $first_row;
+	
 	# Remove On Thu, May 29, 2014 at 9:01 AM, John <name@email.com> wrote:
 	# Remove --001a1134d7c0f749fe04fa848617 Content-Type: text/plain; charset=UTF-8
 	
-	my $from = "--(.+?)\nContent-Type: (.+?); charset=(.+?)\n";
+	#my $from = "--(.+?)\nContent-Type: (.+?); charset=(.+?)\n";
+	my $from = "\n\n";
 	my $to = "\nOn(.+?)at(.+?),(.+?)<(.+?)@(.+?)> wrote:";
-	($gmail_id, undef, undef, $clean_body)= $body =~ /$from(.*?)$to/s;	
+	($clean_body)= $body =~ /$from(.*?)$to/s;	
 	
 	return $clean_body ? $clean_body : $body;
 }

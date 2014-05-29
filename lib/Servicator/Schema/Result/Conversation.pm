@@ -1,12 +1,12 @@
 use utf8;
-package Mail::Schema::Result::Conversation;
+package Servicator::Schema::Result::Conversation;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
 
 =head1 NAME
 
-Mail::Schema::Result::Conversation
+Servicator::Schema::Result::Conversation
 
 =cut
 
@@ -84,13 +84,13 @@ __PACKAGE__->set_primary_key("id");
 
 Type: has_many
 
-Related object: L<Mail::Schema::Result::Message>
+Related object: L<Servicator::Schema::Result::Message>
 
 =cut
 
 __PACKAGE__->has_many(
   "messages",
-  "Mail::Schema::Result::Message",
+  "Servicator::Schema::Result::Message",
   { "foreign.conversation_id" => "self.id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
@@ -99,31 +99,20 @@ __PACKAGE__->has_many(
 
 Type: has_many
 
-Related object: L<Mail::Schema::Result::User>
+Related object: L<Servicator::Schema::Result::User>
 
 =cut
 
 __PACKAGE__->has_many(
   "users",
-  "Mail::Schema::Result::User",
+  "Servicator::Schema::Result::User",
   { "foreign.conversation_id" => "self.id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-05-28 11:40:35
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:IuaazjlKzQBtsA8oC0L0sA
-
-
-sub add_user {
-	my ($self, $email, $name) = @_;
-	my $user = $self->search_related('users', { email => $email} );
-	return 0 if $user->count;
-	
-	$self->create_related('users', { email => $email, name => $name});
-	return 1;
-}
-
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-05-29 13:09:23
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:9RgV4eapi+tiIgu286Xl7w
 
 sub recipients {
 	my ($self, $user_sender, $args) = @_;
@@ -134,6 +123,16 @@ sub recipients {
     }
 	
 	return \@recipients;
+}
+
+
+sub add_user {
+	my ($self, $email, $name) = @_;
+	my $user = $self->search_related('users', { email => $email} );
+	return 0 if $user->count;
+	
+	$self->create_related('users', { email => $email, name => $name});
+	return 1;
 }
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

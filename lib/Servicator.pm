@@ -1,12 +1,12 @@
-package Mail;
+package Servicator;
 use Dancer ':syntax';
 
 use Dancer::Plugin::Ajax;
 
 use DBI;
 
-use Mail::GUI;
-use Mail::Message;
+use Servicator::GUI;
+use Servicator::Message;
 
 our $VERSION = '0.1';
 
@@ -88,6 +88,11 @@ post '/conversation/:id' => sub {
     	$return = $conversation->add_user( param('email'), param('name') ) ;
     }
 
+	# Remove user    
+    if(param('email')){
+    	$return = $conversation->add_user( param('email'), param('name') ) ;
+    }
+
 	# Set subject
     if(param('subject')){
     	return 0 if $conversation->subject;
@@ -101,7 +106,7 @@ post '/conversation/:id' => sub {
 
 post '/conversation/:id/message' => sub {
     content_type('application/json');
-    return to_json Mail::Message::new_message(params);
+    return to_json Servicator::Message::new_message(params);
 };
 
 

@@ -30,7 +30,7 @@ plugins:
   DBIC:
     default:
       dsn: dbi:mysql:dbname=mail
-      schema_class: Mail::Schema
+      schema_class: Servicator::Schema
       user: root
       pass: toor
       options:
