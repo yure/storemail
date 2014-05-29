@@ -17,6 +17,7 @@
 		</form>
 		<% END %>
 		<form role="form" id="conversation-user-form" name="add_user">
+		<input type="hidden" name="add_user" value="1" />
 			<div class="form-group">
 				<h3>Add user</h3>
 				<label>Name</label> <input class="form-control" type="text" name="name" /> <label>Email</label> <input class="form-control" type="text" name="email" />
@@ -135,8 +136,21 @@
 						$("#users").append(
 								"<li><b>" + value.name
 										+ "</b>, <br />" + value.email
-										+ "</li>");
+										+ " <a class='remove_user' href='#' id="+ value.email +">x</a></li>");
 					});
+					
+					$('.remove_user').click(function() {
+						var data = $(this).serialize();
+						$.ajax({
+							type : "POST",
+							url : '/' + domain + '/conversation/' + conId,
+							data : {email: $(this).attr('id'), remove_user: 1},
+							dataType : "json",
+							success : function(data) {
+								update_con();
+							}
+						})
+					})
 
 				} else {
 					alert("No data!");

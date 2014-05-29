@@ -84,13 +84,13 @@ post '/conversation/:id' => sub {
     }
 
 	# Add user    
-    if(param('email')){
+    if(param('add_user')){
     	$return = $conversation->add_user( param('email'), param('name') ) ;
     }
 
 	# Remove user    
-    if(param('email')){
-    	$return = $conversation->add_user( param('email'), param('name') ) ;
+    if(param('remove_user')){
+    	$return = $conversation->remove_user( param('email') ) ;
     }
 
 	# Set subject

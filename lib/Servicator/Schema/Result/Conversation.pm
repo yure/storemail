@@ -135,5 +135,15 @@ sub add_user {
 	return 1;
 }
 
+
+sub remove_user {
+	my ($self, $email) = @_;
+	my $user = $self->search_related('users', { email => $email} );
+	return 0 unless $user->count;
+	
+	$self->delete_related('users', { email => $email});
+	return 1;
+}
+
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;
