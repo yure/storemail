@@ -39,7 +39,7 @@ while(1){
 	
 			my $conversation = schema->resultset('Conversation')->find( $conv_id ."@". $domain );
 			unless ($conversation){
-				debug "Invalid mail";
+				debug "Invalid mail or conversation";
 				$imap->see($mail_id) or warn "Could not see: $@\n";
 				next;
 			}

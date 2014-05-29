@@ -4,9 +4,7 @@ use Dancer ':syntax';
 our $VERSION = '0.1';
 
 use Dancer::Plugin::DBIC qw(schema resultset rset);
-
 use Servicator::Email;
-
 
 
 sub new_message{
@@ -23,7 +21,10 @@ sub new_message{
     
     # Check sender
 	my $user_sender = $conversation->search_related('users', { email => $arg{sender_email}} )->first;
-	return {error => 'Sender not found'} unless $user_sender;
+	unless( $user_sender){
+		debug "Sender not alowed to send to this conversation";
+		return {error => 'Sender not found'} ;
+	}
     
 	# Save new message to DB
     my $message = schema->resultset('Message')->create({
@@ -37,7 +38,7 @@ sub new_message{
     Servicator::Email::send_mail( 
     	sender => $user_sender->name." <".$arg{id}."@".$arg{domain}.">",
     	recipients => $conversation->recipients($user_sender, {send_copy => $arg{send_copy}}), 
-    	subject => $arg{domain}." Message no. ".$arg{id}, 
+    	subject => $conversation->subject ? $conversation->subject : $arg{domain}." Message no. ".$arg{id}, 
     	body => $arg{body},
     	send_copy => $arg{send_copy},
     );
@@ -45,6 +46,5 @@ sub new_message{
     return {};
 }
     
-
 
 true;
