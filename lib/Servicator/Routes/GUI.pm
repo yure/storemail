@@ -1,4 +1,4 @@
-package Servicator::GUI;
+package Servicator::Routes::GUI;
 use Dancer ':syntax';
 
 use Dancer::Plugin::Ajax;
