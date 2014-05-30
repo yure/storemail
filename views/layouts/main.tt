@@ -19,7 +19,7 @@
 		<% content %>
 	</div>
 	<div id="footer">
-	Mail 0.1
+	Mail 0.2
 	</div>
 </div>
 </body>

@@ -14,14 +14,9 @@ get '/gui/conversation/all' => sub {
 };
 
 
-get '/gui/conversation/:id/' => sub {
-    return template 'con.html', {domain => param('domain'), id => param('id')};
+get '/gui/conversation/:id' => sub {
+    return template 'conversation.html', {domain => param('domain'), id => param('id')};
 };
-
-get '/gui/cronjob/checkmail' => sub {
-    return template 'checkmail.html', {domain => param('domain')};
-};
-
 
 
 true;

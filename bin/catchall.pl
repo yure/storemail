@@ -7,9 +7,11 @@ use Servicator::Message;
 use MIME::QuotedPrint::Perl;
 use Encode qw(decode);
 
+my %args = @ARGV;
+
 while(1){
 	
-	my $domain = 'prevajalska-agencija.si';
+	my $domain; # = $args{'-d'};
 
 	my $imap = Mail::IMAPClient->new(
 		Server   => config->{catch_all}->{host},
@@ -32,9 +34,10 @@ while(1){
 			# TODO: weed out random mail
 	
 			# Conversation ID
-			my $email;
-			my $conv_id = $hashref->{To}[0];
-			($conv_id) = $conv_id =~ /<(.*?)>/s;
+			my $emails = $hashref->{To}[0];
+			my ($email) = split ',', $emails;
+			my ($conv_id, $domain) = $email =~ /<(.*?)@(.*?)>/s;
+			($conv_id, $domain) = $email =~ /(.*?)@(.*?)$/s unless $conv_id;
 			$conv_id =~ s/\@$domain//g;
 	
 			my $conversation = schema->resultset('Conversation')->find( $conv_id ."@". $domain );
