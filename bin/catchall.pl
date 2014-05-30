@@ -9,9 +9,11 @@ use Encode qw(decode);
 
 my %args = @ARGV;
 
+my $sleep = $args{'-s'} || 5;
+
 while(1){
 	
-	my $domain; # = $args{'-d'};
+	my $domain;
 
 	my $imap = Mail::IMAPClient->new(
 		Server   => config->{catch_all}->{host},
@@ -75,7 +77,7 @@ while(1){
 		warn "No new emails\n";
 	}
 
-	sleep(5);
+	sleep($sleep);
 }
 
 

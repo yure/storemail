@@ -51,7 +51,9 @@ You need to run dancer application (bin/app.pl), to handle API requests and bin/
 
 =head3 Catchall service
 
-catchall.pl -d 'mydomain.com'
+-s = seconds between inbox check
+
+perl catchall.pl [-s 5] 
 
 =head1 API Use
 
