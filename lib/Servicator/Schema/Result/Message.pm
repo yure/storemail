@@ -65,6 +65,11 @@ __PACKAGE__->table("message");
   data_type: 'text'
   is_nullable: 1
 
+=head2 attachments
+
+  data_type: 'text'
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -86,6 +91,8 @@ __PACKAGE__->add_columns(
   "sender_email",
   { data_type => "varchar", is_nullable => 1, size => 45 },
   "recipients",
+  { data_type => "text", is_nullable => 1 },
+  "attachments",
   { data_type => "text", is_nullable => 1 },
 );
 
@@ -119,9 +126,19 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-05-29 13:09:23
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:hMGGzMpI9EOjTbzfNB3nlQ
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-07-04 14:10:46
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:obuHDzryM1fhvJZheKD6mw
 
+
+__PACKAGE__->inflate_column(
+	attachments => {
+     	inflate => sub { [split('/', shift)] },
+    	deflate => sub { 
+	     	my $attachments = shift;
+	     	return join('/',@{ $attachments });
+	    },
+ 	}
+ );
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

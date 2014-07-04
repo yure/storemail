@@ -28,7 +28,7 @@ get '/conversation/:id' => sub {
     return to_json {
     	subject => $conversation->subject,
     	users => [map { {$_->get_columns} } $conversation->users],
-    	messages =>  [map { {$_->get_columns} } $conversation->messages],
+    	messages =>  [map { {$_->get_inflated_columns} } $conversation->messages],
     };    	
 };
 

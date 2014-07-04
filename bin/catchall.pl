@@ -5,7 +5,9 @@ use Dancer::Plugin::DBIC qw(schema resultset rset);
 use Servicator::Email;
 use Servicator::Message;
 use MIME::QuotedPrint::Perl;
+use Email::MIME;
 use Encode qw(decode);
+use File::Path qw(make_path remove_tree);
 
 my %args = @ARGV;
 
@@ -32,6 +34,7 @@ while(1){
 		#splice @unread, 5;
 		for my $mail_id (@unread) {
 			my $hashref = $imap->parse_headers( $mail_id, "Date", "Subject", "To", "From" );
+			my $all = $imap->parse_headers( $mail_id, "ALL");
 	
 			# TODO: weed out random mail
 	
@@ -61,16 +64,33 @@ while(1){
 			# Check sender
 			my $user_sender = $conversation->search_related( 'users', { email => $sender_email } )->first;
 			debug { error => 'Sender not found' } unless $user_sender;
-	
-			#$imap->subject($mail_id)
-	
-			Servicator::Message::new_message(
+
+			# New message	
+			my $message = Servicator::Message::new_message(
 				id           => $conv_id,
 				domain       => $domain,
 				sender_email => $user_sender->email,
 				recipients   => $conversation->recipients($user_sender),
 				body         => $body
 			);
+
+			# Attachments
+			my $mail_str = $imap->message_string($mail_id);
+			my @atts;
+			my $dir = "../public/attachments/".$message->id;
+			Email::MIME->new($mail_str)->walk_parts(sub {
+				my($part) = @_;
+		  		return unless $part->content_type =~ /\bname="([^"]+)"/;  # " grr...
+		  		system( "mkdir -p $dir" ) unless (-e $dir); 
+				my $name = "$dir/$1";
+				print "$0: writing $name...\n";
+				open my $fh, ">", $name or die "$0: open $name: $!";
+				print $fh $part->content_type =~ m!^text/! ? $part->body_str : $part->body or die "$0: print $name: $!";
+				close $fh or warn "$0: close $name: $!";
+				push @atts, $1;
+			});
+			$message->attachments(\@atts);
+			$message->update;
 		}
 	}
 	else{

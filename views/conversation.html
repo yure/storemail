@@ -128,10 +128,18 @@
 						$("#conversation-subject-form").hide();
 					}
 					$.each(data.messages, function(index, value) {
+						var attachments = "";
+						if(value.attachments){
+							$.each(value.attachments, function(index, filename) {
+							  attachments += '<li><a href="/attachments/'+value.id+'/'+filename+'">'+filename+"</a></li>";
+							});
+						}
+						
 						$("#mails").append(
-								"<p><h3>Mail from " + value.sender
-										+ "</h3><pre>" + value.body
-										+ "</pre><p>");
+								"<p><h3>Mail from " + value.sender + "</h3>" 
+										+ "</h3><pre>" + value.body + "</pre>" 
+										+ (attachments ? "<p>Attachments: <ul>"+attachments+"</ul></p>" : "")
+										+ "</p>");
 					});
 					$.each(data.users, function(index, value) {
 						$("#users").append(

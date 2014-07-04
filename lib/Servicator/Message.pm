@@ -43,7 +43,7 @@ sub new_message{
     	send_copy => $arg{send_copy},
     );
     
-    return {};
+    return $message;
 }
     
 
