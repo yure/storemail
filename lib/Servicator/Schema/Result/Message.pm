@@ -65,11 +65,6 @@ __PACKAGE__->table("message");
   data_type: 'text'
   is_nullable: 1
 
-=head2 attachments
-
-  data_type: 'text'
-  is_nullable: 1
-
 =cut
 
 __PACKAGE__->add_columns(
@@ -91,8 +86,6 @@ __PACKAGE__->add_columns(
   "sender_email",
   { data_type => "varchar", is_nullable => 1, size => 45 },
   "recipients",
-  { data_type => "text", is_nullable => 1 },
-  "attachments",
   { data_type => "text", is_nullable => 1 },
 );
 
@@ -126,19 +119,42 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-07-04 14:10:46
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:obuHDzryM1fhvJZheKD6mw
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-07-08 10:26:37
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:93dJwTvWWahyGF5JN5tNzA
+
+use FindBin;
+use Cwd qw/realpath/;
+my $appdir = realpath( "$FindBin::Bin/..");
+
+ 
+sub attachments {
+	my ($self) = @_;
+	my $id = $self->id;
+	my @files;
+	my $dir ="$appdir/public/attachments/$id/";
+    opendir(DIR, $dir) or return undef;
+
+    while (my $file = readdir(DIR)) {
+        next if ($file =~ m/^\./); # Use a regular expression to ignore files beginning with a period
+		push @files, $file;
+    }
+    closedir(DIR);
+    return @files;	
+}
 
 
-__PACKAGE__->inflate_column(
-	attachments => {
-     	inflate => sub { [split('/', shift)] },
-    	deflate => sub { 
-	     	my $attachments = shift;
-	     	return join('/',@{ $attachments });
-	    },
- 	}
- );
+sub add_attachments {
+	my ($self, @files) = @_;
+	
+}
+ 
+ 
+sub attachments_paths {
+	my ($self) = @_;
+	my $id = $self->id;
+	my @attachments = $self->attachments;
+	return map {"$appdir/public/attachments/$id/$_"} @attachments;
+}
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

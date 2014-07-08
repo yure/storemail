@@ -33,6 +33,8 @@ sub new_message{
     	body => $arg{body},
     });
     
+    # Add attachements and remove them from pending
+    $conversation->attach_all_to( $message->id );
     
     # Send email to all recipients
     Servicator::Email::send_mail( 
@@ -41,6 +43,7 @@ sub new_message{
     	subject => $conversation->subject ? $conversation->subject : $arg{domain}." Message no. ".$arg{id}, 
     	body => $arg{body},
     	send_copy => $arg{send_copy},
+    	attachments => $message->attachments_paths,
     );
     
     return $message;

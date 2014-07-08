@@ -8,6 +8,9 @@ use MIME::QuotedPrint::Perl;
 use Email::MIME;
 use Encode qw(decode);
 use File::Path qw(make_path remove_tree);
+use FindBin;
+use Cwd qw/realpath/;
+my $appdir = realpath( "$FindBin::Bin/..");
 
 my %args = @ARGV;
 
@@ -65,19 +68,9 @@ while(1){
 			my $user_sender = $conversation->search_related( 'users', { email => $sender_email } )->first;
 			debug { error => 'Sender not found' } unless $user_sender;
 
-			# New message	
-			my $message = Servicator::Message::new_message(
-				id           => $conv_id,
-				domain       => $domain,
-				sender_email => $user_sender->email,
-				recipients   => $conversation->recipients($user_sender),
-				body         => $body
-			);
-
 			# Attachments
 			my $mail_str = $imap->message_string($mail_id);
-			my @atts;
-			my $dir = "../public/attachments/".$message->id;
+			my $dir = "$appdir/attachments/".$conversation->id;
 			Email::MIME->new($mail_str)->walk_parts(sub {
 				my($part) = @_;
 		  		return unless $part->content_type =~ /\bname="([^"]+)"/;  # " grr...
@@ -87,10 +80,16 @@ while(1){
 				open my $fh, ">", $name or die "$0: open $name: $!";
 				print $fh $part->content_type =~ m!^text/! ? $part->body_str : $part->body or die "$0: print $name: $!";
 				close $fh or warn "$0: close $name: $!";
-				push @atts, $1;
 			});
-			$message->attachments(\@atts);
-			$message->update;
+
+			# New message	
+			my $message = Servicator::Message::new_message(
+				id           => $conv_id,
+				domain       => $domain,
+				sender_email => $user_sender->email,
+				recipients   => $conversation->recipients($user_sender),
+				body         => $body
+			);
 		}
 	}
 	else{

@@ -30,7 +30,7 @@
 	<div class="col-md-9">
 		<h2>Conversation</h2>
 		
-		<div class="replay">
+		<div class="replay" style="backgorund: white">
 			<h2>Replay</h2>
 			<form role="form" id="replay-form">
 				
@@ -45,9 +45,22 @@
 					<textarea name="body" class="form-control" rows="" cols=""></textarea>
 				</div>
 
-			
+				<ul id="attachments">
+				
+				</ul>
+				
 				<button id="replay-btn" type="submit" class="btn btn-default">Send</button>
 
+			</form>
+			
+			<form method="post" action="/<% domain %>/conversation/<% id %>/upload" style="margin-top: 20px" enctype="multipart/form-data">
+				<div class="form-group">
+					<label>Attachments (Should be ajax. After upload go back and refresh ;)</label>
+					<input name="file" type="file"/>
+				</div>
+				<div class="form-group">
+					<button id="replay-btn" type="submit" class="btn btn-default">Upload</button>
+				</div>
 			</form>
 		</div>
 
@@ -116,6 +129,7 @@
 
 	function update_con() {
 		$("#mails").html("");
+		$("#attachments").html("");
 		$("#users").html("");
 		$.ajax({
 			url : '/' + domain + '/conversation/' + conId,
@@ -141,9 +155,14 @@
 										+ (attachments ? "<p>Attachments: <ul>"+attachments+"</ul></p>" : "")
 										+ "</p>");
 					});
+					$.each(data.attachments, function(index, value) {
+						$("#attachments").append(
+								"<li>" + value	+ "</b>"
+										+ " <a class='remove_att' href='#' id='"+ value +"'>x</a></li>");
+					});
 					$.each(data.users, function(index, value) {
 						$("#users").append(
-								"<li><b>" + value.name
+								"<li>" + value.name
 										+ "</b>, <br />" + value.email
 										+ " <a class='remove_user' href='#' id="+ value.email +">x</a></li>");
 					});
@@ -154,6 +173,18 @@
 							type : "POST",
 							url : '/' + domain + '/conversation/' + conId,
 							data : {email: $(this).attr('id'), remove_user: 1},
+							dataType : "json",
+							success : function(data) {
+								update_con();
+							}
+						})
+					})
+					
+					$('.remove_att').click(function() {						
+						$.ajax({
+							type : "POST",
+							url : '/' + domain + '/conversation/' + conId + '/upload/remove',
+							data : {file: $(this).attr('id')},
 							dataType : "json",
 							success : function(data) {
 								update_con();

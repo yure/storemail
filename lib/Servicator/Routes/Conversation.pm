@@ -6,6 +6,7 @@ use DBI;
 use Servicator::Message;
 use Dancer::Plugin::DBIC qw(schema resultset rset);
 
+
 prefix '/:domain';
 
 
@@ -26,9 +27,11 @@ get '/conversation/:id' => sub {
 	    });
     }
     return to_json {
+    	id => $conversation->id,
     	subject => $conversation->subject,
     	users => [map { {$_->get_columns} } $conversation->users],
-    	messages =>  [map { {$_->get_inflated_columns} } $conversation->messages],
+    	messages =>  [map { {$_->get_inflated_columns, attachments => $_->attachments ? [$_->attachments] : []} } $conversation->messages],
+    	attachments => $conversation->attachments ? [$conversation->attachments] : [],
     };    	
 };
 
@@ -76,14 +79,34 @@ post '/conversation/:id' => sub {
     	$conversation->update;
     }
     
+    # Attachments
+    
+    
     return $return;
 };
 
 
 post '/conversation/:id/message' => sub {
     content_type('application/json');
-    return to_json Servicator::Message::new_message(params);
+    my $message = Servicator::Message::new_message(params);
+    return to_json {$message->get_inflated_columns};
 };
+
+
+post '/conversation/:id/upload/remove' => sub {
+	my $conversation = schema->resultset('Conversation')->find(param('id')."@".param('domain'));
+	return $conversation->remove_attachments( param('file') );
+};
+
+	
+post '/conversation/:id/upload' => sub {
+	my $id = param('id');
+	my $conversation = schema->resultset('Conversation')->find(param('id')."@".param('domain'));
+	my $file = upload('file');
+	return $conversation->add_attachments( upload('file') );	
+};
+
+
 
 
 true;

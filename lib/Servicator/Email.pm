@@ -25,7 +25,7 @@ sub send_mail {
 			subject => $mail{subject},
 			body    => wrap_body( $mail{body} ),
 
-			#attach  => '/path/to/attachment',
+			attach  => $mail{attachments} ? [$mail{attachments}] : undef,
 		};
 		warn $msg->{string} if $msg->{type} and $msg->{type} eq 'failure';
 	}

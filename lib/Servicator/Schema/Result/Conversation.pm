@@ -114,6 +114,11 @@ __PACKAGE__->has_many(
 # Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-05-29 13:09:23
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:9RgV4eapi+tiIgu286Xl7w
 
+use FindBin;
+use Cwd qw/realpath/;
+my $appdir = realpath( "$FindBin::Bin/..");
+
+
 sub recipients {
 	my ($self, $user_sender, $args) = @_;
 	
@@ -146,5 +151,65 @@ sub remove_user {
 }
 
 
-# You can replace this text with custom code or comments, and it will be preserved on regeneration
+sub attachments {
+	my ($self) = @_;
+	my @files;
+	my $dir = $appdir.'/attachments/'.$self->id;
+    opendir(DIR, $dir) or return undef;
+
+    while (my $file = readdir(DIR)) {
+        next if ($file =~ m/^\./); # Use a regular expression to ignore files beginning with a period
+		push @files, $file;
+    }
+    closedir(DIR);
+    return @files;
+}
+
+
+sub remove_attachments {
+	my ($self, @files) = @_;
+	my $count = @files;
+	my $success_count = 0;
+	# Upload dir
+	my $path = "attachments/".$self->id;
+	for my $filename (@files){
+		unlink "$appdir/$path/$filename";
+		$success_count++;
+	}
+	return $count == $success_count;
+}
+
+
+sub add_attachments {
+	my ($self, @files) = @_;
+	my $count = @files;
+	my $success_count = 0;
+	# Upload dir
+	my $path = "attachments/".$self->id;
+	
+	# Upload image
+	for my $file (@files){
+		my $fileName = $file->{filename};
+		
+		my $dir = "$appdir/$path/";
+		system( "mkdir -p $dir" ) unless (-e $dir);       
+		
+		if($file->copy_to($dir.$fileName)){			
+			$success_count++;
+		}		
+    }
+	return $count == $success_count;
+}
+
+
+sub attach_all_to {
+	my ($self, $message_id) = @_;
+	my $path = "attachments/".$self->id;
+	my $dir = "$appdir/public/attachments/$message_id";
+	system( "mkdir -p $dir" ) unless (-e $dir);  
+	for my $filename ($self->attachments){
+		rename "$appdir/$path/$filename", "$dir/$filename";
+	}
+}
+
 1;
