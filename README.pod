@@ -162,6 +162,28 @@ Returns:
 		error: stirng (optional)
 	}
 
+=head3 Attachments
+
+Attachments are added to conversation prior to sending message. 
+Any attachements waitng in temp folder will be sent with next message and moved to another folder bind to message and are accessible in 
+	
+	/attachments/:message_id/:filename
+
+File should be uploaded with form and file field named 'file'. enctype has to be multipart/form-data.
+
+	POST /conversation/:id/upload
+
+Example form:
+
+	<form 
+		method="post" 
+		action="/prevajalska-agencija.si/conversation/3/upload" 
+		enctype="multipart/form-data">
+		
+			<input name="file" type="file">
+			<button type="submit">Upload</button>
+	
+	</form>
 
 =head2 Message
 
