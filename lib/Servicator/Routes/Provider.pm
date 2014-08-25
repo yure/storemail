@@ -32,8 +32,6 @@ get '/provider/:comma_separated_emails' => sub {
     );
     
     return to_json {
-    	id => param('email'),
-    	subject => param('email'),
     	messages =>  [map { $_->hash } $messages->all],
     };    	
 };

@@ -116,7 +116,7 @@ $.fn.serializeObject = function() {
 			return false; // avoid to execute the actual submit of the form.
 		});	
 		
-		function readImage(input) {
+		function readFile(input) {
 		    if ( input.files && input.files[0] ) {
 		    	var filename = input.files[0].name;
 		        var FR= new FileReader();
@@ -129,7 +129,7 @@ $.fn.serializeObject = function() {
 		}
 		
 		$("#att").change(function(){
-		    readImage( this );
+		    readFile( this );
 		});
 
 	})
