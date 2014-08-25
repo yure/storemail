@@ -275,6 +275,15 @@ JS
 
 GET /:domain/provider/:comma_separated_emails
 
+
+=head2 Get provider unread emails
+
+GET /:domain/provider/unread/:comma_separated_emails
+
+=head2 Get all unread emails
+
+GET /:domain/message/unread
+
 returns JSON.
 
 Sample:

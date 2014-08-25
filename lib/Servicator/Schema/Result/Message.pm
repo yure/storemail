@@ -65,6 +65,13 @@ __PACKAGE__->table("message");
   is_nullable: 0
   size: 1
 
+=head2 new
+
+  accessor: undef
+  data_type: 'tinyint'
+  default_value: 1
+  is_nullable: 0
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -87,6 +94,13 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 1 },
   "direction",
   { data_type => "varchar", is_nullable => 0, size => 1 },
+  "new",
+  {
+    accessor      => undef,
+    data_type     => "tinyint",
+    default_value => 1,
+    is_nullable   => 0,
+  },
 );
 
 =head1 PRIMARY KEY
@@ -139,8 +153,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-08-22 10:38:32
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:/aZhvRv9zqKAcg0CtsjTUQ
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-08-25 14:51:52
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:P2Fyu5DIKnghXCmFAy3Kdg
 
 use Dancer ':syntax';
 use Dancer::Plugin::Email;
@@ -224,7 +238,7 @@ sub send {
 	my $email = {
 		from    => $self->frm,
 		subject => $self->subject,
-		body => $self->body,
+		body => $self->body || " ",
 	};
 	$email->{to} = _csv_emails($self->to) if _csv_emails($self->to);
 	$email->{cc} = _csv_emails($self->cc) if _csv_emails($self->cc);
@@ -248,7 +262,9 @@ sub hash {
     	bcc => [map($_->email, $self->bcc)],
     	subject => $self->subject,
     	body => $self->body ,
-    	attachments => $self->attachments ? [$self->attachments] : []
+    	attachments => $self->attachments ? [$self->attachments] : [],
+    	direction => $self->direction,
+    	read => $self->get_column('new') ? 0 : 1
 	}
 }
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
