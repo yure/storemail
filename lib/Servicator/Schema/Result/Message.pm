@@ -148,6 +148,30 @@ use FindBin;
 use Cwd qw/realpath/;
 my $appdir = realpath( "$FindBin::Bin/..");
 
+
+sub to {
+	my ($self) = @_;
+	return $self->search_related('emails', { type => 'to' });
+}
+
+
+sub cc {
+	my ($self) = @_;
+	return $self->search_related('emails', { type => 'cc' });
+}
+
+
+sub bcc {
+	my ($self) = @_;
+	return $self->search_related('emails', { type => 'bcc' });
+}
+
+
+sub _csv_emails {
+	my @items = @_;
+	return join(", ", map( $_->email, @items));
+}
+
  
 sub attachments {
 	my ($self) = @_;
@@ -197,16 +221,33 @@ sub send {
 	my $to = join(", ", map( $_->email, $self->emails));
 	debug "Mail to $to from " . $self->frm. ": " . $self->subject;
 	
+	
 	my $msg = Dancer::Plugin::Email::email {
 		from    => $self->frm,
-		to      => $to,
+		to      => _csv_emails($self->to),
+		cc      => _csv_emails($self->cc),
+		bcc      => _csv_emails($self->bcc),
 		subject => $self->subject,
 		body    => $self->body,
-		attach  => $self->attachments,
+		attach  => $self->attachments,					
 	};
 	warn $msg->{string} if $msg->{type} and $msg->{type} eq 'failure';	
+	
 	return undef;
 }
 
+
+sub hash {
+	my ($self) = @_;
+	return {
+		from => $self->frm,
+    	to => [map($_->email, $self->to)],
+    	cc => [map($_->email, $self->cc)],
+    	bcc => [map($_->email, $self->bcc)],
+    	subject => $self->subject,
+    	body => $self->body ,
+    	attachments => $self->attachments ? [$self->attachments] : []
+	}
+}
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

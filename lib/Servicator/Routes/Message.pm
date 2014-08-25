@@ -11,7 +11,7 @@ set serializer => 'JSON';
 
 get '/message/:id' => sub {
     my $message = schema->resultset('Message')->find(param('id'));
-    return to_json {$message->get_columns};
+    return to_json $message->hash;
 };
 
 
@@ -26,22 +26,8 @@ post '/message/send' => sub {
 			);
     
     $message->send;
-    
-    # Add attachements and remove them from pending
-    # $conversation->attach_all_to( $message->id );
-    
-    # TODO Send
-    # Send email to all recipients
-    #Servicator::Email::send_mail( 
-    #	sender => $user_sender->name." <".$arg{id}."@".$arg{domain}.">",
-    #	recipients => $conversation->recipients($user_sender, {send_copy => $arg{send_copy}}), 
-    #	subject => $conversation->subject ? $conversation->subject : $arg{domain}." Message no. ".$arg{id}, 
-    #	body => $arg{body},
-    #	send_copy => $arg{send_copy},
-    #	attachments => $message->attachments_paths,
-    #);
-    
-    return to_json {$message->get_inflated_columns};
+   
+    return to_json $message->hash;
 };
 
 1;

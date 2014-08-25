@@ -24,6 +24,14 @@
 					<label>To</label> <input class="form-control" type="text" name="to"  />
 					
 				</div>
+				<div class="form-group">
+					<label>Cc</label> <input class="form-control" type="text" name="cc"  />
+					
+				</div>
+				<div class="form-group">
+					<label>Bcc</label> <input class="form-control" type="text" name="bcc"  />
+					
+				</div>
 
 				<div class="form-group">
 					<label>Subject</label> <input class="form-control" type="text" name="subject"  />
@@ -90,6 +98,8 @@ $.fn.serializeObject = function() {
 			var message = {
 				from: this.from.value,
 				to: this.to.value,
+				cc: this.cc.value,
+				bcc: this.bcc.value,
 				subject: this.subject.value,
 				body: this.body.value,
 				attachments: attachments,

@@ -22,10 +22,14 @@ sub new_message{
     });
     
     # Add recipients
-    $arg{to} = [$arg{to}] unless ref $arg{to} eq 'ARRAY';
-    for my $raw_email ( @{$arg{to}} ){
-    	$message->add_to_emails({email => extract_email($raw_email) });
-    }
+    my @types = ('to', 'cc', 'bcc');
+    for my $type (@types){
+    	next unless $arg{$type};
+	    $arg{$type} = [$arg{$type}] unless ref $arg{$type} eq 'ARRAY';
+	    for my $raw_email ( @{$arg{$type}} ){
+	    	$message->add_to_emails({email => extract_email($raw_email), type => $type });
+	    }
+    }   
     
     # Save attachments
    $message->add_attachments(@{$arg{attachments}}) if $arg{attachments};

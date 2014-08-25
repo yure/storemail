@@ -35,6 +35,13 @@ __PACKAGE__->table("email");
   is_nullable: 0
   size: 90
 
+=head2 type
+
+  data_type: 'varchar'
+  default_value: 'to'
+  is_nullable: 0
+  size: 15
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -42,6 +49,8 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "email",
   { data_type => "varchar", is_nullable => 0, size => 90 },
+  "type",
+  { data_type => "varchar", default_value => "to", is_nullable => 0, size => 15 },
 );
 
 =head1 PRIMARY KEY
@@ -76,8 +85,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-08-22 08:44:09
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:jLppOtiDSytsqApuZmZnbw
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-08-25 08:55:38
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:BLVoUXUwN6pXvk9uTtSJXQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
