@@ -55,7 +55,7 @@ You need to run dancer application (bin/app.pl), to handle API requests and bin/
 
 perl catchall.pl [-s 5] 
 
-=head1 API Use
+=head1 Conversations
 
 All API routes start with your domain. 
 
@@ -203,6 +203,51 @@ Returns:
 		"sender_email" : string, 
 	}
 	
+=head1 Provider
+
+Wokring GUI example on /:domain/gui/provider/:comma_separated_emails
+
+JS and HTML code in views/provider.html
+
+=head2 Send mail
+
+
+POST /:domain/message/send
+
+Send email via some GUI. Example use:
+
+		$("#replay-form").submit(function(e) {
+				var message = {
+					from: this.from.value,
+					to: this.to.value,
+					cc: this.cc.value,
+					bcc: this.bcc.value,
+					subject: this.subject.value,
+					body: this.body.value,
+					attachments: [
+						{
+							content: "data:text/plain;base64,Y2131....",
+							name: 'text.txt'
+						},
+				}
+	
+				$.ajax({
+					type : "POST",
+					url : '/' + domain + '/message/send',
+					data : {data: JSON.stringify(message)},
+					dataType : 'json',
+					success: function(data) {
+						update_con();
+					},
+				});
+				return false; // avoid to execute the actual submit of the form.
+			});	
+
+=head2 Get provider emails
+
+GET /
+
+
 =head1 GUI
 
 =head2 Conversation thread

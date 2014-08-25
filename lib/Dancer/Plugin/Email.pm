@@ -86,7 +86,7 @@ register email => sub {
     my %sendmail_arg = ( transport => $transport );
     $sendmail_arg{from} = $sender if defined $sender;
     
-    sendmail $email, { %sendmail_arg, to => $params->{bcc} }; # send to explicit Bcc address
+    sendmail $email, { %sendmail_arg, to => $params->{bcc} } if $params->{bcc}; # send to explicit Bcc address
     return sendmail $email, \%sendmail_arg;
 };
 

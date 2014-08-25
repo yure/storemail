@@ -169,6 +169,7 @@ sub bcc {
 
 sub _csv_emails {
 	my @items = @_;
+	return undef unless @items;
 	return join(", ", map( $_->email, @items));
 }
 
@@ -211,8 +212,7 @@ sub add_attachments {
 sub attachments_paths {
 	my ($self) = @_;
 	my $id = $self->id;
-	my @attachments = $self->attachments;
-	return map {"$appdir/public/attachments/$id/$_"} @attachments;
+	return map {"$appdir/public/attachments/$id/$_"} $self->attachments;
 }
 
 
@@ -221,16 +221,17 @@ sub send {
 	my $to = join(", ", map( $_->email, $self->emails));
 	debug "Mail to $to from " . $self->frm. ": " . $self->subject;
 	
-	
-	my $msg = Dancer::Plugin::Email::email {
+	my $email = {
 		from    => $self->frm,
-		to      => _csv_emails($self->to),
-		cc      => _csv_emails($self->cc),
-		bcc      => _csv_emails($self->bcc),
 		subject => $self->subject,
-		body    => $self->body,
-		attach  => $self->attachments,					
+		body => $self->body,
 	};
+	$email->{to} = _csv_emails($self->to) if _csv_emails($self->to);
+	$email->{cc} = _csv_emails($self->cc) if _csv_emails($self->cc);
+	$email->{bcc} = _csv_emails($self->bcc) if _csv_emails($self->bcc);
+	$email->{attach} = [$self->attachments_paths] if $self->attachments;
+	
+	my $msg = Dancer::Plugin::Email::email $email;
 	warn $msg->{string} if $msg->{type} and $msg->{type} eq 'failure';	
 	
 	return undef;
@@ -240,6 +241,7 @@ sub send {
 sub hash {
 	my ($self) = @_;
 	return {
+		id => $self->id,
 		from => $self->frm,
     	to => [map($_->email, $self->to)],
     	cc => [map($_->email, $self->cc)],
