@@ -7,6 +7,8 @@ use Servicator::Message;
 use MIME::QuotedPrint::Perl;
 use MIME::Base64;
 use Email::MIME;
+use Time::ParseDate;
+use DateTime;
 use Encode qw(decode);
 use File::Path qw(make_path remove_tree);
 use FindBin;
@@ -33,7 +35,7 @@ print "Use with args:
 --sleep
 -d --direction (default i = incoming) [i, o]
 
-Service starte with
+Service started with
 $server, $user, ******, SSL: $ssl, $port
 
 ";
@@ -77,13 +79,16 @@ while(1){
 	
 			# From
 			my $from = $headers->{From}[0];
-			#($from) = $from =~ /<(.*?)>/s;		
 
 			# To
 			my (@to_email) = split ',', $headers->{To}[0];
 
 			# Subject
 			my $subject = decode("UTF-8", $headers->{Subject}[0]);
+
+			# Datetime
+			my $epoch = parsedate($headers->{Date}[0]);
+			my $datetime = DateTime->from_epoch( epoch => $epoch );
 
 			# New message	
 			my $message = Servicator::Message::new_message(				
@@ -92,6 +97,7 @@ while(1){
 				body         => $body,
 				subject => $subject,
 				direction => $direction,
+				date => $datetime->ymd." ".$datetime->hms,
 			);
 
 			# Attachments
