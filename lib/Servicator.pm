@@ -14,6 +14,7 @@ get '**' => sub {
 };
 use Servicator::Routes::Message;
 use Servicator::Routes::Conversation;
+use Servicator::Routes::Provider;
 
 
 our $VERSION = '0.1';

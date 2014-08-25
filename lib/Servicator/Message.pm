@@ -8,46 +8,43 @@ use Servicator::Email;
 
 
 sub new_message{
-	my %arg = @_;
-	my $conversation = schema->resultset('Conversation')->find($arg{id}."@".$arg{domain});
+	my (%arg) = @_;
 
-	# Create new conversation if it doesn't exists
-    unless($conversation){
-	    $conversation = schema->resultset('Conversation')->create({
-	    	id => $arg{id}."@".$arg{domain},
-	    	domain => $arg{domain},
-	    });
-    }
-    
-    # Check sender
-	my $user_sender = $conversation->search_related('users', { email => $arg{sender_email}} )->first;
-	unless( $user_sender){
-		debug "Sender not alowed to send to this conversation";
-		return {error => 'Sender not found'} ;
-	}
-    
+	my $conversation_id = $arg{id} and $arg{domain} ? $arg{id}."@".$arg{domain} : undef;
+
 	# Save new message to DB
     my $message = schema->resultset('Message')->create({
-    	conversation_id => $arg{id}."@".$arg{domain},
-    	sender => $user_sender->email,
+    	conversation_id => $conversation_id,
+    	frm => extract_email($arg{from}),
     	body => $arg{body},
+    	subject => $arg{subject},
+    	direction => $arg{direction},
     });
     
-    # Add attachements and remove them from pending
-    $conversation->attach_all_to( $message->id );
+    # Add recipients
+    $arg{to} = [$arg{to}] unless ref $arg{to} eq 'ARRAY';
+    for my $raw_email ( @{$arg{to}} ){
+    	$message->add_to_emails({email => extract_email($raw_email) });
+    }
     
-    # Send email to all recipients
-    Servicator::Email::send_mail( 
-    	sender => $user_sender->name." <".$arg{id}."@".$arg{domain}.">",
-    	recipients => $conversation->recipients($user_sender, {send_copy => $arg{send_copy}}), 
-    	subject => $conversation->subject ? $conversation->subject : $arg{domain}." Message no. ".$arg{id}, 
-    	body => $arg{body},
-    	send_copy => $arg{send_copy},
-    	attachments => $message->attachments_paths,
-    );
+    # Save attachments
+   $message->add_attachments(@{$arg{attachments}}) if $arg{attachments};
     
     return $message;
 }
+
+
+sub extract_email {
+	my $str = shift;
+	my ($email) = $str =~ /<(.*?)>/s;	
+	return trim($email ? $email : $str);
+}
+
     
+sub trim {
+	my $str = shift;
+	$str =~ s/^\s+|\s+$//g;
+	return $str;
+}
 
 true;

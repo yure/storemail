@@ -5,6 +5,7 @@ use Dancer::Plugin::DBIC qw(schema resultset rset);
 use Servicator::Email;
 use Servicator::Message;
 use MIME::QuotedPrint::Perl;
+use MIME::Base64;
 use Email::MIME;
 use Encode qw(decode);
 use File::Path qw(make_path remove_tree);
@@ -14,7 +15,28 @@ my $appdir = realpath( "$FindBin::Bin/..");
 
 my %args = @ARGV;
 
-my $sleep = $args{'-s'} || 5;
+my $sleep = $args{'--sleep'} || 5;
+
+my $server   = $args{'-s'} 		|| $args{'--server'} 	|| config->{catch_all}->{host};
+my $user     = $args{'-u'} 		|| $args{'--user'} 		|| config->{catch_all}->{username};
+my $password = $args{'-p'} 		|| $args{'--password'} 	|| config->{catch_all}->{password};
+my $ssl      = $args{'--ssl'} 							|| config->{catch_all}->{ssl};
+my $port     = $args{'--port'} 							|| config->{catch_all}->{post};
+my $direction= $args{'-d'} 		|| $args{'--direction'} || 'i';
+
+print "Use with args: 
+-s --server 
+-u --user
+-p --password
+--ssl
+--port
+--sleep
+-d --direction (default i = incoming) [i, o]
+
+Service starte with
+$server, $user, ******, SSL: $ssl, $port
+
+";
 
 while(1){
 	
@@ -36,41 +58,45 @@ while(1){
 	
 		#splice @unread, 5;
 		for my $mail_id (@unread) {
-			my $hashref = $imap->parse_headers( $mail_id, "Date", "Subject", "To", "From" );
+			my $headers = $imap->parse_headers( $mail_id, "Date", "Subject", "To", "From" );
 			my $all = $imap->parse_headers( $mail_id, "ALL");
-	
-			# TODO: weed out random mail
-	
-			# Conversation ID
-			my $emails = $hashref->{To}[0];
-			my ($email) = split ',', $emails;
-			my ($conv_id, $domain) = $email =~ /<(.*?)@(.*?)>/s;
-			($conv_id, $domain) = $email =~ /(.*?)@(.*?)$/s unless $conv_id;
-			$conv_id =~ s/\@$domain//g;
-	
-			my $conversation = schema->resultset('Conversation')->find( $conv_id ."@". $domain );
-			unless ($conversation){
-				debug "Invalid mail or conversation";
-				$imap->see($mail_id) or warn "Could not see: $@\n";
-				next;
-			}
 			
 			# Message body
-			my $body = extract_body( $imap->body_string($mail_id) );
+			my $struct = $imap->get_bodystructure($mail_id);
+				# Simple mail
+			my $body = extract($struct, $imap, $mail_id);
+				# Multipart mail
+			unless($body){
+				foreach my $dumpme ($struct->bodystructure()) {
+					next unless $dumpme->bodytype() eq "TEXT";
+					$body="";
+					$body=extract($dumpme,$imap,$mail_id );
+				}
+			}
+			$body = decode("UTF-8",decode_qp($body));
 	
-			my $b_struc = $imap->get_bodystructure($mail_id);
-	
-			# Sender
-			my $sender_email = $hashref->{From}[0];
-			($sender_email) = $sender_email =~ /<(.*?)>/s;
-	
-			# Check sender
-			my $user_sender = $conversation->search_related( 'users', { email => $sender_email } )->first;
-			debug { error => 'Sender not found' } unless $user_sender;
+			# From
+			my $from = $headers->{From}[0];
+			#($from) = $from =~ /<(.*?)>/s;		
+
+			# To
+			my (@to_email) = split ',', $headers->{To}[0];
+
+			# Subject
+			my $subject = decode("UTF-8", $headers->{Subject}[0]);
+
+			# New message	
+			my $message = Servicator::Message::new_message(				
+				from => $from,
+				to   => \@to_email,
+				body         => $body,
+				subject => $subject,
+				direction => $direction,
+			);
 
 			# Attachments
 			my $mail_str = $imap->message_string($mail_id);
-			my $dir = "$appdir/attachments/".$conversation->id;
+			my $dir = "$appdir/public/attachments/".$message->id;
 			Email::MIME->new($mail_str)->walk_parts(sub {
 				my($part) = @_;
 		  		return unless $part->content_type =~ /\bname="([^"]+)"/;  # " grr...
@@ -81,15 +107,7 @@ while(1){
 				print $fh $part->content_type =~ m!^text/! ? $part->body_str : $part->body or die "$0: print $name: $!";
 				close $fh or warn "$0: close $name: $!";
 			});
-
-			# New message	
-			my $message = Servicator::Message::new_message(
-				id           => $conv_id,
-				domain       => $domain,
-				sender_email => $user_sender->email,
-				recipients   => $conversation->recipients($user_sender),
-				body         => $body
-			);
+			print "Email fetched: $subject from $from\n";
 		}
 	}
 	else{
@@ -116,9 +134,13 @@ sub extract_body {
 	#$to = $mailId;
 	
 	# Remove all from breake text on 
-	my $from = '';
-	my $to = substr(Servicator::Email::email_break_text, 0, -1); # Decoding can loose last char...
-	($wanted) = $body =~ /$from(.*?)$to/s;
+	#my $from = '';
+	#my $to = substr(Servicator::Email::email_break_text, 0, -1); # Decoding can loose last char...
+	#($wanted) = $body =~ /$from(.*?)$to/s;
+	
+	
+	
+	$wanted = $body;
 	if($wanted){
 		$wanted = remove_gmail_code($wanted);
 		$wanted = remove_outlook_code($wanted);
@@ -180,4 +202,22 @@ sub trim {
 	my $str = shift;
 	$str =~ s/^\s+|\s+$//g;
 	return $str;
+}
+
+sub extract  {
+	my ($process, $imap, $msg) = @_;
+	if ($process->bodytype eq "TEXT") {
+	   if ($process->bodyenc eq "base64") {
+	        return decode_base64($imap->bodypart_string($msg,$process->id));
+	        }
+	   elsif (index(" -7bit- -8bit- -quoted-printable- ",lc($process->bodyenc)) !=-1  ) {
+	        return $imap->bodypart_string($msg,$process->id);
+	        }
+	print "\n==========Insert new decoder here============";
+	print "\n".$imap->bodypart_string($msg,$process->id);
+	print "\n=================================================";
+	
+	}
+	
+	return "";
 }

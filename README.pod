@@ -78,6 +78,7 @@ Returns:
 			date: string,  
 			id: string,  
 			sender: string,  
+			attachments: [string, string]
 			},
 		]
 		users: [

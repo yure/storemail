@@ -33,10 +33,10 @@ __PACKAGE__->table("message");
 
   data_type: 'varchar'
   is_foreign_key: 1
-  is_nullable: 0
+  is_nullable: 1
   size: 45
 
-=head2 sender
+=head2 frm
 
   data_type: 'varchar'
   is_nullable: 0
@@ -54,16 +54,16 @@ __PACKAGE__->table("message");
   default_value: current_timestamp
   is_nullable: 0
 
-=head2 sender_email
-
-  data_type: 'varchar'
-  is_nullable: 1
-  size: 45
-
-=head2 recipients
+=head2 subject
 
   data_type: 'text'
   is_nullable: 1
+
+=head2 direction
+
+  data_type: 'varchar'
+  is_nullable: 0
+  size: 1
 
 =cut
 
@@ -71,8 +71,8 @@ __PACKAGE__->add_columns(
   "id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "conversation_id",
-  { data_type => "varchar", is_foreign_key => 1, is_nullable => 0, size => 45 },
-  "sender",
+  { data_type => "varchar", is_foreign_key => 1, is_nullable => 1, size => 45 },
+  "frm",
   { data_type => "varchar", is_nullable => 0, size => 45 },
   "body",
   { data_type => "text", is_nullable => 1 },
@@ -83,10 +83,10 @@ __PACKAGE__->add_columns(
     default_value => \"current_timestamp",
     is_nullable => 0,
   },
-  "sender_email",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
-  "recipients",
+  "subject",
   { data_type => "text", is_nullable => 1 },
+  "direction",
+  { data_type => "varchar", is_nullable => 0, size => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -115,13 +115,35 @@ __PACKAGE__->belongs_to(
   "conversation",
   "Servicator::Schema::Result::Conversation",
   { id => "conversation_id" },
-  { is_deferrable => 1, on_delete => "RESTRICT", on_update => "RESTRICT" },
+  {
+    is_deferrable => 1,
+    join_type     => "LEFT",
+    on_delete     => "SET NULL",
+    on_update     => "CASCADE",
+  },
+);
+
+=head2 emails
+
+Type: has_many
+
+Related object: L<Servicator::Schema::Result::Email>
+
+=cut
+
+__PACKAGE__->has_many(
+  "emails",
+  "Servicator::Schema::Result::Email",
+  { "foreign.message_id" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-07-08 10:26:37
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:93dJwTvWWahyGF5JN5tNzA
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-08-22 10:38:32
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:/aZhvRv9zqKAcg0CtsjTUQ
 
+use Dancer ':syntax';
+use Dancer::Plugin::Email;
 use FindBin;
 use Cwd qw/realpath/;
 my $appdir = realpath( "$FindBin::Bin/..");
@@ -145,7 +167,20 @@ sub attachments {
 
 sub add_attachments {
 	my ($self, @files) = @_;
+	my $id = $self->id;
 	
+	for my $file (@files){
+		my $dir = "$appdir/public/attachments/$id/";
+		system( "mkdir -p $dir" ) unless (-e $dir);  
+		
+		my $content = $file->{content};
+		$content =~ s/data:;base64,//g;
+	    my $decoded= MIME::Base64::decode_base64($content);
+		open my $fh, '>', "$dir".$file->{name} or die $!;
+		binmode $fh;
+		print $fh $decoded;
+		close $fh
+    }
 }
  
  
@@ -154,6 +189,23 @@ sub attachments_paths {
 	my $id = $self->id;
 	my @attachments = $self->attachments;
 	return map {"$appdir/public/attachments/$id/$_"} @attachments;
+}
+
+
+sub send {
+	my ($self) = @_;
+	my $to = join(", ", map( $_->email, $self->emails));
+	debug "Mail to $to from " . $self->frm. ": " . $self->subject;
+	
+	my $msg = Dancer::Plugin::Email::email {
+		from    => $self->frm,
+		to      => $to,
+		subject => $self->subject,
+		body    => $self->body,
+		attach  => $self->attachments,
+	};
+	warn $msg->{string} if $msg->{type} and $msg->{type} eq 'failure';	
+	return undef;
 }
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

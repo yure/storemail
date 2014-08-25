@@ -13,14 +13,13 @@ sub email_break_text {return '===== WRITE YOUR REPLY ABOVE THIS LINE ====='};
 
 sub send_mail {
 	my %mail = @_;
-	$mail{sender} ||= "";
+	$mail{from} ||= "";
 	$mail{recipients} ||= "";
-	debug "Mail to ".join(", ", map( $_->{email}, @{$mail{recipients}}))." from $mail{sender}: $mail{body}";
+	debug "Mail to ".join(", ", map( $_->{email}, @{$mail{recipients}}))." from $mail{from}: $mail{body}";
 	
-	#my @recipients = split ",", $mail{recipients};
 	for my $recipient (@{$mail{recipients}}) {
 		my $msg = email {
-			from    => $mail{sender},
+			from    => $mail{from},
 			to      => $recipient->{name} . " <".$recipient->{email}.">",
 			subject => $mail{subject},
 			body    => wrap_body( $mail{body} ),
