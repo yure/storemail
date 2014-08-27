@@ -5,6 +5,7 @@ our $VERSION = '0.1';
 use Dancer::Plugin::Ajax;
 use DBI;
 use Dancer::Plugin::DBIC qw(schema resultset rset);
+use Encode;
 
 prefix '/:domain';
 set serializer => 'JSON';
@@ -38,7 +39,7 @@ post '/message/send' => sub {
     content_type('application/json');
     
 	my $rawparams = param('data');
-	my $params = from_json $rawparams;
+	my $params = from_json encode('utf8', $rawparams);
       
     my $message = Servicator::Message::new_message(							
 				direction => 'o',

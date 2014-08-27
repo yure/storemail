@@ -42,6 +42,12 @@ __PACKAGE__->table("email");
   is_nullable: 0
   size: 15
 
+=head2 name
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 90
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -51,6 +57,8 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 0, size => 90 },
   "type",
   { data_type => "varchar", default_value => "to", is_nullable => 0, size => 15 },
+  "name",
+  { data_type => "varchar", is_nullable => 1, size => 90 },
 );
 
 =head1 PRIMARY KEY
@@ -85,9 +93,15 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-08-25 08:55:38
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:BLVoUXUwN6pXvk9uTtSJXQ
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-08-27 13:19:26
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:eKJ5qBtnQk8TN+CGxvoPMw
 
+use Encode;
+
+sub named_email {
+	my $self = shift;
+	return encode("MIME-Header", $self->name ? $self->name."<".$self->email.">" : $self->email); 
+}
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

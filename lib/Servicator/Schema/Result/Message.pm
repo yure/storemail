@@ -40,7 +40,13 @@ __PACKAGE__->table("message");
 
   data_type: 'varchar'
   is_nullable: 0
-  size: 45
+  size: 90
+
+=head2 name
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 90
 
 =head2 body
 
@@ -87,7 +93,9 @@ __PACKAGE__->add_columns(
   "conversation_id",
   { data_type => "varchar", is_foreign_key => 1, is_nullable => 1, size => 45 },
   "frm",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "varchar", is_nullable => 0, size => 90 },
+  "name",
+  { data_type => "varchar", is_nullable => 1, size => 90 },
   "body",
   { data_type => "text", is_nullable => 1 },
   "date",
@@ -167,13 +175,14 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-08-27 11:33:38
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:C7jk0Mo2q7eieh7wf2rWQQ
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-08-27 13:19:26
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:MDyfLHzISqjdVja+wC8YuA
 
 use Dancer ':syntax';
 use Dancer::Plugin::Email;
 use FindBin;
 use Cwd qw/realpath/;
+use Encode;
 my $appdir = realpath( "$FindBin::Bin/..");
 
 
@@ -199,6 +208,17 @@ sub _csv_emails {
 	my @items = @_;
 	return undef unless @items;
 	return join(", ", map( $_->email, @items));
+}
+
+
+sub _csv_named_emails {
+	my @items = @_;
+	return undef unless @items;
+	my @named_emails;
+	for my $email (@items){
+		push @named_emails, $email->named_email; 
+	}
+	return join(", ", @named_emails);
 }
 
  
@@ -250,13 +270,13 @@ sub send {
 	debug "Mail to $to from " . $self->frm. ": " . $self->subject;
 	
 	my $email = {
-		from    => $self->frm,
-		subject => $self->subject,
+		from    => $self->named_from,
+		subject => encode("MIME-Header", $self->subject),
 		body => $self->body || " ",
 	};
-	$email->{to} = _csv_emails($self->to) if _csv_emails($self->to);
-	$email->{cc} = _csv_emails($self->cc) if _csv_emails($self->cc);
-	$email->{bcc} = _csv_emails($self->bcc) if _csv_emails($self->bcc);
+	$email->{to} = _csv_named_emails($self->to) if $self->to;
+	$email->{cc} = _csv_named_emails($self->cc) if $self->cc;
+	$email->{bcc} = _csv_named_emails($self->bcc) if $self->bcc;
 	$email->{attach} = [$self->attachments_paths] if $self->attachments;
 	
 	my $msg = Dancer::Plugin::Email::email $email;
@@ -265,15 +285,21 @@ sub send {
 	return undef;
 }
 
+sub named_from {
+	my $self = shift;
+	return encode("MIME-Header", $self->name ? $self->name."<".$self->frm.">" : $self->frm); 
+}
+
 
 sub hash {
 	my ($self) = @_;
 	return {
 		id => $self->id,
 		from => $self->frm,
-    	to => [map($_->email, $self->to)],
-    	cc => [map($_->email, $self->cc)],
-    	bcc => [map($_->email, $self->bcc)],
+		from_name => $self->name,
+    	to => [map({email => $_->email, name => $_->name}, $self->to)],
+    	cc => [map({email => $_->email, name => $_->name}, $self->cc)],
+    	bcc => [map({email => $_->email, name => $_->name}, $self->bcc)],
     	subject => $self->subject,
     	body => $self->body ,
     	date => $self->date ,
