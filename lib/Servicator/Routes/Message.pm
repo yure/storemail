@@ -37,7 +37,8 @@ get '/message/:id' => sub {
 post '/message/send' => sub {
     content_type('application/json');
     
-	my $params = from_json param('data');
+	my $rawparams = param('data');
+	my $params = from_json $rawparams;
       
     my $message = Servicator::Message::new_message(							
 				direction => 'o',

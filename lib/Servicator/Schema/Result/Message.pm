@@ -72,6 +72,13 @@ __PACKAGE__->table("message");
   default_value: 1
   is_nullable: 0
 
+=head2 type
+
+  data_type: 'varchar'
+  default_value: 'email'
+  is_nullable: 0
+  size: 45
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -100,6 +107,13 @@ __PACKAGE__->add_columns(
     data_type     => "tinyint",
     default_value => 1,
     is_nullable   => 0,
+  },
+  "type",
+  {
+    data_type => "varchar",
+    default_value => "email",
+    is_nullable => 0,
+    size => 45,
   },
 );
 
@@ -153,8 +167,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-08-25 14:51:52
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:P2Fyu5DIKnghXCmFAy3Kdg
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-08-27 11:33:38
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:C7jk0Mo2q7eieh7wf2rWQQ
 
 use Dancer ':syntax';
 use Dancer::Plugin::Email;
@@ -262,9 +276,11 @@ sub hash {
     	bcc => [map($_->email, $self->bcc)],
     	subject => $self->subject,
     	body => $self->body ,
+    	date => $self->date ,
     	attachments => $self->attachments ? [$self->attachments] : [],
     	direction => $self->direction,
-    	read => $self->get_column('new') ? 0 : 1
+    	read => $self->get_column('new') ? 0 : 1,
+    	type => $self->type
 	}
 }
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

@@ -20,6 +20,8 @@ sub new_message{
     	subject => $arg{subject},
     	direction => $arg{direction},
     	date => $arg{date},
+    	'new' => $arg{'new'} || 1,
+    	type => $arg{type},
     });
     
     # Add recipients

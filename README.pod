@@ -69,7 +69,7 @@ All API routes start with your domain.
 
 =head2 Conversation
 
-New conververstaion is initiated automaticly with first message, user adding or subject setting.
+New conversation is initiated automatically with first message, user adding or subject setting.
 
 =head3 Conversation data
 
@@ -152,7 +152,7 @@ It can only be set once.
 Returns:
 
 	1 if successful
-	0 if unsucessful
+	0 if unsuccessful
 
 =head3 Adding messages
 
@@ -168,13 +168,13 @@ Adds message to conversation and sends it around.
 Returns:
 
 	{
-		error: stirng (optional)
+		error: String (optional)
 	}
 
 =head3 Attachments
 
 Attachments are added to conversation prior to sending message. 
-Any attachements waitng in temp folder will be sent with next message and moved to another folder bind to message and are accessible in 
+Any attachments waiting in temp folder will be sent with next message and moved to another folder bind to message and are accessible in 
 	
 	/attachments/:message_id/:filename
 
