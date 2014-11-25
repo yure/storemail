@@ -287,7 +287,7 @@ sub send {
 
 sub named_from {
 	my $self = shift;
-	return encode("MIME-Header", $self->name ? $self->name."<".$self->frm.">" : $self->frm); 
+	return encode("MIME-Header", $self->name ? $self->name." <".$self->frm.">" : $self->frm); 
 }
 
 
