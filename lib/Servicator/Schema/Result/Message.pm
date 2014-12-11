@@ -29,6 +29,12 @@ __PACKAGE__->table("message");
   is_auto_increment: 1
   is_nullable: 0
 
+=head2 domain
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 90
+
 =head2 conversation_id
 
   data_type: 'varchar'
@@ -90,6 +96,8 @@ __PACKAGE__->table("message");
 __PACKAGE__->add_columns(
   "id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  "domain",
+  { data_type => "varchar", is_nullable => 1, size => 90 },
   "conversation_id",
   { data_type => "varchar", is_foreign_key => 1, is_nullable => 1, size => 45 },
   "frm",
@@ -175,8 +183,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-08-27 13:19:26
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:MDyfLHzISqjdVja+wC8YuA
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-12-11 09:25:42
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gNacmELqhU6D8adbSMnzAQ
 
 use Dancer ':syntax';
 use Dancer::Plugin::Email;

@@ -15,7 +15,8 @@ get '/message/unread' => sub {
     content_type('application/json');
     my $messages = schema->resultset('Message')->search(
     	{
-    		'new' => 1,    		
+    		'new' => 1,  
+    		domain => param('domain')  		
     	},
     	{ 
     		order_by => 'date',
@@ -30,7 +31,7 @@ get '/message/unread' => sub {
 
 get '/message/:id' => sub {
     content_type('application/json');
-    my $message = schema->resultset('Message')->find(param('id'));
+    my $message = schema->resultset('Message')->find({id => param('id'), domain => param('domain')});
     return to_json $message->hash;
 };
 
@@ -43,6 +44,7 @@ post '/message/send' => sub {
       
     my $message = Servicator::Message::new_message(							
 				direction => 'o',
+				domain => param('domain'),
 				%$params
 			);
     
@@ -77,7 +79,7 @@ post '/batch/message/send' => sub {
 get '/message/:id/read' => sub {
     content_type('application/json');
     
-    my $message = schema->resultset('Message')->find(param('id'));    
+    my $message = schema->resultset('Message')->find({id => param('id'), domain => param('domain')});    
     $message->update({'new' => 0 });
    
     return to_json $message->hash;
@@ -87,7 +89,7 @@ get '/message/:id/read' => sub {
 get '/message/:id/unread' => sub {
     content_type('application/json');
     
-    my $message = schema->resultset('Message')->find(param('id'));    
+    my $message = schema->resultset('Message')->find({id => param('id'), domain => param('domain')});    
     $message->update({'new' => 1 });
    
     return to_json $message->hash;

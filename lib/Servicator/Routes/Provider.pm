@@ -15,6 +15,7 @@ get '/provider/unread/:comma_separated_emails' => sub {
     my $messages = schema->resultset('Message')->search(
     	{
     		'new' => 1,
+    		domain => param('domain'),
     		-or => [
 	    		-and => [
 	    			direction => 'i',
@@ -66,7 +67,9 @@ get '/provider/:comma_separated_emails' => sub {
 	#my $parser   = schema->storage->datetime_parser;
     push $where->{-and}, {date => { '<=', $to }} if $to;
     push $where->{-and}, {date => { '>=', $from }} if $from;
+
     	
+    $where->{domain} = param('domain');
     my $messages = schema->resultset('Message')->search(
     	$where,
     	{ 
