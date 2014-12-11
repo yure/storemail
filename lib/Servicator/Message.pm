@@ -11,7 +11,7 @@ sub new_message{
 	my (%arg) = @_;
 
 	my $conversation_id = $arg{id} and $arg{domain} ? $arg{id}."@".$arg{domain} : undef;
-	my ($email, $name) = extract_email($arg{from});
+	my ($name, $email) = extract_email($arg{from});
 
 	# Save new message to DB
     my $message = schema->resultset('Message')->create({
@@ -33,7 +33,7 @@ sub new_message{
 	    $arg{$type} = [$arg{$type}] unless ref $arg{$type} eq 'ARRAY';
 	    for my $raw_emails ( @{$arg{$type}} ){
 		    for my $raw_email ( split ',', $raw_emails ){
-		    	my ($email, $name) = extract_email($raw_email);
+		    	my ($name, $email) = extract_email($raw_email);
 		    	$message->add_to_emails({
 		    		email => $email, 
 		    		name => $name, 
@@ -55,7 +55,7 @@ sub extract_email {
 	$str = decode("MIME-Header", $str);
 	my ($name, $email) = $str =~ /(.*?)<(.*?)>/s;
 	$email = $str unless $email;
-	return (trim($email), trim($name));
+	return (trim($name), trim($email));
 }
 
     

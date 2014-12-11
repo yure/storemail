@@ -11,28 +11,6 @@ prefix '/:domain';
 sub email_break_text {return '===== WRITE YOUR REPLY ABOVE THIS LINE ====='};
 
 
-sub send_mail {
-	my %mail = @_;
-	$mail{from} ||= "";
-	$mail{recipients} ||= "";
-	debug "Mail to ".join(", ", map( $_->{email}, @{$mail{recipients}}))." from $mail{from}: $mail{body}";
-	
-	for my $recipient (@{$mail{recipients}}) {
-		my $msg = email {
-			from    => $mail{from},
-			to      => $recipient->{name} . " <".$recipient->{email}.">",
-			subject => $mail{subject},
-			body    => wrap_body( $mail{body} ),
-
-			attach  => $mail{attachments} ? [$mail{attachments}] : undef,
-		};
-		warn $msg->{string} if $msg->{type} and $msg->{type} eq 'failure';
-	}
-
-	return undef;
-}
-
-
 sub wrap_body {
 	my $body = shift;
 	

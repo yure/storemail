@@ -267,7 +267,7 @@ sub attachments_paths {
 sub send {
 	my ($self) = @_;
 	my $to = join(", ", map( $_->email, $self->emails));
-	debug "Mail to $to from " . $self->frm. ": " . $self->subject;
+	debug localtime()." Mail to $to from " . $self->frm. ": " . $self->subject.'\n';
 	
 	my $email = {
 		from    => $self->named_from,

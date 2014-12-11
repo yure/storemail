@@ -40,9 +40,9 @@ get '/provider/unread/:comma_separated_emails' => sub {
 
 get '/provider/:comma_separated_emails' => sub {
 	my @emails = map { s/\s*(\S+)\s*/$1/; $_ } split ',', param('comma_separated_emails');
-    my $messages = schema->resultset('Message')->search(
-    	{
-    		-or => [
+	my $where;
+	$where->{-and} = [];
+	push $where->{-and}, [ -or => [
 	    		-and => [
 	    			direction => 'i',
 	    			-or => [map( (frm => $_), @emails )]
@@ -51,8 +51,24 @@ get '/provider/:comma_separated_emails' => sub {
 	    			direction => 'o',
 	    			-or => [map( ('emails.email' => $_), @emails )]
     			],    		
-    		]
-    	},
+    		]];
+
+	# Search
+	my $search =  param('search');
+    push $where->{-and},[ -or => [
+    	subject => { 'like', "%$search%" },
+    	body => { 'like', "%$search%" },
+    ]] if $search;
+    	
+	# Date span
+	my $from =  param('from');
+	my $to =  param('to');
+	#my $parser   = schema->storage->datetime_parser;
+    push $where->{-and}, {date => { '<=', $to }} if $to;
+    push $where->{-and}, {date => { '>=', $from }} if $from;
+    	
+    my $messages = schema->resultset('Message')->search(
+    	$where,
     	{ 
 			join => 'emails',    		 
     		order_by => 'date',

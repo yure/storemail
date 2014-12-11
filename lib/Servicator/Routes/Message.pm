@@ -52,6 +52,28 @@ post '/message/send' => sub {
 };
 
 
+post '/batch/message/send' => sub {
+    content_type('application/json');
+    
+	my $rawparams = param('data');
+	my $params = from_json encode('utf8', $rawparams);
+    my @emails = split(',', $params->{to});
+    my @sent;
+    for my $email (@emails){
+    	$params->{to} = $email;
+	    my $message = Servicator::Message::new_message(							
+					direction => 'o',
+					%$params
+				);
+	    
+	    $message->send;
+	    push @sent, $message->hash;
+    }
+   
+    return to_json \@sent;
+};
+
+
 get '/message/:id/read' => sub {
     content_type('application/json');
     
