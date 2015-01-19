@@ -16,6 +16,7 @@ Mailing service with threaded conversation backend.
  
 Setup mailing provider and DB info in config.yml. Example below:
 
+	domain: prevajalska-agencija.si
 	catch_all:
 	  host: 'imap.gmail.com'
 	  port: 993
@@ -23,6 +24,20 @@ Setup mailing provider and DB info in config.yml. Example below:
 	  password: 'passss'
 	  ssl: 1
 
+	gmail:
+	  accounts:
+	    Info:
+	      host: 'imap.gmail.com'
+	      port: 993
+	      username: 'info@prevajalska-agencija.si'
+	      password: 'passss'
+	      ssl: 1
+	    Sales:
+	      host: 'imap.gmail.com'
+	      port: 993
+	      username: 'sales@prevajalska-agencija.si'
+	      password: 'passs'
+	      ssl: 1
 
 	plugins:
 	  DBIC:
@@ -48,6 +63,13 @@ You can easily deploy DB after you have set up config with bin/deploy.pl
 =head2 Running services
 
 You need to run dancer application (bin/app.pl), to handle API requests and bin/catchall.pl script to fetch mail from inbox.
+
+=head3 Gmail fetch
+
+perl bin/get_gmail.pl [--sleep 10] 
+
+You have to set 'domain' and 'gmail' setting in config. 
+
 
 =head3 Catchall service
 

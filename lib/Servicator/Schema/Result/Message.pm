@@ -91,6 +91,18 @@ __PACKAGE__->table("message");
   is_nullable: 0
   size: 45
 
+=head2 message_id
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 36
+
+=head2 source
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 45
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -131,6 +143,10 @@ __PACKAGE__->add_columns(
     is_nullable => 0,
     size => 45,
   },
+  "message_id",
+  { data_type => "varchar", is_nullable => 1, size => 36 },
+  "source",
+  { data_type => "varchar", is_nullable => 1, size => 45 },
 );
 
 =head1 PRIMARY KEY
@@ -144,6 +160,20 @@ __PACKAGE__->add_columns(
 =cut
 
 __PACKAGE__->set_primary_key("id");
+
+=head1 UNIQUE CONSTRAINTS
+
+=head2 C<message_id_UNIQUE>
+
+=over 4
+
+=item * L</message_id>
+
+=back
+
+=cut
+
+__PACKAGE__->add_unique_constraint("message_id_UNIQUE", ["message_id"]);
 
 =head1 RELATIONS
 
@@ -183,8 +213,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2014-12-11 09:25:42
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gNacmELqhU6D8adbSMnzAQ
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2015-01-19 13:24:46
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:zVLGYdBXu/SR/+7vmPd0IQ
 
 use Dancer ':syntax';
 use Dancer::Plugin::Email;

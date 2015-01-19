@@ -6,6 +6,7 @@ our $VERSION = '0.1';
 use Dancer::Plugin::DBIC qw(schema resultset rset);
 use Servicator::Email;
 use Encode;
+sub trim {	my $str = shift; $str =~ s/^\s+|\s+$//g if $str; return $str;}
 
 sub new_message{
 	my (%arg) = @_;
@@ -20,6 +21,8 @@ sub new_message{
     	frm => $email,
     	name => $name,
     	body => $arg{body},
+    	message_id => $arg{message_id},
+    	source => $arg{source},
     	subject => decode("MIME-Header", $arg{subject}),
     	direction => $arg{direction},
     	date => $arg{date},
@@ -57,13 +60,6 @@ sub extract_email {
 	my ($name, $email) = $str =~ /(.*?)<(.*?)>/s;
 	$email = $str unless $email;
 	return (trim($name), trim($email));
-}
-
-    
-sub trim {
-	my $str = shift;
-	$str =~ s/^\s+|\s+$//g;
-	return $str;
 }
 
 true;
