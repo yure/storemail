@@ -21,6 +21,8 @@ sub trim {	my $str = shift; $str =~ s/^\s+|\s+$//g if $str; return $str;}
 my %args = @ARGV;
 
 my $sleep = $args{'--sleep'} || 10;
+my $initial = $args{'-i'};
+print "Starting initial import!\n" if $initial;
 
 print "Set some IMAP accounts in config!" unless config->{gmail}->{accounts};
 
@@ -62,7 +64,7 @@ sub process_emails {
 	my ($messages, $direction, $username) = @_;
 	# Reverse list and keep adding until you find message in db
 	
-	for my $mail_id (reverse @$messages) {
+	for my $mail_id ($initial ? @$messages : reverse @$messages) {
 		try {
 			no warnings 'exiting';
 			my $headers = $imap->parse_headers( $mail_id, "Date", "Subject", "To", "From" );
@@ -73,10 +75,18 @@ sub process_emails {
 			my $message_id;
 			$message_id = trim $all->{'Message-ID'}[0] if $all->{'Message-ID'};
 			$message_id = trim $all->{'Message-Id'}[0] if $all->{'Message-Id'};
+			$message_id = to_dumper $all unless $message_id;
 			$message_id = md5_hex $message_id;
 	
 			# End if already exists
-			last if schema->resultset('Message')->find({source => $username, message_id => $message_id});
+			unless($initial){
+				last if schema->resultset('Message')->find({source => $username, message_id => $message_id});				
+			} else {
+				if (schema->resultset('Message')->find({source => $username, message_id => $message_id})){
+					print '.';
+					next;
+				}
+			}
 	
 			# From
 			my $from = $headers->{From}[0];
@@ -238,9 +248,9 @@ sub extract  {
 	   elsif (index(" -7bit- -8bit- -quoted-printable- ",lc($process->bodyenc)) !=-1  ) {
 	        return $imap->bodypart_string($msg,$process->id);
 	        }
-	print "\n==========Insert new decoder here============";
-	print "\n".$imap->bodypart_string($msg,$process->id);
-	print "\n=================================================";
+	#print "\n==========Insert new decoder here============";
+	#print "\n".$imap->bodypart_string($msg,$process->id);
+	#print "\n=================================================";
 	
 	}
 	
