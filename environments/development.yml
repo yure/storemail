@@ -26,26 +26,4 @@ show_errors: 1
 # OR TINY KITTENS SHALL DIE WITH LOTS OF SUFFERING
 auto_reload: 0
 
-catch_all:
-  host: 'imap.gmail.com'
-  port: 993
-  username: 'info@prevajalska-agencija.si'
-  password: 'ReZeRVA33'
-  ssl: 1
 
-plugins:
-  Email:
-    transport:
-      SMTP:
-#        ssl: 1
-#        host: 'smtp.gmail.com'
-#        port: 465
-#        sasl_username: 'info@prevajalska-agencija.si'
-#        sasl_password: 'ReZeRVA33'
-#        redirect_address: "grega.pompe@informa.si"
- 
-        host: 'smtp.mandrillapp.com'
-        port: 587
-        sasl_username: 'grega.pompe@informa.si'
-        sasl_password: 'Iamtj2dZBLZ71vZ3trKOHw'
-#        redirect_address: "grega.pompe@informa.si"

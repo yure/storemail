@@ -15,3 +15,28 @@ show_errors: 0
 # cache route resolution for maximum performance
 route_cache: 1
 
+DBIC:
+        default:
+                dsn: dbi:mysql:dbname=mail
+                schema_class: Servicator::Schema
+                user: storemail
+                pass: W125wgs542asfQWtq
+                options:
+                mysql_enable_utf8: 1
+
+        gmail:
+          accounts:
+            Info:
+              host: 'imap.gmail.com'
+              port: 993
+              username: 'info@prevajalska-agencija.si'
+              password: 'passss'
+              ssl: 1
+            Sales:
+              host: 'imap.gmail.com'
+              port: 993
+              username: 'sales@prevajalska-agencija.si'
+              password: 'passs'
+              ssl: 1
+
+

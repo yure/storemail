@@ -26,15 +26,6 @@ template: "simple"
 #     start_tag: '[%'
 #     end_tag:   '%]'
 
-plugins:
-  DBIC:
-    default:
-      dsn: dbi:mysql:dbname=mail
-      schema_class: Servicator::Schema
-      user: root
-      pass: toor
-      options:
-        mysql_enable_utf8: 1
   'Ajax':
     content_type: 'application/json'
 
