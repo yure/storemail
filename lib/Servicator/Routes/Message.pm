@@ -36,6 +36,39 @@ get '/message/:id' => sub {
 };
 
 
+get '/message/:id/tag/set/:tag' => sub {
+    content_type('application/json');
+    my $message = schema->resultset('Message')->find({id => param('id'), domain => param('domain')});
+    my $related = $message->search_related('tags', { value => param('tag') });
+    $message->create_related('tags', {value => param('tag')}) unless $related->count;
+    return to_json { tags =>  [map { $_->value } $message->tags->all] };  
+};
+
+
+get '/message/:id/tag/remove/:tag' => sub {
+    content_type('application/json');
+    my $message = schema->resultset('Message')->find({id => param('id'), domain => param('domain')});
+    my $related = $message->search_related('tags', { value => param('tag') });
+    $message->delete_related('tags', {value => param('tag')}) if $related->count;
+    return to_json { tags =>  [map { $_->value } $message->tags->all] };  
+};
+
+
+get '/message/:id/tag/check/:tag' => sub {
+    content_type('application/json');
+    my $message = schema->resultset('Message')->find({id => param('id'), domain => param('domain')});
+    my $related = $message->search_related('tags', { value => param('tag') });
+    return $related->count ? 1 : 0;
+};
+
+
+get '/message/:id/tag/get_all' => sub {
+    content_type('application/json');
+    my $message = schema->resultset('Message')->find({id => param('id'), domain => param('domain')});
+    return to_json { tags =>  [map { $_->value } $message->tags->all] };
+};
+
+
 post '/message/send' => sub {
     content_type('application/json');
     

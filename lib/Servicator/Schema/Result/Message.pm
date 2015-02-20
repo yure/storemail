@@ -15,6 +15,14 @@ use warnings;
 
 use base 'DBIx::Class::Core';
 
+use Dancer ':syntax';
+use Dancer::Plugin::Email;
+use FindBin;
+use Cwd qw/realpath/;
+use Encode;
+my $appdir = realpath( "$FindBin::Bin/..");
+
+
 =head1 TABLE: C<message>
 
 =cut
@@ -199,31 +207,22 @@ __PACKAGE__->belongs_to(
   },
 );
 
-=head2 emails
-
-Type: has_many
-
-Related object: L<Servicator::Schema::Result::Email>
-
-=cut
 
 __PACKAGE__->has_many(
   "emails",
   "Servicator::Schema::Result::Email",
   { "foreign.message_id" => "self.id" },
-  { cascade_copy => 0, cascade_delete => 0 },
+  { cascade_copy => 1, cascade_delete => 1 },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2015-01-19 13:24:46
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:zVLGYdBXu/SR/+7vmPd0IQ
+__PACKAGE__->has_many(
+  "tags",
+  "Servicator::Schema::Result::Tag",
+  { "foreign.message_id" => "self.id" },
+  { cascade_copy => 1, cascade_delete => 1 },
+);
 
-use Dancer ':syntax';
-use Dancer::Plugin::Email;
-use FindBin;
-use Cwd qw/realpath/;
-use Encode;
-my $appdir = realpath( "$FindBin::Bin/..");
 
 
 sub to {
@@ -349,5 +348,5 @@ sub hash {
     	type => $self->type
 	}
 }
-# You can replace this text with custom code or comments, and it will be preserved on regeneration
+ 
 1;
