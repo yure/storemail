@@ -21,6 +21,7 @@ sub new_message{
     	frm => $email,
     	name => $name,
     	body => $arg{body},
+    	raw_body => $arg{raw_body},
     	message_id => $arg{message_id},
     	source => $arg{source},
     	subject => decode("MIME-Header", $arg{subject}),

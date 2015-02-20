@@ -17,53 +17,66 @@ use Cwd qw/realpath/;
 use Digest::MD5 qw(md5_hex);
 my $appdir = realpath( "$FindBin::Bin/..");
 sub trim {	my $str = shift; $str =~ s/^\s+|\s+$//g if $str; return $str;}
+sub printt { $|++; print "\n".localtime().' | '.shift }
+
 
 my %args = @ARGV;
 
 my $sleep = $args{'--sleep'} || 10;
 my $initial = $args{'-i'};
-print "Starting initial import!\n" if $initial;
+printt "Starting initial import!\n" if $initial;
 
-print "Set some IMAP accounts in config!" unless config->{gmail}->{accounts};
+die "Set some IMAP accounts in config!" unless config->{gmail} and config->{gmail}->{accounts};
 
 my $imap;
 
 while(1){
 	my $gmail = config->{gmail};
 	for my $account_name (keys config->{gmail}->{accounts}){
-		print "-- Account $account_name --\n";
+		printt "-- Account $account_name --\n";
 		my $account = config->{gmail}->{accounts}->{$account_name};
-		$imap = Mail::IMAPClient->new(
-			Server   => $account->{host},
-			User     => $account->{username},
-			Password => $account->{password},
-			Ssl      => $account->{ssl},
-			Port     => $account->{port},
-		);
+		$imap = log_in($account);
+		unless($imap){
+			printt 'Unable to log in';
+			next;
+		}
 		$imap->Peek(1);
 		$imap->Uid(1);
 			
 		$imap->select('INBOX') or die "Select INBOX error: ", $imap->LastError, "\n";
 		my @inbox = $imap->messages;
 		my @inbox_sorted = $imap->sort('Date', 'UTF-8', 'ALL');
-		print "Checkin Inbox\n";
-		process_emails(\@inbox, 'i', $account->{username});
+		printt "Checkin Inbox\n";
+		process_emails(\@inbox, 'i', $account);
 
 		$imap->select('[Gmail]/Sent Mail') or die "Select INBOX error: ", $imap->LastError, "\n";;
 		my @outbox = $imap->messages;
-		print "Checkin Sent mail\n";
-		process_emails(\@outbox, 'o', $account->{username});
+		printt "Checkin Sent mail\n";
+		process_emails(\@outbox, 'o', $account);
 			
 	}
-	print "Waiting $sleep sec\n----------------------\n\n\n";
+	die 'Inital import completed' if $initial;
+	printt "Waiting $sleep sec\n----------------------\n\n\n";
 	sleep($sleep);
 }
 
 
+sub log_in {
+	my $account = shift;
+	return Mail::IMAPClient->new(
+			Server   => $account->{host},
+			User     => $account->{username},
+			Password => $account->{password},
+			Ssl      => $account->{ssl},
+			Port     => $account->{port},
+		);
+		
+}
+
 sub process_emails {
-	my ($messages, $direction, $username) = @_;
-	# Reverse list and keep adding until you find message in db
+	my ($messages, $direction, $account) = @_;
 	
+	# Reverse list and keep adding until you find message in db
 	for my $mail_id ($initial ? @$messages : reverse @$messages) {
 		try {
 			no warnings 'exiting';
@@ -80,9 +93,9 @@ sub process_emails {
 	
 			# End if already exists
 			unless($initial){
-				last if schema->resultset('Message')->find({source => $username, message_id => $message_id});				
+				last if schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id});				
 			} else {
-				if (schema->resultset('Message')->find({source => $username, message_id => $message_id})){
+				if (schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id})){
 					print '.';
 					next;
 				}
@@ -101,35 +114,39 @@ sub process_emails {
 			my $epoch = parsedate($headers->{Date}[0]);
 			my $datetime = DateTime->from_epoch( epoch => $epoch ) if $epoch;
 	
-			#print "$message_id: $from - $subject, ".$datetime->ymd." ".$datetime->hms;
-			
-			#next;
-	
 			# Message body
-			my $struct = $imap->get_bodystructure($mail_id);
-				# Simple mail
-			my $body = extract($struct, $imap, $mail_id);
-				# Multipart mail
-			unless($body){
-				foreach my $dumpme ($struct->bodystructure()) {
-					next unless $dumpme->bodytype() eq "TEXT";
-					$body="";
-					$body=extract($dumpme,$imap,$mail_id );
-				}
+			my $struct;
+			try{
+				$struct = $imap->get_bodystructure($mail_id);				
 			}
-			$body = decode("UTF-8",decode_qp($body));
+			catch {
+				$imap = log_in($account);
+				$struct = $imap->get_bodystructure($mail_id);				
+			};
+			
+			# Body
+			my $body = extract_body($struct, $imap, $mail_id, 'PLAIN');
+			my $raw_body;
+			unless( $body){
+				$raw_body = extract_body($struct, $imap, $mail_id, 'HTML') ;
+				$body = clean_html($raw_body);
+			}
+			
+			$body = decode_qp($body);
+			$body = decode("UTF-8", $body);
 	
 			# New message	
 			my $message = Servicator::Message::new_message(	
-				domain => config->{domain},			
+				domain => $account->{domain} || config->{domain},			
 				from => $from,
 				to   => \@to_email,
 				body         => $body,
+				raw_body         => $raw_body,
 				subject => $subject,
 				direction => $direction,
 				date => $datetime->ymd." ".$datetime->hms,
 				message_id => $message_id,
-				source => $username,
+				source => $account->{username},
 			);
 			
 			if($message){
@@ -143,23 +160,28 @@ sub process_emails {
 			  		return unless $part->content_type =~ /\bname="([^"]+)"/;  # " grr...
 			  		system( "mkdir -p $dir" ) unless (-e $dir); 
 					my $name = "$dir/$1";
-					#print "$0: writing $name...\n";
+					#printt "$0: writing $name...\n";
 					open my $fh, ">", $name or die "$0: open $name: $!";
-					#print $fh $part->content_type =~ m!^text/! ? $part->body_str : $part->body or die "$0: print $name: $!";
+					#printt $fh $part->content_type =~ m!^text/! ? $part->body_str : $part->body or die "$0: printt $name: $!";
 					close $fh or warn "$0: close $name: $!";
 				});
-				print "    Email ".$message->id." from ".$message->frm." fetched, ".$message->date."\n";
+				printt "    Email ".$message->id." from ".$message->frm." fetched, ".$message->date."\n";
 				
 			}
 			catch {
-				print "    Fetching email with id $mail_id was not successfull!!!\n";
+				printt "    Fetching email with id $mail_id was not successfull!!!\n";
 			}
 		}
 	}
 }
 
+sub clean_html {
+	my $body = ''.shift;
+	$body =~ s/<style(.+?)<\/style>//smg; # Remove style tag
+	return $body;	
+}
 
-sub extract_body {
+sub clean_body {
 	my $body = shift;
 	
 #	return $body; #Untill we cover all cases, do noting
@@ -239,19 +261,23 @@ sub remove_outlook_code {
 }
 
 
-sub extract  {
-	my ($process, $imap, $msg) = @_;
-	if ($process->bodytype eq "TEXT") {
-	   if ($process->bodyenc eq "base64") {
-	        return decode_base64($imap->bodypart_string($msg,$process->id));
+sub extract_body  {
+	my ($struct, $imap, $msg, $subtype) = @_;
+	if ($struct->bodytype eq "MULTIPART") {
+		for my $part ($struct->bodystructure()) {
+			return extract_body($part, $imap, $msg, $subtype);
+		}
+	}
+	if (lc $struct->bodytype eq lc "TEXT" and lc $struct->bodysubtype eq lc $subtype) {
+	   if (lc $struct->bodyenc eq "base64") {
+	        return decode_base64($imap->bodypart_string($msg,$struct->id));
 	        }
-	   elsif (index(" -7bit- -8bit- -quoted-printable- ",lc($process->bodyenc)) !=-1  ) {
-	        return $imap->bodypart_string($msg,$process->id);
+	   elsif (lc $struct->bodyenc eq lc "QUOTED-PRINTABLE" ) {
+	        return $imap->bodypart_string($msg,$struct->id);
 	        }
-	#print "\n==========Insert new decoder here============";
-	#print "\n".$imap->bodypart_string($msg,$process->id);
-	#print "\n=================================================";
-	
+	   elsif (index(" -7bit- -8bit- -quoted-printtable- ",lc($struct->bodyenc)) !=-1  ) {
+	        return $imap->bodypart_string($msg,$struct->id);
+	        }
 	}
 	
 	return "";

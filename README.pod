@@ -33,6 +33,7 @@ Setup mailing provider and DB info in config.yml. Example below:
 	      password: 'passss'
 	      ssl: 1
 	    Sales:
+	      domain: prevajalska-agencija.hr 
 	      host: 'imap.gmail.com'
 	      port: 993
 	      username: 'sales@prevajalska-agencija.si'
@@ -66,9 +67,13 @@ You need to run dancer application (bin/app.pl), to handle API requests and bin/
 
 =head3 Gmail fetch
 
-perl bin/get_gmail.pl [--sleep 10] 
+perl bin/get_gmail.pl [--sleep 10]  > get_mail_log.txt
 
 You have to set 'domain' and 'gmail' setting in config. 
+
+=head4 Initial import
+
+perl get_gmail.pl -i 1 > get_mail_log.txt
 
 
 =head3 Catchall service

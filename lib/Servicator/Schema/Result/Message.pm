@@ -118,6 +118,8 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 90 },
   "body",
   { data_type => "text", is_nullable => 1 },
+  "raw_body",
+  { data_type => "text", is_nullable => 1 },
   "date",
   {
     data_type => "timestamp",
