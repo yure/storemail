@@ -1,4 +1,6 @@
 .project
-environments
+environments/
 attachments
 public/attachments
+config.yml
+logs
