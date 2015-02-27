@@ -22,7 +22,7 @@ sub printt { $|++; print "\n".localtime().' | '.shift }
 
 my %args = @ARGV;
 
-my $sleep = $args{'--sleep'} || 10;
+my $sleep = $args{'--sleep'};
 my $initial = $args{'-i'};
 printt "Starting initial import!\n" if $initial;
 
@@ -58,6 +58,7 @@ while(1){
 	die 'Inital import completed' if $initial;
 	printt "Waiting $sleep sec\n----------------------\n\n\n";
 	sleep($sleep);
+	last unless $sleep;
 }
 
 
@@ -135,18 +136,21 @@ sub process_emails {
 			$body = decode_qp($body);
 			$body = decode("UTF-8", $body);
 	
+	
 			# New message	
 			my $message = Servicator::Message::new_message(	
 				domain => $account->{domain} || config->{domain},			
 				from => $from,
 				to   => \@to_email,
 				body         => $body,
+				body_type         => $raw_body ? 'html' : 'plain',
 				raw_body         => $raw_body,
 				subject => $subject,
 				direction => $direction,
 				date => $datetime->ymd." ".$datetime->hms,
 				message_id => $message_id,
 				source => $account->{username},
+				tags => 'primejam,mass-mail,someTag',
 			);
 			
 			if($message){

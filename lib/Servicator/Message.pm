@@ -21,6 +21,7 @@ sub new_message{
     	frm => $email,
     	name => $name,
     	body => $arg{body},
+    	body_type => $arg{body_type},
     	raw_body => $arg{raw_body},
     	message_id => $arg{message_id},
     	source => $arg{source},
@@ -28,6 +29,7 @@ sub new_message{
     	direction => $arg{direction},
     	date => $arg{date},
     	'new' => $arg{'new'} || 1,
+    	send_queue => $arg{send_queue},
     	type => $arg{type} || 'email',
     });
     
@@ -47,6 +49,13 @@ sub new_message{
 		    }
 	    }
     }   
+    
+    # Add tags
+   for my $tag ( split ',', $arg{tags} ){
+    	my $related = $message->search_related('tags', { value => $tag });
+    	$message->create_related('tags', {value => $tag}) unless $related->count;
+    }
+       
     
     # Save attachments
    $message->add_attachments(@{$arg{attachments}}) if $arg{attachments};

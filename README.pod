@@ -63,7 +63,8 @@ You can easily deploy DB after you have set up config with bin/deploy.pl
 	  
 =head2 Running services
 
-You need to run dancer application (bin/app.pl), to handle API requests and bin/catchall.pl script to fetch mail from inbox.
+You need to run dancer application (bin/app.pl), to handle API requests and bin/catchall.pl script to fetch mail from inbox. 
+Mails sent are added to send queue so you have to run bin/mail_queue.pl to send mails on queue. By default it checks for new mail on queue every 10sec.
 
 =head3 Gmail fetch
 
@@ -259,6 +260,8 @@ Send email via some GUI. Example use:
 					bcc: this.bcc.value,
 					subject: this.subject.value,
 					body: this.body.value,
+					body_type: 'html', //(or 'plain by default)
+					tags: 'ad,someOtherTag'
 					attachments: [
 						{
 							content: "data:text/plain;base64,Y2131....",

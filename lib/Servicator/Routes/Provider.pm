@@ -62,6 +62,19 @@ get '/provider/:comma_separated_emails' => sub {
     	subject => { 'like', "%$search%" },
     	body => { 'like', "%$search%" },
     ]] if $search;
+
+	# Tag Search
+	my $tags =  param('tags');
+	if($tags){
+		my @tags_condition;
+		for my $tag (split ',', $tags){
+			#push $where->{-and}, {'tags.value' => $tag};
+		    push @tags_condition, 'tags.value' => $tag;
+		}
+	     push $where->{-and},[ -or => [
+	    	@tags_condition
+	    ]] if @tags_condition;
+	}
     	
 	# Date span
 	my $from =  param('from');
@@ -75,8 +88,9 @@ get '/provider/:comma_separated_emails' => sub {
     my $messages = schema->resultset('Message')->search(
     	$where,
     	{ 
-			join => 'emails',    		 
+			join => ['emails', 'tags'],    		 
     		order_by => 'date',
+    		group_by => [ qw/id/ ],
     	}
     );
     

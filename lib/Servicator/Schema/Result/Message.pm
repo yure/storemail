@@ -146,12 +146,21 @@ __PACKAGE__->add_columns(
     default_value => 1,
     is_nullable   => 0,
   },
+  "send_queue",
+  { data_type     => "tinyint", is_nullable   => 1, },
   "type",
   {
     data_type => "varchar",
     default_value => "email",
     is_nullable => 0,
     size => 45,
+  },
+  "body_type",
+  {
+    data_type => "varchar",
+    default_value => "plain",
+    is_nullable => 0,
+    size => 10,
   },
   "message_id",
   { data_type => "varchar", is_nullable => 1, size => 36 },
@@ -306,12 +315,13 @@ sub attachments_paths {
 sub send {
 	my ($self) = @_;
 	my $to = join(", ", map( $_->email, $self->emails));
-	debug localtime()." Mail to $to from " . $self->frm. ": " . $self->subject.'\n';
+	debug localtime()."Sending mail to $to from " . $self->frm. ": " . $self->subject.'. ';
 	
 	my $email = {
 		from    => $self->named_from,
 		subject => encode("MIME-Header", $self->subject),
 		body => $self->body || " ",
+		type => $self->body_type,
 	};
 	$email->{to} = _csv_named_emails($self->to) if $self->to;
 	$email->{cc} = _csv_named_emails($self->cc) if $self->cc;
@@ -319,9 +329,12 @@ sub send {
 	$email->{attach} = [$self->attachments_paths] if $self->attachments;
 	
 	my $msg = Dancer::Plugin::Email::email $email;
-	warn $msg->{string} if $msg->{type} and $msg->{type} eq 'failure';	
-	
-	return undef;
+	if ($msg->{type} and $msg->{type} eq 'failure'){
+		warn $msg->{string};
+		return 0;
+	}		
+	debug "Sent.'\n'";
+	return 1;
 }
 
 sub named_from {
@@ -345,7 +358,8 @@ sub hash {
     	attachments => $self->attachments ? [$self->attachments] : [],
     	direction => $self->direction,
     	read => $self->get_column('new') ? 0 : 1,
-    	type => $self->type
+    	type => $self->type,
+    	tags => [map($_->value, $self->tags)],
 	}
 }
  

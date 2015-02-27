@@ -74,15 +74,14 @@ post '/message/send' => sub {
     
 	my $rawparams = param('data');
 	my $params = from_json encode('utf8', $rawparams);
-      
+    
     my $message = Servicator::Message::new_message(							
 				direction => 'o',
+				send_queue => 1,
 				domain => param('domain'),
 				%$params
 			);
     
-    $message->send;
-   
     return to_json $message->hash;
 };
 
@@ -98,10 +97,10 @@ post '/batch/message/send' => sub {
     	$params->{to} = $email;
 	    my $message = Servicator::Message::new_message(							
 					direction => 'o',
+					send_queue => 1,
 					%$params
 				);
 	    
-	    $message->send;
 	    push @sent, $message->hash;
     }
    
