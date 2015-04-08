@@ -119,7 +119,7 @@ sub process_emails {
 			my $from = $headers->{From}[0];
 	
 			# To
-			my (@to_email) = split ',', $headers->{To}[0];
+			my (@to_email) = split ',', $headers->{To}[0] if defined $headers->{To}[0];
 	
 			# Subject
 			my $subject = decode("UTF-8", $headers->{Subject}[0]);
@@ -174,7 +174,7 @@ sub process_emails {
 				my $dir = "$appdir/public/attachments/".$message->id;
 				Email::MIME->new($mail_str)->walk_parts(sub {
 					my($part) = @_;
-			  		return unless $part->content_type =~ /\bname="([^"]+)"/;  # " grr...
+			  		return unless defined $part->content_type and $part->content_type =~ /\bname="([^"]+)"/;  # " grr...
 			  		system( "mkdir -p $dir" ) unless (-e $dir); 
 					my $name = "$dir/$1";
 					#logt "$0: writing $name...\n";
