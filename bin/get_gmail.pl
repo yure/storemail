@@ -1,3 +1,5 @@
+#!/usr/bin/env perl
+# get_gmail.pl
 use Dancer ':script';
 
 use Mail::IMAPClient;
@@ -13,31 +15,36 @@ use Try::Tiny;
 use Encode qw(decode);
 use File::Path qw(make_path remove_tree);
 use FindBin;
-use Cwd qw/realpath/;
+use Cwd qw/realpath getcwd/;
+use Getopt::Long;
+use Proc::Daemon;
+use File::Spec::Functions;
 use Digest::MD5 qw(md5_hex);
-my $appdir = realpath( "$FindBin::Bin/..");
 sub trim {	my $str = shift; $str =~ s/^\s+|\s+$//g if $str; return $str;}
-sub printt { $|++; print "\n".localtime().' | '.shift }
+my ($imap, $initial, $appdir, $logfile);
+sub logt { 
+	my($txt) = @_;
+	open(my $FH, '>>', catfile(getcwd(), $logfile)); 
+	$|++; print $FH "\n".localtime().' | '.$txt;
+	close $FH;
+}
+sub logi { 
+	my($txt) = @_;
+	open(my $FH, '>>', catfile(getcwd(), $logfile)); 
+	$|++; print $FH $txt;
+	close $FH;
+}
 
+$logfile = "log.txt";
 
-my %args = @ARGV;
-
-my $sleep = $args{'--sleep'};
-my $initial = $args{'-i'};
-printt "Starting initial import!\n" if $initial;
-
-die "Set some IMAP accounts in config!" unless config->{gmail} and config->{gmail}->{accounts};
-
-my $imap;
-
-while(1){
+sub fetch_all {	
 	my $gmail = config->{gmail};
 	for my $account_name (keys config->{gmail}->{accounts}){
-		printt "-- Account $account_name --\n";
+		logt "- Account $account_name: ";
 		my $account = config->{gmail}->{accounts}->{$account_name};
 		$imap = log_in($account);
 		unless($imap){
-			printt 'Unable to log in';
+			logt 'Unable to log in';
 			next;
 		}
 		$imap->Peek(1);
@@ -46,19 +53,25 @@ while(1){
 		$imap->select('INBOX') or die "Select INBOX error: ", $imap->LastError, "\n";
 		my @inbox = $imap->messages;
 		my @inbox_sorted = $imap->sort('Date', 'UTF-8', 'ALL');
-		printt "Checkin Inbox\n";
+		logi "Inbox: ";
 		process_emails(\@inbox, 'i', $account);
 
 		$imap->select('[Gmail]/Sent Mail') or die "Select INBOX error: ", $imap->LastError, "\n";;
 		my @outbox = $imap->messages;
-		printt "Checkin Sent mail\n";
+		logi "Sent mail: ";
 		process_emails(\@outbox, 'o', $account);
 			
 	}
 	die 'Inital import completed' if $initial;
-	printt "Waiting $sleep sec\n----------------------\n\n\n";
-	sleep($sleep);
-	last unless $sleep;
+=asd
+	if($sleep){
+		logt "Waiting $sleep sec\n----------------------\n\n";
+		sleep($sleep);
+	}
+	else {
+		last;
+	}
+=cut
 }
 
 
@@ -97,7 +110,7 @@ sub process_emails {
 				last if schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id});				
 			} else {
 				if (schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id})){
-					print '.';
+					logi '.';
 					next;
 				}
 			}
@@ -164,16 +177,16 @@ sub process_emails {
 			  		return unless $part->content_type =~ /\bname="([^"]+)"/;  # " grr...
 			  		system( "mkdir -p $dir" ) unless (-e $dir); 
 					my $name = "$dir/$1";
-					#printt "$0: writing $name...\n";
+					#logt "$0: writing $name...\n";
 					open my $fh, ">", $name or die "$0: open $name: $!";
-					#printt $fh $part->content_type =~ m!^text/! ? $part->body_str : $part->body or die "$0: printt $name: $!";
+					#logt $fh $part->content_type =~ m!^text/! ? $part->body_str : $part->body or die "$0: logt $name: $!";
 					close $fh or warn "$0: close $name: $!";
 				});
-				printt "    Email ".$message->id." from ".$message->frm." fetched, ".$message->date."\n";
+				logi '['.$message->id.": ".$message->frm.", ".$message->date.'] ';
 				
 			}
 			catch {
-				printt "    Fetching email with id $mail_id was not successfull!!!\n";
+				logt "    Fetching email with id $mail_id was not successfull!!!";
 			}
 		}
 	}
@@ -279,10 +292,128 @@ sub extract_body  {
 	   elsif (lc $struct->bodyenc eq lc "QUOTED-PRINTABLE" ) {
 	        return $imap->bodypart_string($msg,$struct->id);
 	        }
-	   elsif (index(" -7bit- -8bit- -quoted-printtable- ",lc($struct->bodyenc)) !=-1  ) {
+	   elsif (index(" -7bit- -8bit- -quoted-logtable- ",lc($struct->bodyenc)) !=-1  ) {
 	        return $imap->bodypart_string($msg,$struct->id);
 	        }
 	}
 	
 	return "";
+}
+
+#-------- DAEMON STUFF --------
+
+my $pf = catfile(getcwd(), 'pidfile.pid');
+my $daemon = Proc::Daemon->new(
+	pid_file => $pf,
+	work_dir => getcwd()
+);
+# are you running?  Returns 0 if not.
+my $pid = $daemon->Status($pf);
+my $daemonize = 1;
+
+GetOptions(
+    'daemon!' => \$daemonize,
+    "help"    => \&usage,
+    "reload"  => \&reload,
+    "restart" => \&restart,
+    "start"   => \&run,
+    "status"  => \&proc_status,
+    "stop"    => \&stop,
+    "init"    => \&init_import,
+    ) or die $!;
+exit(0);
+
+sub stop {
+        if ($pid) {
+	        print "Stopping pid $pid...\n";
+	        if ($daemon->Kill_Daemon($pf)) {
+		        print "Successfully stopped.\n";
+		        logt "Service stopped.";
+	        } else {
+		        print "Could not find $pid.  Was it running?\n";
+	        }
+         } else {
+                print "Not running, nothing to stop.\n";
+         }
+}
+
+
+sub proc_status {
+	if ($pid) {
+		print "Running with pid $pid.\n";
+	} else {
+		print "Not running.\n";
+	}
+}
+
+
+sub run {
+	if (!$pid) {
+		print "Starting...\n";
+		if ($daemonize) {
+			# when Init happens, everything under it runs in the child process.
+			# this is important when dealing with file handles, due to the fact
+			# Proc::Daemon shuts down all open file handles when Init happens.
+			# Keep this in mind when laying out your program, particularly if
+			# you use filehandles.
+			$daemon->Init;
+		}
+
+		logt "Service starting...";
+		my $sleep = config->{sleep} || 10;
+		while (1) {
+            $appdir = realpath( "$FindBin::Bin/..");
+			
+			#my $sleep = $args{'--sleep'};
+			$initial = undef; #$args{'-i'};
+			logt "Starting initial import!" if $initial;
+			
+			die "Set some IMAP accounts in config!" unless config->{gmail} and config->{gmail}->{accounts};
+			
+            fetch_all();     
+                        # this example writes to a filehandle every 5 seconds.
+            logt "Sleeping $sleep seconds.";
+			sleep $sleep;
+		}
+	} else {
+		print "Already Running with pid $pid\n";
+	}
+}
+
+
+sub init_import {
+		print "Starting initial import...\n";
+		$logfile = 'initial_import_log.txt';
+		logt "Service starting...";
+        $appdir = realpath( "$FindBin::Bin/..");
+			
+		$initial = 1; #$args{'-i'};
+		logt "Starting initial import!" if $initial;
+			
+		die "Set some IMAP accounts in config!" unless config->{gmail} and config->{gmail}->{accounts};
+		
+        fetch_all();     
+}
+
+
+sub usage
+{
+    my ($opt_name, $opt_value) = @_;
+    print "your usage text goes here...\n";
+    exit(0);
+}
+
+
+sub reload
+{
+    my ($opt_name, $opt_value) = @_;
+    print "reload process not implemented.\n";
+}
+
+
+sub restart
+{
+    my ($opt_name, $opt_value) = @_;
+    &stop;
+    &run;
 }

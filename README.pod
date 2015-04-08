@@ -59,7 +59,9 @@ Setup mailing provider and DB info in config.yml. Example below:
 	  
 =head2 DB deploy
 
-You can easily deploy DB after you have set up config with bin/deploy.pl
+You can easily deploy DB after you have set up config with 
+
+	bin/deploy.pl
 	  
 =head2 Running services
 
@@ -68,14 +70,17 @@ Mails sent are added to send queue so you have to run bin/mail_queue.pl to send 
 
 =head3 Gmail fetch
 
-perl bin/get_gmail.pl [--sleep 10]  > get_mail_log.txt
+	bin/get_gmail.pl 
+	
+Log is in log.txt
 
-You have to set 'domain' and 'gmail' setting in config. 
+You have to set 'domain' and 'gmail' setting in config. Default sleep between tries is 10sec. You can set 'sleep' in config. 
 
 =head4 Initial import
 
-perl get_gmail.pl -i 1 > get_mail_log.txt
+get_gmail.pl -init
 
+Log is in initial_import_log.txt
 
 =head3 Catchall service
 
