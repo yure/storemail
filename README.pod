@@ -91,7 +91,7 @@ Log is in initial_import_log.txt
 
 =head3 MailQueue service
 
-	bin/mail_queue_daemon.pl --redirect grega.pompe@informa.si --start
+	bin/mail_queue_daemon.pl --redirect john.snow@wall.com --start
 
 Options are:
 	
