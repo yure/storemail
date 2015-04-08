@@ -51,9 +51,11 @@ sub new_message{
     }   
     
     # Add tags
-   for my $tag ( split ',', $arg{tags} ){
-    	my $related = $message->search_related('tags', { value => $tag });
-    	$message->create_related('tags', {value => $tag}) unless $related->count;
+    if($arg{tags}){
+	    for my $tag ( split ',', $arg{tags} ){
+	    	my $related = $message->search_related('tags', { value => $tag });
+	    	$message->create_related('tags', {value => $tag}) unless $related->count;
+	    }
     }
        
     
