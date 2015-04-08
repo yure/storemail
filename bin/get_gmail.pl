@@ -360,7 +360,7 @@ sub run {
 		}
 
 		logt "Service starting...";
-		my $sleep = config->{sleep} || 10;
+		my $sleep = config->{get_gmail_sleep} || 10;
 		while (1) {
             $appdir = realpath( "$FindBin::Bin/..");
 			

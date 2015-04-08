@@ -66,21 +66,42 @@ You can easily deploy DB after you have set up config with
 =head2 Running services
 
 You need to run dancer application (bin/app.pl), to handle API requests and bin/catchall.pl script to fetch mail from inbox. 
-Mails sent are added to send queue so you have to run bin/mail_queue.pl to send mails on queue. By default it checks for new mail on queue every 10sec.
+Mails sent are added to send queue so you have to mail queue service to actually send them. 
 
 =head3 Gmail fetch
 
-	bin/get_gmail.pl 
+	bin/get_gmail.pl --start
+
+Options are:
+	
+	--start Starts daemon
+	--stop Stops daemon
+	--redirect Redirects all sent mail to set email. Argument must be before --start!
+	--logfile Logfile path/name. Argument must be before --start!
 	
 Log is in log.txt
 
-You have to set 'domain' and 'gmail' setting in config. Default sleep between tries is 10sec. You can set 'sleep' in config. 
+You have to set 'domain' and 'gmail' setting in config. Default sleep between tries is 10sec. You can set 'get_gmail_sleep' in config. 
 
 =head4 Initial import
 
-get_gmail.pl -init
+	bin/get_gmail.pl --init
 
 Log is in initial_import_log.txt
+
+=head3 MailQueue service
+
+	bin/mail_queue_daemon.pl --redirect grega.pompe@informa.si --start
+
+Options are:
+	
+	--start Starts daemon
+	--stop Stops daemon
+	--redirect Redirects all sent mail to set email. Argument must be before --start!
+	--logfile Logfile path/name. Argument must be before --start!
+
+By default it checks for new mail on queue every 3sec (setting mail_queue_sleep).
+
 
 =head3 Catchall service
 
