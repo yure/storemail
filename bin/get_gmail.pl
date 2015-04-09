@@ -35,7 +35,7 @@ sub logi {
 	close $FH;
 }
 
-$logfile = "log.txt";
+$logfile = "get_gmail_log.txt";
 
 sub fetch_all {	
 	my $gmail = config->{gmail};
@@ -53,12 +53,12 @@ sub fetch_all {
 		$imap->select('INBOX') or die "Select INBOX error: ", $imap->LastError, "\n";
 		my @inbox = $imap->messages;
 		my @inbox_sorted = $imap->sort('Date', 'UTF-8', 'ALL');
-		logi "Inbox: ";
+		logt "Inbox: ";
 		process_emails(\@inbox, 'i', $account);
 
 		$imap->select('[Gmail]/Sent Mail') or die "Select INBOX error: ", $imap->LastError, "\n";;
 		my @outbox = $imap->messages;
-		logi "Sent mail: ";
+		logt "Sent mail: ";
 		process_emails(\@outbox, 'o', $account);
 			
 	}
