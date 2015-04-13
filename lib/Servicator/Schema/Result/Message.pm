@@ -313,9 +313,9 @@ sub attachments_paths {
 
 
 sub send {
-	my ($self) = @_;
-	my $to = join(", ", map( $_->email, $self->emails));
-	debug localtime()."Sending mail to $to from " . $self->frm. ": " . $self->subject.'. ';
+	my ($self, $redirect) = @_;
+	my $to = $redirect || join(", ", map( $_->email, $self->emails));
+	print localtime()."Sending mail to $to from " . $self->frm. ": " . $self->subject.'. ';
 	
 	my $email = {
 		from    => $self->named_from,
@@ -323,9 +323,17 @@ sub send {
 		body => $self->body || " ",
 		type => $self->body_type,
 	};
-	$email->{to} = _csv_named_emails($self->to) if $self->to;
-	$email->{cc} = _csv_named_emails($self->cc) if $self->cc;
-	$email->{bcc} = _csv_named_emails($self->bcc) if $self->bcc;
+	
+	# Redirect if set
+	if($redirect){
+		$email->{to} = $redirect;
+	}
+	# Set recievers
+	else {
+		$email->{to} = _csv_named_emails($self->to) if $self->to;
+		$email->{cc} = _csv_named_emails($self->cc) if $self->cc;
+		$email->{bcc} = _csv_named_emails($self->bcc) if $self->bcc;
+	}
 	$email->{attach} = [$self->attachments_paths] if $self->attachments;
 	
 	my $msg = Dancer::Plugin::Email::email $email;
@@ -333,7 +341,7 @@ sub send {
 		warn $msg->{string};
 		return 0;
 	}		
-	debug "Sent.'\n'";
+	print "Sent.\n";
 	return 1;
 }
 

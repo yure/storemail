@@ -1,3 +1,5 @@
+#!/usr/bin/env perl
+package Servicator::MailQueue;
 use Dancer ':script';
 
 use Mail::IMAPClient;
@@ -10,31 +12,33 @@ use Encode qw(decode);
 use File::Path qw(make_path remove_tree);
 use FindBin;
 use Cwd qw/realpath/;
+use Getopt::Long;
+sub printt { $|++; print "\n".localtime().' | '.shift }
+
 my $appdir = realpath( "$FindBin::Bin/..");
 
-my %args = @ARGV;
+my $redirect = undef;
 
-my $sleep = $args{'--sleep'} || 5;
-
-while(1){
-	
+sub send {
+	my $args = {@_};
 	my $messages = schema->resultset('Message')->search( {send_queue => 1}, {order_by => '-date'} );
-
+	
 	if (my $count = $messages->count) {
-
-		debug "$count emails found. Processing...";
+	
+		printt "$count emails found. Processing..." . ($args->{redirect} ? 'with redirect to '.$args->{redirect}.' ...' : '');
 	
 		#splice @unread, 5;
 		while (my $message = $messages->next) {
-			if($message->send){
+			if($message->send($args->{redirect})){
 				$message->send_queue(undef);
 				$message->update;
 			}
 		}
+		print 'Done.\n'
 	}
 	else{
-		warn "No new emails\n";
+		print ".";
 	}
-
-	sleep($sleep);
 }
+
+return 1;

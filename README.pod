@@ -79,7 +79,7 @@ Options are:
 	--redirect Redirects all sent mail to set email. Argument must be before --start!
 	--logfile Logfile path/name. Argument must be before --start!
 	
-Log is in log.txt
+Log is in get_gmail_log.txt
 
 You have to set 'domain' and 'gmail' setting in config. Default sleep between tries is 10sec. You can set 'get_gmail_sleep' in config. 
 
@@ -91,7 +91,7 @@ Log is in initial_import_log.txt
 
 =head3 MailQueue service
 
-	bin/mail_queue_daemon.pl --redirect john.snow@wall.com --start
+	bin/mail_queue_daemon.pl --redirect jon.snow@wall.com --start
 
 Options are:
 	
@@ -100,7 +100,9 @@ Options are:
 	--redirect Redirects all sent mail to set email. Argument must be before --start!
 	--logfile Logfile path/name. Argument must be before --start!
 
-By default it checks for new mail on queue every 3sec (setting mail_queue_sleep).
+By default it checks for new mail on queue every 3sec (setting in config mail_queue_sleep).
+
+	mail_queue_sleep: 3
 
 
 =head3 Catchall service
