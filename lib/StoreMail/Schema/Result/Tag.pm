@@ -1,5 +1,5 @@
 use utf8;
-package Servicator::Schema::Result::Tag;
+package StoreMail::Schema::Result::Tag;
 
 use strict;
 use warnings;
@@ -23,7 +23,7 @@ __PACKAGE__->set_primary_key("message_id", "value");
 
 __PACKAGE__->belongs_to(
   "message",
-  "Servicator::Schema::Result::Message",
+  "StoreMail::Schema::Result::Message",
   { id => "message_id" },
   { is_deferrable => 1, on_delete => "CASCADE", on_update => "CASCADE" },
 );

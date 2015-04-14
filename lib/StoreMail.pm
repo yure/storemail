@@ -1,20 +1,20 @@
-package Servicator;
+package StoreMail;
 use Dancer ':syntax';
 
 use Dancer::Plugin::Ajax;
 
 use DBI;
 
-use Servicator::Routes::GUI;
+use StoreMail::Routes::GUI;
 
 # API routes
 get '**' => sub {
 	content_type('application/json');
 	pass;
 };
-use Servicator::Routes::Message;
-use Servicator::Routes::Conversation;
-use Servicator::Routes::Provider;
+use StoreMail::Routes::Message;
+use StoreMail::Routes::Conversation;
+use StoreMail::Routes::Provider;
 
 
 our $VERSION = '0.1';

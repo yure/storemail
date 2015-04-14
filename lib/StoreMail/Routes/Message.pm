@@ -1,4 +1,4 @@
-package Servicator::Routes::Message;
+package StoreMail::Routes::Message;
 use Dancer ':syntax';
 our $VERSION = '0.1';
 
@@ -75,7 +75,7 @@ post '/message/send' => sub {
 	my $rawparams = param('data');
 	my $params = from_json encode('utf8', $rawparams);
     
-    my $message = Servicator::Message::new_message(							
+    my $message = StoreMail::Message::new_message(							
 				direction => 'o',
 				send_queue => 1,
 				domain => param('domain'),
@@ -95,7 +95,7 @@ post '/batch/message/send' => sub {
     my @sent;
     for my $email (@emails){
     	$params->{to} = $email;
-	    my $message = Servicator::Message::new_message(							
+	    my $message = StoreMail::Message::new_message(							
 					direction => 'o',
 					send_queue => 1,
 					%$params

@@ -1,9 +1,9 @@
-package Servicator::Routes::Provider;
+package StoreMail::Routes::Provider;
 use Dancer ':syntax';
 
 use Dancer::Plugin::Ajax;
 use DBI;
-use Servicator::Message;
+use StoreMail::Message;
 use Dancer::Plugin::DBIC qw(schema resultset rset);
 
 

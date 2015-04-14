@@ -1,9 +1,9 @@
-package Servicator::Routes::Conversation;
+package StoreMail::Routes::Conversation;
 use Dancer ':syntax';
 
 use Dancer::Plugin::Ajax;
 use DBI;
-use Servicator::Message;
+use StoreMail::Message;
 use Dancer::Plugin::DBIC qw(schema resultset rset);
 
 
@@ -106,14 +106,14 @@ post '/conversation/:id/message' => sub {
 		return to_json {error => 'Sender not found'} ;
 	}
     
-    my $message = Servicator::Message::new_message($conversation, $user_sender, params);
+    my $message = StoreMail::Message::new_message($conversation, $user_sender, params);
     
     # Add attachements and remove them from pending
     $conversation->attach_all_to( $message->id );
     
     # TODO Send
     # Send email to all recipients
-    #Servicator::Email::send_mail( 
+    #StoreMail::Email::send_mail( 
     #	sender => $user_sender->name." <".$arg{id}."@".$arg{domain}.">",
     #	recipients => $conversation->recipients($user_sender, {send_copy => $arg{send_copy}}), 
     #	subject => $conversation->subject ? $conversation->subject : $arg{domain}." Message no. ".$arg{id}, 

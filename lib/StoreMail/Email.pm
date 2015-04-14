@@ -1,4 +1,4 @@
-package Servicator::Email;
+package StoreMail::Email;
 use Dancer ':syntax';
 
 our $VERSION = '0.1';
@@ -14,7 +14,7 @@ sub email_break_text {return '===== WRITE YOUR REPLY ABOVE THIS LINE ====='};
 sub wrap_body {
 	my $body = shift;
 	
-	$body = Servicator::Email::email_break_text.'
+	$body = StoreMail::Email::email_break_text.'
 	
 '.$body;
 		

@@ -1,10 +1,10 @@
-package Servicator::Message;
+package StoreMail::Message;
 use Dancer ':syntax';
 
 our $VERSION = '0.1';
 
 use Dancer::Plugin::DBIC qw(schema resultset rset);
-use Servicator::Email;
+use StoreMail::Email;
 use Encode;
 sub trim {	my $str = shift; $str =~ s/^\s+|\s+$//g if $str; return $str;}
 

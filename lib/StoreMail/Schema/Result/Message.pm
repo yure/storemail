@@ -1,12 +1,12 @@
 use utf8;
-package Servicator::Schema::Result::Message;
+package StoreMail::Schema::Result::Message;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
 
 =head1 NAME
 
-Servicator::Schema::Result::Message
+StoreMail::Schema::Result::Message
 
 =cut
 
@@ -200,13 +200,13 @@ __PACKAGE__->add_unique_constraint("message_id_UNIQUE", ["message_id"]);
 
 Type: belongs_to
 
-Related object: L<Servicator::Schema::Result::Conversation>
+Related object: L<StoreMail::Schema::Result::Conversation>
 
 =cut
 
 __PACKAGE__->belongs_to(
   "conversation",
-  "Servicator::Schema::Result::Conversation",
+  "StoreMail::Schema::Result::Conversation",
   { id => "conversation_id" },
   {
     is_deferrable => 1,
@@ -219,7 +219,7 @@ __PACKAGE__->belongs_to(
 
 __PACKAGE__->has_many(
   "emails",
-  "Servicator::Schema::Result::Email",
+  "StoreMail::Schema::Result::Email",
   { "foreign.message_id" => "self.id" },
   { cascade_copy => 1, cascade_delete => 1 },
 );
@@ -227,7 +227,7 @@ __PACKAGE__->has_many(
 
 __PACKAGE__->has_many(
   "tags",
-  "Servicator::Schema::Result::Tag",
+  "StoreMail::Schema::Result::Tag",
   { "foreign.message_id" => "self.id" },
   { cascade_copy => 1, cascade_delete => 1 },
 );

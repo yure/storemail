@@ -1,4 +1,4 @@
-package Servicator::Routes::GUI;
+package StoreMail::Routes::GUI;
 use Dancer ':syntax';
 
 use Dancer::Plugin::Ajax;

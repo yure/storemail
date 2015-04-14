@@ -2,8 +2,8 @@ use Dancer ':script';
 
 use Mail::IMAPClient;
 use Dancer::Plugin::DBIC qw(schema resultset rset);
-use Servicator::Email;
-use Servicator::Message;
+use StoreMail::Email;
+use StoreMail::Message;
 use MIME::QuotedPrint::Perl;
 use MIME::Base64;
 use Email::MIME;
@@ -91,7 +91,7 @@ while(1){
 			my $datetime = DateTime->from_epoch( epoch => $epoch );
 
 			# New message	
-			my $message = Servicator::Message::new_message(				
+			my $message = StoreMail::Message::new_message(				
 				from => $from,
 				to   => \@to_email,
 				body         => $body,
@@ -141,7 +141,7 @@ sub extract_body {
 	
 	# Remove all from breake text on 
 	#my $from = '';
-	#my $to = substr(Servicator::Email::email_break_text, 0, -1); # Decoding can loose last char...
+	#my $to = substr(StoreMail::Email::email_break_text, 0, -1); # Decoding can loose last char...
 	#($wanted) = $body =~ /$from(.*?)$to/s;
 	
 	

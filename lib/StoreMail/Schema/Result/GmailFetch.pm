@@ -1,12 +1,12 @@
 use utf8;
-package Servicator::Schema::Result::SendQueue;
+package StoreMail::Schema::Result::GmailFetch;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
 
 =head1 NAME
 
-Servicator::Schema::Result::GmailFetch
+StoreMail::Schema::Result::GmailFetch
 
 =cut
 
@@ -19,7 +19,7 @@ use base 'DBIx::Class::Core';
 
 =cut
 
-__PACKAGE__->table("send_queue");
+__PACKAGE__->table("gmail_fetch");
 
 =head1 ACCESSORS
 
@@ -50,13 +50,18 @@ __PACKAGE__->table("send_queue");
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_nullable => 0 },  
+  { data_type => "integer", is_nullable => 0 },
+  "username",
+  { data_type => "varchar", is_nullable => 0, size => 45 },
   "timestamp",
   {
     data_type => "timestamp",
+    datetime_undef_if_invalid => 1,
     default_value => \"current_timestamp",
-    is_nullable => 0,
-  },  
+    is_nullable => 1,
+  },
+  "mail_epoch",
+  { data_type => "integer", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -71,7 +76,7 @@ __PACKAGE__->add_columns(
 
 =cut
 
-__PACKAGE__->set_primary_key("id", "timestamp");
+__PACKAGE__->set_primary_key("id", "username");
 
 
 # Created by DBIx::Class::Schema::Loader v0.07033 @ 2015-01-13 13:19:16

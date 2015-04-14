@@ -1,12 +1,12 @@
 use utf8;
-package Servicator::Schema::Result::User;
+package StoreMail::Schema::Result::User;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
 
 =head1 NAME
 
-Servicator::Schema::Result::User
+StoreMail::Schema::Result::User
 
 =cut
 
@@ -73,13 +73,13 @@ __PACKAGE__->set_primary_key("conversation_id", "email");
 
 Type: belongs_to
 
-Related object: L<Servicator::Schema::Result::Conversation>
+Related object: L<StoreMail::Schema::Result::Conversation>
 
 =cut
 
 __PACKAGE__->belongs_to(
   "conversation",
-  "Servicator::Schema::Result::Conversation",
+  "StoreMail::Schema::Result::Conversation",
   { id => "conversation_id" },
   { is_deferrable => 1, on_delete => "RESTRICT", on_update => "RESTRICT" },
 );

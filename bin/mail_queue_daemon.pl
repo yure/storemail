@@ -25,8 +25,8 @@ sub logi {
 sub service {
 	open(my $FH, '>>', catfile(getcwd(), $logfile));
 	select($FH);
-	require Servicator::MailQueue;
-	Servicator::MailQueue::send(redirect => $redirect);
+	require StoreMail::MailQueue;
+	StoreMail::MailQueue::send(redirect => $redirect);
 	#logt `bin/mail_queue.pl`;
 	sleep (config->{mail_queue_sleep} || 3);
 	select(STDOUT);

@@ -1,12 +1,12 @@
 use utf8;
-package Servicator::Schema::Result::Conversation;
+package StoreMail::Schema::Result::Conversation;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
 
 =head1 NAME
 
-Servicator::Schema::Result::Conversation
+StoreMail::Schema::Result::Conversation
 
 =cut
 
@@ -84,13 +84,13 @@ __PACKAGE__->set_primary_key("id");
 
 Type: has_many
 
-Related object: L<Servicator::Schema::Result::Message>
+Related object: L<StoreMail::Schema::Result::Message>
 
 =cut
 
 __PACKAGE__->has_many(
   "messages",
-  "Servicator::Schema::Result::Message",
+  "StoreMail::Schema::Result::Message",
   { "foreign.conversation_id" => "self.id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
@@ -99,13 +99,13 @@ __PACKAGE__->has_many(
 
 Type: has_many
 
-Related object: L<Servicator::Schema::Result::User>
+Related object: L<StoreMail::Schema::Result::User>
 
 =cut
 
 __PACKAGE__->has_many(
   "users",
-  "Servicator::Schema::Result::User",
+  "StoreMail::Schema::Result::User",
   { "foreign.conversation_id" => "self.id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );

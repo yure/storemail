@@ -2,8 +2,8 @@ use Dancer ':script';
 
 use Mail::IMAPClient;
 use Dancer::Plugin::DBIC qw(schema resultset rset);
-use Servicator::Email;
-use Servicator::Message;
+use StoreMail::Email;
+use StoreMail::Message;
 use MIME::QuotedPrint::Perl;
 use Email::MIME;
 use Encode qw(decode);
@@ -102,7 +102,7 @@ while(1){
 			});
 
 			# New message	
-			my $message = Servicator::Message::new_message(
+			my $message = StoreMail::Message::new_message(
 				id           => $conv_id,
 				domain       => $domain,
 				sender_email => $user_sender->email,
@@ -136,7 +136,7 @@ sub extract_body {
 	
 	# Remove all from breake text on 
 	my $from = '';
-	my $to = substr(Servicator::Email::email_break_text, 0, -1); # Decoding can loose last char...
+	my $to = substr(StoreMail::Email::email_break_text, 0, -1); # Decoding can loose last char...
 	($wanted) = $body =~ /$from(.*?)$to/s;
 	if($wanted){
 		$wanted = remove_gmail_code($wanted);

@@ -4,7 +4,7 @@
  
 =head1 NAME
  
-Servicator
+StoreMail
  
 =head1 SYNOPSIS
  
@@ -43,8 +43,8 @@ Setup mailing provider and DB info in config.yml. Example below:
 	plugins:
 	  DBIC:
 	    default:
-	      dsn: dbi:mysql:dbname=Servicator
-	      schema_class: Servicator::Schema
+	      dsn: dbi:mysql:dbname=StoreMail
+	      schema_class: StoreMail::Schema
 	      user: root
 	      pass: toor
 	      options:

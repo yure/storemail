@@ -1,11 +1,11 @@
 #!/usr/bin/env perl
-package Servicator::MailQueue;
+package StoreMail::MailQueue;
 use Dancer ':script';
 
 use Mail::IMAPClient;
 use Dancer::Plugin::DBIC qw(schema resultset rset);
-use Servicator::Email;
-use Servicator::Message;
+use StoreMail::Email;
+use StoreMail::Message;
 use MIME::QuotedPrint::Perl;
 use Email::MIME;
 use Encode qw(decode);
