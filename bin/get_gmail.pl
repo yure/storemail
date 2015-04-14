@@ -53,16 +53,16 @@ sub fetch_all {
 		$imap->select('INBOX') or die "Select INBOX error: ", $imap->LastError, "\n";
 		my @inbox = $imap->messages;
 		my @inbox_sorted = $imap->sort('Date', 'UTF-8', 'ALL');
-		logt "Inbox: ";
+		logi "Inbox: ";
 		process_emails(\@inbox, 'i', $account);
 
 		$imap->select('[Gmail]/Sent Mail') or die "Select INBOX error: ", $imap->LastError, "\n";;
 		my @outbox = $imap->messages;
-		logt "Sent mail: ";
+		logi "Sent mail: ";
 		process_emails(\@outbox, 'o', $account);
 			
 	}
-	die 'Inital import completed' if $initial;
+	logt 'Inital import completed' if $initial;
 =asd
 	if($sleep){
 		logt "Waiting $sleep sec\n----------------------\n\n";
@@ -89,14 +89,14 @@ sub log_in {
 
 sub process_emails {
 	my ($messages, $direction, $account) = @_;
-	
+	my @messages_save_queue;
 	# Reverse list and keep adding until you find message in db
 	for my $mail_id ($initial ? @$messages : reverse @$messages) {
 		try {
 			no warnings 'exiting';
 			my $headers = $imap->parse_headers( $mail_id, "Date", "Subject", "To", "From" );
 			my $all = $imap->parse_headers( $mail_id, "ALL");
-			
+			my $message_params = {};
 			
 			# ID
 			my $message_id;
@@ -104,7 +104,7 @@ sub process_emails {
 			$message_id = trim $all->{'Message-Id'}[0] if $all->{'Message-Id'};
 			$message_id = to_dumper $all unless $message_id;
 			$message_id = md5_hex $message_id;
-	
+			$message_params->{message_id} = $message_id;
 			# End if already exists
 			unless($initial){
 				last if schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id});				
@@ -116,17 +116,18 @@ sub process_emails {
 			}
 	
 			# From
-			my $from = $headers->{From}[0];
+			$message_params->{from} = $headers->{From}[0];
 	
 			# To
-			my (@to_email) = split ',', $headers->{To}[0] if defined $headers->{To}[0];
+			$message_params->{to_email} = [split ',', $headers->{To}[0]] if defined $headers->{To}[0];
 	
 			# Subject
-			my $subject = decode("UTF-8", $headers->{Subject}[0]);
+			$message_params->{subject} = decode("UTF-8", $headers->{Subject}[0]);
 	
 			# Datetime
 			my $epoch = parsedate($headers->{Date}[0]);
 			my $datetime = DateTime->from_epoch( epoch => $epoch ) if $epoch;
+			$message_params->{date} = $datetime->ymd." ".$datetime->hms;
 	
 			# Message body
 			my $struct;
@@ -148,29 +149,46 @@ sub process_emails {
 			
 			$body = decode_qp($body);
 			$body = decode("UTF-8", $body);
+			$message_params->{body} = $body;
+			$message_params->{domain} = $account->{domain} || config->{domain};			
+			$message_params->{body_type} = $raw_body ? 'html' : 'plain';
+			$message_params->{raw_body} = $raw_body;
+			$message_params->{direction} = $direction;
+			$message_params->{source} = $account->{username};
+			
+			$message_params->{mail_str} = $imap->message_string($mail_id);
+			#$message_params->{tags} => '';
 	
+			if($initial){
+				save_message($message_params);
+			} 
+			else {
+				unshift @messages_save_queue, $message_params;
+				logi '|';
+			}
+		}
+		catch {
+				logt "Fetching email with id $mail_id was not successfull!!!";
+		}
+	}
+	# Save queue
+		
+	for my $message_params (@messages_save_queue){
+		try {save_message($message_params)}
+		catch {logt "Saving email with id ".$message_params->{message_id}." was not successfull!!!";};
+	}
+}
+
+sub save_message {
+	my $message_params = shift;
 	
-			# New message	
-			my $message = Servicator::Message::new_message(	
-				domain => $account->{domain} || config->{domain},			
-				from => $from,
-				to   => \@to_email,
-				body         => $body,
-				body_type         => $raw_body ? 'html' : 'plain',
-				raw_body         => $raw_body,
-				subject => $subject,
-				direction => $direction,
-				date => $datetime->ymd." ".$datetime->hms,
-				message_id => $message_id,
-				source => $account->{username},
-				tags => 'primejam,mass-mail,someTag',
-			);
+	# New message	
+			my $message = Servicator::Message::new_message(	%$message_params );
 			
 			if($message){
-		
 	
 				# Attachments
-				my $mail_str = $imap->message_string($mail_id);
+				my $mail_str = $message_params->{mail_str};
 				my $dir = "$appdir/public/attachments/".$message->id;
 				Email::MIME->new($mail_str)->walk_parts(sub {
 					my($part) = @_;
@@ -185,11 +203,7 @@ sub process_emails {
 				logi '['.$message->id.": ".$message->frm.", ".$message->date.'] ';
 				
 			}
-			catch {
-				logt "    Fetching email with id $mail_id was not successfull!!!";
-			}
-		}
-	}
+			
 }
 
 sub clean_html {
