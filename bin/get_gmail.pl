@@ -196,8 +196,8 @@ sub save_message {
 			  		system( "mkdir -p $dir" ) unless (-e $dir); 
 					my $name = "$dir/$1";
 					#logt "$0: writing $name...\n";
-					open my $att_fh, ">", $name or die "$0: open $name: $!";
-					print $att_fh $part->content_type =~ m!^text/! ? $part->body_str : $part->body or die "$0: logt $name: $!";
+					open my $att_fh, ">", $name or warn "$0: open $name: $!";
+					print $att_fh $part->body;
 					close $att_fh or warn "$0: close $name: $!";
 				});
 				logi '['.$message->id.": ".$message->frm.", ".$message->date.'] ';
