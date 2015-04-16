@@ -316,7 +316,7 @@ sub extract_body  {
 
 #-------- DAEMON STUFF --------
 
-my $pf = catfile(getcwd(), 'pidfile.pid');
+my $pf = catfile(getcwd(), 'get_gmail.pid');
 my $daemon = Proc::Daemon->new(
 	pid_file => $pf,
 	work_dir => getcwd()

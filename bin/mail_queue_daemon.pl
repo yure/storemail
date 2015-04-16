@@ -37,7 +37,7 @@ sub service {
 
 #-------- DAEMON STUFF --------
 
-my $pf = catfile(getcwd(), 'pidfile.pid');
+my $pf = catfile(getcwd(), 'mail_queue_daemon.pid');
 my $daemon = Proc::Daemon->new(
 	pid_file => $pf,
 	work_dir => getcwd()
