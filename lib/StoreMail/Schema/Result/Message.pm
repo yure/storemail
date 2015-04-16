@@ -20,6 +20,7 @@ use Dancer::Plugin::Email;
 use FindBin;
 use Cwd qw/realpath/;
 use Encode;
+use MIME::Base64 qw(encode_base64);
 my $appdir = realpath( "$FindBin::Bin/..");
 
 
@@ -319,7 +320,7 @@ sub send {
 	
 	my $email = {
 		from    => $self->named_from,
-		subject => encode("MIME-Header", $self->subject),
+		subject => '=?UTF-8?B?'.encode_base64(encode("UTF-8",$self->subject)).'?=',
 		body => $self->body || " ",
 		type => $self->body_type,
 	};
