@@ -28,8 +28,7 @@ sub new_message{
     	subject => decode("MIME-Header", $arg{subject}),
     	direction => $arg{direction},
     	date => $arg{date},
-    	'new' => $arg{'new'} || 1,
-    	send_queue => $arg{send_queue},
+    	'new' => $arg{'new'} || 1,    	
     	type => $arg{type} || 'email',
     });
     
@@ -61,7 +60,8 @@ sub new_message{
     
     # Save attachments
    $message->add_attachments(@{$arg{attachments}}) if $arg{attachments};
-    
+    $message->send_queue($arg{send_queue});
+    $message->update;
     return $message;
 }
 

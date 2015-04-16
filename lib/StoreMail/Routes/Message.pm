@@ -82,7 +82,7 @@ post '/message/send' => sub {
 				%$params
 			);
     
-    return to_json $message->hash;
+    return to_json {success => $message ? 1 : 0};
 };
 
 

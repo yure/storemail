@@ -296,7 +296,15 @@ sub add_attachments {
 		system( "mkdir -p $dir" ) unless (-e $dir);  
 		
 		my $content = $file->{content};
-		$content =~ s/data:;base64,//g;
+		#$content =~ s/data:;base64,//g;
+		
+		# Remove base64 encoding wrapper
+		my $start_tag = ';base64,';
+		my $index = index($content, $start_tag);
+		my $offset;
+		$offset = length($start_tag) + $index unless $index == -1;
+		$content = substr($content, $offset);
+		
 	    my $decoded= MIME::Base64::decode_base64($content);
 		open my $fh, '>', "$dir".$file->{name} or die $!;
 		binmode $fh;
