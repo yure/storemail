@@ -151,7 +151,7 @@ sub process_emails {
 			$message_params->{body} = $html_body || $plain_body;
 			$message_params->{domain} = $account->{domain} || config->{domain};			
 			$message_params->{body_type} = $html_body ? 'html' : 'plain';
-			$message_params->{raw_body} = $raw_html_body unless $raw_html_body eq $html_body;
+			$message_params->{raw_body} = $raw_html_body if defined $raw_html_body and $raw_html_body ne $html_body;
 			$message_params->{plain_body} = $plain_body unless $message_params->{body_type} eq 'plain';
 			$message_params->{direction} = $direction;
 			$message_params->{source} = $account->{username};
@@ -207,7 +207,8 @@ sub save_message {
 }
 
 sub clean_html {
-	my $body = ''.shift;
+	my $body = shift;
+	return undef unless $body;
 	$body =~ s/<style(.+?)<\/style>//smg; # Remove style tag
 	return $body;	
 }

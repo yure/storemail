@@ -73,7 +73,7 @@ sub extract_email {
 	my ($name, $email) = $str =~ /(.*?)<(.*?)>/s;
 	$email = $str unless $email;
 	$name = trim($name);
-	$name = undef if $name eq '';
+	$name = undef if defined $name and $name eq '';
 	return (trim($name), trim($email));
 }
 
