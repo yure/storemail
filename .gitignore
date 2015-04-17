@@ -6,4 +6,4 @@ config.yml
 logs
 *.log
 *log.txt
-.pid
+*.pid

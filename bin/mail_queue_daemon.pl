@@ -4,9 +4,13 @@ use Cwd qw/realpath getcwd/;
 use Getopt::Long;
 use Proc::Daemon;
 use File::Spec::Functions;
+use Try::Tiny;
 
 my $logfile = "mail_queue_log.txt";
 my $redirect;
+my $retry_sleep = 30;
+my $retry_total_time = 60*15;
+my $retry_time = 0;
 
 sub logt { 
 	my($txt) = @_;
@@ -25,9 +29,25 @@ sub logi {
 sub service {
 	open(my $FH, '>>', catfile(getcwd(), $logfile));
 	select($FH);
-	require StoreMail::MailQueue;
-	StoreMail::MailQueue::send(redirect => $redirect);
-	#logt `bin/mail_queue.pl`;
+	
+	try{
+		require StoreMail::MailQueue;
+		StoreMail::MailQueue::send(redirect => $redirect);	
+		$retry_time = 0;	
+	}
+	catch {
+		$retry_time += $retry_sleep;
+		logt "Error while trying to run. Waiting $retry_sleep seconds.";
+		if($retry_time < $retry_total_time){
+			sleep $retry_sleep;
+			service();
+		}
+		else {
+			logt "Total time for retrying is up. Exiting.";
+			die "Total time for retrying is up. Exiting.";
+		}
+	};
+
 	sleep (config->{mail_queue_sleep} || 3);
 	select(STDOUT);
 }
