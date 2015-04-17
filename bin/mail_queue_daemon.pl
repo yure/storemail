@@ -6,7 +6,8 @@ use Proc::Daemon;
 use File::Spec::Functions;
 use Try::Tiny;
 
-my $logfile = "mail_queue_log.txt";
+my $logfile = "mail_queue.log";
+my $appdir = config->{appdir};
 my $redirect;
 my $retry_sleep = 30;
 my $retry_total_time = 60*15;
@@ -14,20 +15,20 @@ my $retry_time = 0;
 
 sub logt { 
 	my($txt) = @_;
-	open(my $FH, '>>', catfile(getcwd(), $logfile)); 
+	open(my $FH, '>>', catfile($appdir, 'logs', $logfile)); 
 	$|++; print $FH "\n".localtime().' | '.$txt;
 	close $FH;
 }
 sub logi { 
 	my($txt) = @_;
-	open(my $FH, '>>', catfile(getcwd(), $logfile)); 
+	open(my $FH, '>>', catfile($appdir, 'logs', $logfile)); 
 	$|++; print $FH $txt;
 	close $FH;
 }
 
 
 sub service {
-	open(my $FH, '>>', catfile(getcwd(), $logfile));
+	open(my $FH, '>>', catfile($appdir, 'logs', $logfile));
 	select($FH);
 	
 	try{
@@ -56,8 +57,10 @@ sub service {
 #exit(0);
 
 #-------- DAEMON STUFF --------
+my $dir = config->{pid_dir} ? catfile(config->{pid_dir}, 'storemail') : "$appdir/run";
+system( "mkdir -p $dir" ) unless (-e $dir);
+my $pf = catfile($dir, "mail_queue.pid");
 
-my $pf = catfile(getcwd(), 'mail_queue_daemon.pid');
 my $daemon = Proc::Daemon->new(
 	pid_file => $pf,
 	work_dir => getcwd()

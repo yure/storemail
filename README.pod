@@ -79,8 +79,12 @@ Options are:
 	--redirect Redirects all sent mail to set email. Argument must be before --start!
 	--logfile Logfile path/name. Argument must be before --start!
 	
-Log is in get_gmail_log.txt
+Log are in logs dir.
 
+PID file is located in run dir in storemail dir. You can set custom path it in config. 
+	
+	pid_dir: /var/run
+	 
 You have to set 'domain' and 'gmail' setting in config. Default sleep between tries is 10sec. You can set 'get_gmail_sleep' in config. 
 
 =head4 Initial import

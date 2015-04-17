@@ -22,20 +22,19 @@ use File::Spec::Functions;
 use Digest::MD5 qw(md5_hex);
 sub trim {	my $str = shift; $str =~ s/^\s+|\s+$//g if $str; return $str;}
 my ($imap, $initial, $appdir, $logfile);
+
 sub logt { 
 	my($txt) = @_;
-	open(my $FH, '>>', catfile(getcwd(), $logfile)); 
+	open(my $FH, '>>', catfile($appdir, 'logs', $logfile)); 
 	$|++; print $FH "\n".localtime().' | '.$txt;
 	close $FH;
 }
 sub logi { 
 	my($txt) = @_;
-	open(my $FH, '>>', catfile(getcwd(), $logfile)); 
+	open(my $FH, '>>', catfile($appdir, 'logs', $logfile)); 
 	$|++; print $FH $txt;
 	close $FH;
 }
-
-$logfile = "get_gmail_log.txt";
 
 sub fetch_all {	
 	my $gmail = config->{gmail};
@@ -323,10 +322,11 @@ sub extract_body  {
 }
 
 #-------- DAEMON STUFF --------
-my $dir = "/var/run/storemail/";
+$appdir = config->{appdir};
+my $dir = config->{pid_dir} ? catfile(config->{pid_dir}, 'storemail') : "$appdir/run";
 system( "mkdir -p $dir" ) unless (-e $dir);
+my $pf = catfile($dir, "get_gmail.pid");
 
-my $pf = catfile(getcwd(), $dir.'get_gmail.pid');
 my $daemon = Proc::Daemon->new(
 	pid_file => $pf,
 	work_dir => getcwd()
@@ -372,6 +372,7 @@ sub proc_status {
 
 
 sub run {
+	$logfile = 'get_gmail.log';
 	if (!$pid) {
 		print "Starting...\n";
 		if ($daemonize) {
@@ -386,7 +387,6 @@ sub run {
 		logt "Service starting...";
 		my $sleep = config->{get_gmail_sleep} || 10;
 		while (1) {
-            $appdir = realpath( "$FindBin::Bin/..");
 			
 			#my $sleep = $args{'--sleep'};
 			$initial = undef; #$args{'-i'};
@@ -407,9 +407,8 @@ sub run {
 
 sub init_import {
 		print "Starting initial import...\n";
-		$logfile = 'initial_import_log.txt';
+		$logfile = 'get_gmail_init.log';
 		logt "Service starting...";
-        $appdir = realpath( "$FindBin::Bin/..");
 			
 		$initial = 1; #$args{'-i'};
 		logt "Starting initial import!" if $initial;
