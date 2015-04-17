@@ -73,7 +73,7 @@ __PACKAGE__->add_columns(
 
 =cut
 
-__PACKAGE__->set_primary_key("message_id", "email");
+__PACKAGE__->set_primary_key("message_id", "email", "type");
 
 =head1 RELATIONS
 

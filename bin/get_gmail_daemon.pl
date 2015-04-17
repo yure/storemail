@@ -116,10 +116,12 @@ sub process_emails {
 			}
 	
 			# From
-			$message_params->{from} = $headers->{From}[0];
+			$message_params->{from} = clean_parenthesis($headers->{From}[0]);
 	
 			# To
-			$message_params->{to_email} = [split ',', $headers->{To}[0]] if defined $headers->{To}[0];
+			$message_params->{to} = [map {clean_parenthesis($_)} split ',', $headers->{To}[0]] if defined $headers->{To}[0];
+			$message_params->{cc} = [map {clean_parenthesis($_)} split ',', $headers->{Cc}[0]] if defined $headers->{Cc}[0];
+			$message_params->{bcc} = [map {clean_parenthesis($_)} split ',', $headers->{Bcc}[0]] if defined $headers->{Bcc}[0];
 	
 			# Subject
 			$message_params->{subject} = decode("UTF-8", $headers->{Subject}[0]);
@@ -140,19 +142,18 @@ sub process_emails {
 			};
 			
 			# Body
-			my $body = extract_body($struct, $imap, $mail_id, 'PLAIN');
-			my $raw_body;
-			unless( $body){
-				$raw_body = extract_body($struct, $imap, $mail_id, 'HTML') ;
-				$body = clean_html($raw_body);
-			}
+			my $raw_html_body = extract_body($struct, $imap, $mail_id, 'HTML');
+			my $html_body = clean_html($raw_html_body);			
 			
-			$body = decode_qp($body);
-			$body = decode("UTF-8", $body);
-			$message_params->{body} = $body;
+			my $plain_body = extract_body($struct, $imap, $mail_id, 'PLAIN') ;
+			
+			#$raw_body = undef if $raw_body eq '' or $body eq $raw_body;
+			
+			$message_params->{body} = $html_body || $plain_body;
 			$message_params->{domain} = $account->{domain} || config->{domain};			
-			$message_params->{body_type} = $raw_body ? 'html' : 'plain';
-			$message_params->{raw_body} = $raw_body;
+			$message_params->{body_type} = $html_body ? 'html' : 'plain';
+			$message_params->{raw_body} = $raw_html_body unless $raw_html_body eq $html_body;
+			$message_params->{plain_body} = $plain_body unless $message_params->{body_type} eq 'plain';
 			$message_params->{direction} = $direction;
 			$message_params->{source} = $account->{username};
 			
@@ -168,7 +169,7 @@ sub process_emails {
 			}
 		}
 		catch {
-				logt "Fetching email with id $mail_id was not successfull!!!";
+				logt "Fetching email with id $mail_id was not successfull!!! $_ \n";
 		}
 	}
 	# Save queue
@@ -210,6 +211,13 @@ sub clean_html {
 	my $body = ''.shift;
 	$body =~ s/<style(.+?)<\/style>//smg; # Remove style tag
 	return $body;	
+}
+
+sub clean_parenthesis {
+	my $str = ''.shift;
+	$str =~ s/"//g; # Remove style tag
+	$str =~ s/'//g;
+	return $str;	
 }
 
 sub clean_body {
@@ -296,27 +304,29 @@ sub extract_body  {
 	my ($struct, $imap, $msg, $subtype) = @_;
 	if ($struct->bodytype eq "MULTIPART") {
 		for my $part ($struct->bodystructure()) {
-			return extract_body($part, $imap, $msg, $subtype);
+			my $body = extract_body($part, $imap, $msg, $subtype);
+			return $body if $body;
 		}
 	}
 	if (lc $struct->bodytype eq lc "TEXT" and lc $struct->bodysubtype eq lc $subtype) {
-	   if (lc $struct->bodyenc eq "base64") {
-	        return decode_base64($imap->bodypart_string($msg,$struct->id));
-	        }
-	   elsif (lc $struct->bodyenc eq lc "QUOTED-PRINTABLE" ) {
-	        return $imap->bodypart_string($msg,$struct->id);
-	        }
-	   elsif (index(" -7bit- -8bit- -quoted-logtable- ",lc($struct->bodyenc)) !=-1  ) {
-	        return $imap->bodypart_string($msg,$struct->id);
-	        }
+		my $text = $imap->bodypart_string($msg,$struct->id);
+	    $text = decode_qp($text) if (lc $struct->bodyenc eq lc "QUOTED-PRINTABLE" );
+	    $text = decode_base64($text) if (lc $struct->bodyenc eq lc "base64" );
+		my $encoding = $struct->bodyparms->{CHARSET} if $struct->bodyparms and ref $struct->bodyparms eq 'HASH';
+	    my @bad_encodings = qw/ansi_x3.110-1983/;
+		if($encoding){
+			return decode($encoding, $text);
+		}
 	}
 	
-	return "";
+	return undef;
 }
 
 #-------- DAEMON STUFF --------
+my $dir = "/var/run/storemail/";
+system( "mkdir -p $dir" ) unless (-e $dir);
 
-my $pf = catfile(getcwd(), 'get_gmail.pid');
+my $pf = catfile(getcwd(), $dir.'get_gmail.pid');
 my $daemon = Proc::Daemon->new(
 	pid_file => $pf,
 	work_dir => getcwd()

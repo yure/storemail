@@ -6,6 +6,7 @@ use Dancer::Plugin::Ajax;
 use DBI;
 use Dancer::Plugin::DBIC qw(schema resultset rset);
 use Encode;
+use Try::Tiny;
 
 prefix '/:domain';
 set serializer => 'JSON';
@@ -74,13 +75,18 @@ post '/message/send' => sub {
     
 	my $rawparams = param('data');
 	my $params = from_json encode('utf8', $rawparams);
-    
-    my $message = StoreMail::Message::new_message(							
-				direction => 'o',
-				send_queue => 1,
-				domain => param('domain'),
-				%$params
-			);
+    my $message;
+    try{
+	    $message = StoreMail::Message::new_message(							
+					direction => 'o',
+					send_queue => 1,
+					domain => param('domain'),
+					%$params
+				);
+    }
+    catch {
+    	return to_json {error => $_};
+    };
     
     return to_json {success => $message ? 1 : 0};
 };

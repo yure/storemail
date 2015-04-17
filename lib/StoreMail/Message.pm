@@ -23,6 +23,7 @@ sub new_message{
     	body => $arg{body},
     	body_type => $arg{body_type},
     	raw_body => $arg{raw_body},
+    	plain_body => $arg{plain_body},
     	message_id => $arg{message_id},
     	source => $arg{source},
     	subject => decode("MIME-Header", $arg{subject}),
@@ -71,6 +72,8 @@ sub extract_email {
 	$str = decode("MIME-Header", $str);
 	my ($name, $email) = $str =~ /(.*?)<(.*?)>/s;
 	$email = $str unless $email;
+	$name = trim($name);
+	$name = undef if $name eq '';
 	return (trim($name), trim($email));
 }
 
