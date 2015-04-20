@@ -275,12 +275,13 @@ sub _csv_named_emails {
  
 sub attachments {
 	my ($self) = @_;
-	my $id = $self->id;
+	my $id = $self->attachment_id_dir;
 	my @files;
 	my $dir ="$appdir/public/attachments/$id/";
     opendir(DIR, $dir) or return undef;
 
     while (my $file = readdir(DIR)) {
+    	next if (-d "$dir/$file"); # Skip dirs
         next if ($file =~ m/^\./); # Use a regular expression to ignore files beginning with a period
 		push @files, $file;
     }
@@ -291,7 +292,7 @@ sub attachments {
 
 sub add_attachments {
 	my ($self, @files) = @_;
-	my $id = $self->id;
+	my $id = $self->attachment_id_dir;
 	
 	for my $file (@files){
 		my $dir = "$appdir/public/attachments/$id/";
@@ -318,8 +319,29 @@ sub add_attachments {
  
 sub attachments_paths {
 	my ($self) = @_;
-	my $id = $self->id;
+	my $id = $self->attachment_id_dir;
 	return map {"$appdir/public/attachments/$id/$_"} $self->attachments;
+}
+
+
+sub attachment_id_dir {
+	my ($self) = @_;
+	my $id = "".$self->id;
+	my $str;
+	my @nums = (split //, $id);
+	my $odd = 1;
+	for my $n (@nums){
+		if ($odd){
+			$odd = 0;
+			$str .= "/$n";		
+		}
+		else {
+			$odd = 1;
+			$str .= $n;
+		}
+	}
+	$str = reverse substr $str, 1;
+	return $str ;
 }
 
 

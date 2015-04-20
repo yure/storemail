@@ -189,7 +189,7 @@ sub save_message {
 	
 				# Attachments
 				my $mail_str = $message_params->{mail_str};
-				my $dir = "$appdir/public/attachments/".$message->id;
+				my $dir = "$appdir/public/attachments/".$message->attachment_id_dir;
 				Email::MIME->new($mail_str)->walk_parts(sub {
 					my($part) = @_;
 			  		return unless defined $part->content_type and $part->content_type =~ /\bname="([^"]+)"/;  # " grr...
