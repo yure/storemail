@@ -104,10 +104,11 @@ post '/batch/message/send' => sub {
 	    my $message = StoreMail::Message::new_message(							
 					direction => 'o',
 					send_queue => 1,
+					domain => param('domain'),
 					%$params
 				);
 	    
-	    push @sent, $message->hash;
+	    push @sent, $email;
     }
    
     return to_json \@sent;
