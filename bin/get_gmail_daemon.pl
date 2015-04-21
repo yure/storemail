@@ -128,7 +128,7 @@ sub process_emails {
 			# Datetime
 			my $epoch = parsedate($headers->{Date}[0]);
 			my $datetime = DateTime->from_epoch( epoch => $epoch ) if $epoch;
-			$message_params->{date} = $datetime->ymd." ".$datetime->hms;
+			$message_params->{date} = $datetime ? $datetime->ymd." ".$datetime->hms : undef;
 	
 			# Message body
 			my $struct;
