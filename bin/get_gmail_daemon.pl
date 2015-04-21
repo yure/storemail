@@ -214,7 +214,9 @@ sub clean_html {
 }
 
 sub clean_parenthesis {
-	my $str = ''.shift;
+	my $str = shift;
+	return undef unless defined $str;
+	$str = ''.$str;
 	$str =~ s/"//g; # Remove style tag
 	$str =~ s/'//g;
 	return $str;	
