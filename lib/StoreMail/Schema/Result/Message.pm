@@ -368,7 +368,7 @@ sub send {
 		$email->{bcc} = _csv_named_emails($self->bcc) if $self->bcc;
 	}
 	$email->{attach} = [$self->attachments_paths] if $self->attachments;
-	
+	 
 	my $msg = Dancer::Plugin::Email::email $email;
 	if ($msg->{type} and $msg->{type} eq 'failure'){
 		warn $msg->{string};
@@ -394,7 +394,7 @@ sub hash {
     	cc => [map({email => $_->email, name => $_->name}, $self->cc)],
     	bcc => [map({email => $_->email, name => $_->name}, $self->bcc)],
     	subject => $self->subject,
-    	body => $self->body ,
+    	body => $self->plain_body || $self->body,
     	date => $self->date ,
     	attachments => $self->attachments ? [$self->attachments] : [],
     	direction => $self->direction,
