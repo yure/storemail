@@ -90,7 +90,6 @@ get '/provider/:comma_separated_emails' => sub {
     	{ 
 			join => ['emails', 'tags'],    		 
     		order_by => 'date',
-    		group_by => [ qw/id/ ],
     	}
     );
     
