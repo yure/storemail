@@ -46,7 +46,7 @@ get '/provider/:comma_separated_emails' => sub {
 	
 	# Remove duplicates / yes, this happens
 	my %hash   = map { $_, 1 } @emails;
-   	my @emails = keys %hash;
+   	@emails = keys %hash;
 
 	#debug('emails :', \@emails);
 
