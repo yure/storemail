@@ -12,6 +12,9 @@ prefix '/:domain';
 
 get '/provider/unread/:comma_separated_emails' => sub {
 	content_type('application/json');
+	
+	return to_json {error => 'No emails specified'} if (index (param('comma_separated_emails'), '@') < 0); 
+	
 	my @emails = map { s/\s*(\S+)\s*/$1/; $_ } split ',', param('comma_separated_emails');
     my $messages = schema->resultset('Message')->search(
     	{
@@ -42,6 +45,9 @@ get '/provider/unread/:comma_separated_emails' => sub {
 
 get '/provider/:comma_separated_emails' => sub {
 	content_type('application/json');
+	
+	return to_json {error => 'No emails specified'} if (index (param('comma_separated_emails'), '@') < 0);
+	
 	my @emails = map { s/\s*(\S+)\s*/$1/; $_ } split ',', param('comma_separated_emails');
 	my $where;
 	$where->{-and} = [];
