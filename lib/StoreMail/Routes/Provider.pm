@@ -49,6 +49,13 @@ get '/provider/:comma_separated_emails' => sub {
 	return to_json {error => 'No emails specified'} if (index (param('comma_separated_emails'), '@') < 0);
 	
 	my @emails = map { s/\s*(\S+)\s*/$1/; $_ } split ',', param('comma_separated_emails');
+	
+	# Remove duplicates / yes, this happens
+	my %hash   = map { $_, 1 } @emails;
+   	@emails = keys %hash;
+
+	#debug('emails :', \@emails);
+
 	my $where;
 	$where->{-and} = [];
 	push $where->{-and}, [ -or => [
@@ -95,8 +102,7 @@ get '/provider/:comma_separated_emails' => sub {
     	$where,
     	{ 
 			join => ['emails', 'tags'],    		 
-    		order_by => 'date',
-    		group_by => [ qw/id/ ],
+	    		order_by => 'date',
     	}
     );
     
