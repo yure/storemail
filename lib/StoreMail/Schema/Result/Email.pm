@@ -98,6 +98,14 @@ __PACKAGE__->belongs_to(
 
 use Encode;
 
+use overload
+    '""' => 'stringify';
+     
+    sub stringify {
+    my ($self) = @_;
+    return $self->email;
+}
+
 sub named_email {
 	my $self = shift;
 	return encode("MIME-Header", $self->name ? $self->name."<".$self->email.">" : $self->email); 

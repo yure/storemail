@@ -254,6 +254,10 @@ sub bcc {
 	return $self->search_related('emails', { type => 'bcc' });
 }
 
+sub toccbcc {
+	my ($self) = @_;
+	return $self->to, $self->cc, $self->bcc;
+}
 
 sub _csv_emails {
 	my @items = @_;
@@ -401,6 +405,15 @@ sub hash {
     	read => $self->get_column('new') ? 0 : 1,
     	type => $self->type,
     	tags => [map($_->value, $self->tags)],
+	}
+}
+
+sub hash_lite {
+	my ($self) = @_;
+	return {
+		from => $self->frm,
+    	to => [map {$_->email} $self->to],
+    	date => $self->date ,
 	}
 }
  
