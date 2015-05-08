@@ -23,6 +23,10 @@ get '/email_list' => sub {
     	body => { 'like', "%$search%" },
     ]] if $search;
 
+	# ID
+	my $search =  param('last_id');
+    push $where->{-and}, id => { '>', param('last_id') } if $search;
+
 	# Tag Search
 	my $tags =  param('tags');
 	if($tags){
@@ -48,8 +52,9 @@ get '/email_list' => sub {
     my $messages = schema->resultset('Message')->search(
     	$where,
     	{ 
-			join => ['emails', 'tags'],    		 
+			join => ['tags'],    		 
 	    		order_by => 'date',
+	    		
 	    		#rows => 10,
     	}
     );

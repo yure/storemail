@@ -414,6 +414,8 @@ sub hash_lite {
 		from => $self->frm,
     	to => [map {$_->email} $self->to],
     	date => $self->date ,
+    	id => $self->id ,
+    	tags => [map($_->value, $self->tags)],
 	}
 }
  

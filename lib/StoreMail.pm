@@ -15,6 +15,7 @@ get '**' => sub {
 use StoreMail::Routes::Message;
 use StoreMail::Routes::Conversation;
 use StoreMail::Routes::Provider;
+use StoreMail::Routes::Tag;
 
 
 our $VERSION = '0.1';
