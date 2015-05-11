@@ -113,6 +113,7 @@ sub process_emails {
 					next;
 				}
 			}
+			my $mime = Email::MIME->new($imap->message_string($mail_id));
 	
 			# From
 			$message_params->{from} = clean_parenthesis($headers->{From}[0]);
@@ -141,7 +142,7 @@ sub process_emails {
 			};
 			
 			# Body
-			my $raw_html_body = extract_body($struct, $imap, $mail_id, 'HTML');
+			my $raw_html_body = extract_body($struct, $imap, $mail_id, 'HTML', $mime);
 			my $html_body = clean_html($raw_html_body);			
 			
 			my $plain_body = extract_body($struct, $imap, $mail_id, 'PLAIN') ;
@@ -303,15 +304,26 @@ sub remove_outlook_code {
 
 
 sub extract_body  {
-	my ($struct, $imap, $msg, $subtype) = @_;
+	my ($struct, $imap, $msg, $subtype, $mime) = @_;
 	if ($struct->bodytype eq "MULTIPART") {
+		my $i = 0;
 		for my $part ($struct->bodystructure()) {
-			my $body = extract_body($part, $imap, $msg, $subtype);
+			my $body = extract_body($part, $imap, $msg, $subtype, $mime->{parts} ? $mime->{parts}->[$i] : undef);
+			$i++;
 			return $body if $body;
 		}
 	}
 	if (lc $struct->bodytype eq lc "TEXT" and lc $struct->bodysubtype eq lc $subtype) {
 		my $text = $imap->bodypart_string($msg,$struct->id);
+		
+		# Skip attachments
+		my $params = $mime->{header}->{headers};
+		for my $param (@$params){
+			if (index($param, 'attachment;') != -1){
+				return undef;
+			}
+		}
+		
 	    $text = decode_qp($text) if (lc $struct->bodyenc eq lc "QUOTED-PRINTABLE" );
 	    $text = decode_base64($text) if (lc $struct->bodyenc eq lc "base64" );
 		my $encoding = $struct->bodyparms->{CHARSET} if $struct->bodyparms and ref $struct->bodyparms eq 'HASH';

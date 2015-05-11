@@ -398,7 +398,7 @@ sub hash {
     	cc => [map({email => $_->email, name => $_->name}, $self->cc)],
     	bcc => [map({email => $_->email, name => $_->name}, $self->bcc)],
     	subject => $self->subject,
-    	body => $self->plain_body || $self->body,
+    	body => $self->body,
     	date => $self->date ,
     	attachments => $self->attachments ? [$self->attachments] : [],
     	direction => $self->direction,
