@@ -117,6 +117,7 @@ sub process_emails {
 					next;
 				}
 			}
+			$found = 0;
 			my $mime = Email::MIME->new($imap->message_string($mail_id));
 	
 			# From
