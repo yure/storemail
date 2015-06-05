@@ -39,7 +39,7 @@ sub logi {
 sub fetch_all {	
 	my $gmail = config->{gmail};
 	for my $account_name (keys config->{gmail}->{accounts}){
-		logt "- Account $account_name: ";
+		logt "- Account $account_name:";
 		my $account = config->{gmail}->{accounts}->{$account_name};
 		$imap = log_in($account);
 		unless($imap){
@@ -51,12 +51,12 @@ sub fetch_all {
 			
 		$imap->select('INBOX') or logt "Select INBOX error: ", $imap->LastError, "\n";
 		my @inbox = $imap->messages;
-		logi "Inbox: ";
+		logi " Inbox: ";
 		process_emails(\@inbox, 'i', $account);
 
 		$imap->select('[Gmail]/Sent Mail') or logt "Select INBOX error: ", $imap->LastError, "\n";;
 		my @outbox = $imap->messages;
-		logi "Sent mail: ";
+		logi " Sent mail: ";
 		process_emails(\@outbox, 'o', $account);
 			
 	}
@@ -107,8 +107,10 @@ sub process_emails {
 			$message_params->{message_id} = $message_id;
 			# End if already exists
 			unless($initial){
+				logi '-';
 				$found++ if schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id});
-				last if $found > 3;	# If for some reason they get mixed	 		
+				last if $found >= 3;	# If for some reason they get mixed	 	
+				next;	
 			} else {
 				if (schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id})){
 					logi '.';
