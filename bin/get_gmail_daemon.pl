@@ -49,13 +49,12 @@ sub fetch_all {
 		$imap->Peek(1);
 		$imap->Uid(1);
 			
-		$imap->select('INBOX') or die "Select INBOX error: ", $imap->LastError, "\n";
+		$imap->select('INBOX') or logt "Select INBOX error: ", $imap->LastError, "\n";
 		my @inbox = $imap->messages;
-		my @inbox_sorted = $imap->sort('Date', 'UTF-8', 'ALL');
 		logi "Inbox: ";
 		process_emails(\@inbox, 'i', $account);
 
-		$imap->select('[Gmail]/Sent Mail') or die "Select INBOX error: ", $imap->LastError, "\n";;
+		$imap->select('[Gmail]/Sent Mail') or logt "Select INBOX error: ", $imap->LastError, "\n";;
 		my @outbox = $imap->messages;
 		logi "Sent mail: ";
 		process_emails(\@outbox, 'o', $account);
@@ -89,6 +88,7 @@ sub log_in {
 sub process_emails {
 	my ($messages, $direction, $account) = @_;
 	my @messages_save_queue;
+	my $found = 0;
 	# Reverse list and keep adding until you find message in db
 	for my $mail_id ($initial ? @$messages : reverse @$messages) {
 		try {
@@ -96,6 +96,7 @@ sub process_emails {
 			my $headers = $imap->parse_headers( $mail_id, "Date", "Subject", "To", "From" );
 			my $all = $imap->parse_headers( $mail_id, "ALL");
 			my $message_params = {};
+			
 			
 			# ID
 			my $message_id;
@@ -106,7 +107,8 @@ sub process_emails {
 			$message_params->{message_id} = $message_id;
 			# End if already exists
 			unless($initial){
-				last if schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id});				
+				$found++ if schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id});
+				last if $found > 3;	# If for some reason they get mixed	 		
 			} else {
 				if (schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id})){
 					logi '.';
