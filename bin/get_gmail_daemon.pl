@@ -18,6 +18,7 @@ use FindBin;
 use Cwd qw/realpath getcwd/;
 use Getopt::Long;
 use Proc::Daemon;
+use Dancer::Plugin::Email;
 use File::Spec::Functions;
 use Digest::MD5 qw(md5_hex);
 sub trim {	my $str = shift; $str =~ s/^\s+|\s+$//g if $str; return $str;}
@@ -406,15 +407,21 @@ sub run {
 
 		logt "Service starting...";
 		my $sleep = config->{get_gmail_sleep} || 10;
+		die "Set some IMAP accounts in config!" unless config->{gmail} and config->{gmail}->{accounts};
 		while (1) {
 			
-			#my $sleep = $args{'--sleep'};
-			$initial = undef; #$args{'-i'};
-			logt "Starting initial import!" if $initial;
 			
-			die "Set some IMAP accounts in config!" unless config->{gmail} and config->{gmail}->{accounts};
-			
-            fetch_all();     
+			try{
+	            fetch_all();     
+			}
+			catch {
+				email {
+			        from    => 'get.gmail@informa.si',
+			        to      => config->{admin_email},
+			        subject => 'Get Gmail error',
+			        body    => $_,
+			    };
+			};			
                         # this example writes to a filehandle every 5 seconds.
             logt "Sleeping $sleep seconds.";
 			sleep $sleep;
