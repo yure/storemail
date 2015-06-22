@@ -107,13 +107,14 @@ sub process_emails {
 			$message_id = md5_hex $message_id;
 			$message_params->{message_id} = $message_id;
 			# End if already exists
-			unless($initial){
-				logi '-';
-				$found++ if schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id});
-				last if $found >= 3;	# If for some reason they get mixed	 	
-				next;	
-			} else {
-				if (schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id})){
+			my $existing = schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id});
+			if($existing){				
+				unless($initial){
+					logi '-';
+					$found++;
+					last if $found >= 3;	# If for some reason they get mixed	 	
+					next;	
+				} else {
 					logi '.';
 					next;
 				}
