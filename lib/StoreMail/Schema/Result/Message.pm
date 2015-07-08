@@ -22,6 +22,7 @@ use Cwd qw/realpath/;
 use Encode;
 use MIME::Base64 qw(encode_base64);
 my $appdir = realpath( "$FindBin::Bin/..");
+use Try::Tiny;
 
 
 =head1 TABLE: C<message>
@@ -151,6 +152,10 @@ __PACKAGE__->add_columns(
   },
   "send_queue",
   { data_type     => "tinyint", is_nullable   => 1, },
+  "send_queue_fail_count",
+  { data_type     => "tinyint", is_nullable   => 0, default_value => 0 },
+  "send_queue_sleep",
+  { data_type     => "intiger", is_nullable   => 0, default_value => 0 },
   "type",
   {
     data_type => "varchar",
@@ -372,14 +377,23 @@ sub send {
 		$email->{bcc} = _csv_named_emails($self->bcc) if $self->bcc;
 	}
 	$email->{attach} = [$self->attachments_paths] if $self->attachments;
-	 
-	my $msg = Dancer::Plugin::Email::email $email;
-	if ($msg->{type} and $msg->{type} eq 'failure'){
-		warn $msg->{string};
+	
+	try{
+		my $msg = Dancer::Plugin::Email::email $email;
+		if ($msg->{type} and $msg->{type} eq 'failure'){
+			warn $msg->{string};
+			return 0;
+		}		
+		print "Sent.\n";
+		return 1;
+	} 
+	catch {
+		my $fail_count = $self->send_queue_fail_count;
+		$self->send_queue_fail_count($fail_count+1);
+		$self->send_queue_sleep(time() + 10 ** $fail_count );
+		$self->update;
 		return 0;
-	}		
-	print "Sent.\n";
-	return 1;
+	};
 }
 
 sub named_from {
@@ -403,6 +417,9 @@ sub hash {
     	attachments => $self->attachments ? [$self->attachments] : [],
     	direction => $self->direction,
     	read => $self->get_column('new') ? 0 : 1,
+    	type => $self->type,
+    	send_queue => $self->send_queue ? 1 : 0,
+    	send_queue_fail_count => $self->send_queue_fail_count,
     	type => $self->type,
     	tags => [map($_->value, $self->tags)],
 	}

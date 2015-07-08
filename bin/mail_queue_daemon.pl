@@ -3,7 +3,7 @@ use Dancer ':script';
 use Cwd qw/realpath getcwd/;
 use Getopt::Long;
 use Proc::Daemon;
-use File::Spec::Functions;
+use File::Spec::Functions qw/catfile/;
 use Try::Tiny;
 
 my $logfile = "mail_queue.log";
@@ -39,6 +39,7 @@ sub service {
 	catch {
 		$retry_time += $retry_sleep;
 		logt "Error while trying to run. Waiting $retry_sleep seconds.";
+		logt "$_";
 		if($retry_time < $retry_total_time){
 			sleep $retry_sleep;
 			service();

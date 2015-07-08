@@ -21,7 +21,10 @@ my $redirect = undef;
 
 sub send {
 	my $args = {@_};
-	my $messages = schema->resultset('Message')->search( {send_queue => 1}, {order_by => '-date'} );
+	my $messages = schema->resultset('Message')->search( {
+		send_queue => 1,
+		send_queue_sleep => {'<' => time()}
+	}, {order_by => '-date'} );
 	
 	if (my $count = $messages->count) {
 	
@@ -31,7 +34,10 @@ sub send {
 		while (my $message = $messages->next) {
 			if($message->send($args->{redirect})){
 				$message->send_queue(undef);
-				$message->update;
+				$message->update;				
+			}
+			else {
+				print ' - FAILED ';
 			}
 		}
 		print 'Done.\n'
