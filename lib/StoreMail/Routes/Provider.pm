@@ -32,7 +32,8 @@ get '/provider/unread/:comma_separated_emails' => sub {
     		],
     	},
     	{ 
-			join => 'emails',    		 
+			join => 'emails',
+			group_by => [ qw/id/ ]		 
     		order_by => 'date',
     	}
     );
@@ -102,7 +103,8 @@ get '/provider/:comma_separated_emails' => sub {
     	$where,
     	{ 
 			join => ['emails', 'tags'],    		 
-	    		order_by => 'date',
+    		order_by => 'date',
+	    	group_by => [ qw/id/ ]		
     	}
     );
     
