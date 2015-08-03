@@ -24,6 +24,12 @@ use Digest::MD5 qw(md5_hex);
 sub trim {	my $str = shift; $str =~ s/^\s+|\s+$//g if $str; return $str;}
 my ($imap, $initial, $appdir, $logfile);
 
+sub logl { 
+	my($txt) = @_;
+	open(my $FH, '>>', catfile($appdir, 'logs', $logfile)); 
+	$|++; print $FH "\n".$txt;
+	close $FH;
+} 
 sub logt { 
 	my($txt) = @_;
 	open(my $FH, '>>', catfile($appdir, 'logs', $logfile)); 
@@ -40,7 +46,7 @@ sub logi {
 sub fetch_all {	
 	my $gmail = config->{gmail};
 	for my $account_name (keys config->{gmail}->{accounts}){
-		logt "- Account $account_name:";
+		logl "$account_name:";
 		my $account = config->{gmail}->{accounts}->{$account_name};
 		$imap = log_in($account);
 		unless($imap){
@@ -52,12 +58,12 @@ sub fetch_all {
 			
 		$imap->select('INBOX') or logt "Select INBOX error: ", $imap->LastError, "\n";
 		my @inbox = $imap->messages;
-		logi " Inbox: ";
+		logi " In: ";
 		process_emails(\@inbox, 'i', $account);
 
 		$imap->select('[Gmail]/Sent Mail') or logt "Select INBOX error: ", $imap->LastError, "\n";;
 		my @outbox = $imap->messages;
-		logi " Sent mail: ";
+		logi " Out: ";
 		process_emails(\@outbox, 'o', $account);
 			
 	}
