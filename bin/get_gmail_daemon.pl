@@ -183,7 +183,7 @@ sub process_emails {
 		
 	for my $message_params (@messages_save_queue){
 		try {save_message($message_params)}
-		catch {logt "Saving email with id ".$message_params->{message_id}." was not successfull!!!";};
+		catch {logt "Saving email with id ".$message_params->{message_id}." was not successfull!!! $_";};
 	}
 }
 
