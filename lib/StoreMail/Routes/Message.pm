@@ -30,6 +30,27 @@ get '/message/unread' => sub {
 };
 
 
+get '/message/incoming' => sub {
+    content_type('application/json');
+	my $last_id = param('last_id') || return 'No id specified. Example ?last_id=94500';
+    my $messages = schema->resultset('Message')->search(
+    	{
+    		id => {'>' => $last_id},
+    		source => {'-not' => undef},  
+    		direction => 'i',  
+    		domain => param('domain'),	
+    	},
+    	{ 
+    		order_by => 'id',
+    	}
+    );
+    
+    return to_json {
+    	messages =>  [map { $_->hash_lite } $messages->all],
+    };    	
+};
+
+
 get '/message/:id' => sub {
     content_type('application/json');
     my $message = schema->resultset('Message')->find({id => param('id'), domain => param('domain')});

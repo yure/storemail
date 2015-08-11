@@ -24,7 +24,7 @@ get '/email_list' => sub {
     ]] if $search;
 
 	# ID
-	my $search =  param('last_id');
+	$search =  param('last_id');
     push $where->{-and}, id => { '>', param('last_id') } if $search;
 
 	# Tag Search
