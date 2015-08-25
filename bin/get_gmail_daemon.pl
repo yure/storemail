@@ -23,24 +23,19 @@ use File::Spec::Functions;
 use Digest::MD5 qw(md5_hex);
 sub trim {	my $str = shift; $str =~ s/^\s+|\s+$//g if $str; return $str;}
 my ($imap, $initial, $appdir, $logfile);
+open(my $FH, '>>', catfile($appdir, 'logs', $logfile)); 
 
 sub logl { 
 	my($txt) = @_;
-	open(my $FH, '>>', catfile($appdir, 'logs', $logfile)); 
 	$|++; print $FH "\n".$txt;
-	close $FH;
 } 
 sub logt { 
 	my($txt) = @_;
-	open(my $FH, '>>', catfile($appdir, 'logs', $logfile)); 
 	$|++; print $FH "\n".localtime().' | '.$txt;
-	close $FH;
 }
 sub logi { 
 	my($txt) = @_;
-	open(my $FH, '>>', catfile($appdir, 'logs', $logfile)); 
 	$|++; print $FH $txt;
-	close $FH;
 }
 
 sub fetch_all {	
@@ -430,7 +425,7 @@ sub run {
 			    };
 			};			
                         # this example writes to a filehandle every 5 seconds.
-            logt "Sleeping $sleep seconds.";
+            logt "Sleep $sleep s";
 			sleep $sleep;
 		}
 	} else {
