@@ -398,7 +398,7 @@ sub proc_status {
 sub run {
 	
 	$logfile = 'get_gmail.log';
-	open($FH, '>>', catfile($appdir, 'logs', $logfile));
+	open($FH, '>>', catfile(config->{appdir}, 'logs', $logfile));
 	if (!$pid) {
 		print "Starting...\n";
 		if ($daemonize) {
@@ -440,7 +440,7 @@ sub run {
 sub init_import {
 		print "Starting initial import...\n";
 		$logfile = 'get_gmail_init.log';
-		open($FH, '>>', catfile($appdir, 'logs', $logfile));
+		open($FH, '>>', catfile(config->{appdir}, 'logs', $logfile));
 		logt "Service starting...";
 			
 		$initial = 1; #$args{'-i'};
