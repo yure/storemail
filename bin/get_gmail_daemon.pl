@@ -22,8 +22,9 @@ use Dancer::Plugin::Email;
 use File::Spec::Functions;
 use Digest::MD5 qw(md5_hex);
 sub trim {	my $str = shift; $str =~ s/^\s+|\s+$//g if $str; return $str;}
-my ($imap, $initial, $appdir, $logfile);
-open(my $FH, '>>', catfile($appdir, 'logs', $logfile)); 
+my ($FH, $imap, $initial, $appdir, $logfile);
+$appdir = config->{appdir};
+ 
 
 sub logl { 
 	my($txt) = @_;
@@ -311,6 +312,7 @@ sub remove_outlook_code {
 }
 
 
+
 sub extract_body  {
 	my ($struct, $imap, $msg, $subtype, $mime) = @_;
 	if ($struct->bodytype eq "MULTIPART") {
@@ -345,7 +347,6 @@ sub extract_body  {
 }
 
 #-------- DAEMON STUFF --------
-$appdir = config->{appdir};
 my $dir = config->{pid_dir} ? catfile(config->{pid_dir}, 'storemail') : "$appdir/run";
 system( "mkdir -p $dir" ) unless (-e $dir);
 my $pf = catfile($dir, "get_gmail.pid");
@@ -395,7 +396,9 @@ sub proc_status {
 
 
 sub run {
+	
 	$logfile = 'get_gmail.log';
+	open(my $FH, '>>', catfile($appdir, 'logs', $logfile));
 	if (!$pid) {
 		print "Starting...\n";
 		if ($daemonize) {
@@ -437,6 +440,7 @@ sub run {
 sub init_import {
 		print "Starting initial import...\n";
 		$logfile = 'get_gmail_init.log';
+		open(my $FH, '>>', catfile($appdir, 'logs', $logfile));
 		logt "Service starting...";
 			
 		$initial = 1; #$args{'-i'};
