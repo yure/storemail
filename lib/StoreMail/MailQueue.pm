@@ -26,9 +26,9 @@ sub send {
 		send_queue_sleep => {'<' => time()}
 	}, {order_by => '-date'} );
 	
-	if (my $count = $messages->count) {
+	if (my $count = $messages->search( {},{columns => [qw/id/]} )->count() ) {
 	
-		printt "$count emails found. Processing..." . ($args->{redirect} ? 'with redirect to '.$args->{redirect}.' ...' : '');
+		printt ("$count emails found. Processing..." . ($args->{redirect} ? 'with redirect to '.$args->{redirect}.' ...' : '') );
 	
 		#splice @unread, 5;
 		while (my $message = $messages->next) {
