@@ -22,21 +22,25 @@ use Dancer::Plugin::Email;
 use File::Spec::Functions;
 use Digest::MD5 qw(md5_hex);
 sub trim {	my $str = shift; $str =~ s/^\s+|\s+$//g if $str; return $str;}
-my ($FH, $imap, $initial, $appdir, $logfile);
-$appdir = config->{appdir};
- 
+my ($imap, $initial, $appdir, $logfile);
 
 sub logl { 
 	my($txt) = @_;
+	open(my $FH, '>>', catfile($appdir, 'logs', $logfile)); 
 	$|++; print $FH "\n".$txt;
+	close $FH;
 } 
 sub logt { 
 	my($txt) = @_;
+	open(my $FH, '>>', catfile($appdir, 'logs', $logfile)); 
 	$|++; print $FH "\n".localtime().' | '.$txt;
+	close $FH;
 }
 sub logi { 
 	my($txt) = @_;
+	open(my $FH, '>>', catfile($appdir, 'logs', $logfile)); 
 	$|++; print $FH $txt;
+	close $FH;
 }
 
 sub fetch_all {	
@@ -64,15 +68,7 @@ sub fetch_all {
 			
 	}
 	logt 'Inital import completed' if $initial;
-=asd
-	if($sleep){
-		logt "Waiting $sleep sec\n----------------------\n\n";
-		sleep($sleep);
-	}
-	else {
-		last;
-	}
-=cut
+
 }
 
 
@@ -137,7 +133,7 @@ sub process_emails {
 	
 			# Datetime
 			my $epoch = parsedate($headers->{Date}[0]);
-			my $datetime = DateTime->from_epoch( epoch => $epoch ) if $epoch;
+			my $datetime = DateTime->from_epoch( epoch => $epoch )->set_time_zone( config->{timezone} ) if $epoch;
 			$message_params->{date} = $datetime ? $datetime->ymd." ".$datetime->hms : undef;
 	
 			# Message body
@@ -312,7 +308,6 @@ sub remove_outlook_code {
 }
 
 
-
 sub extract_body  {
 	my ($struct, $imap, $msg, $subtype, $mime) = @_;
 	if ($struct->bodytype eq "MULTIPART") {
@@ -347,6 +342,7 @@ sub extract_body  {
 }
 
 #-------- DAEMON STUFF --------
+$appdir = config->{appdir};
 my $dir = config->{pid_dir} ? catfile(config->{pid_dir}, 'storemail') : "$appdir/run";
 system( "mkdir -p $dir" ) unless (-e $dir);
 my $pf = catfile($dir, "get_gmail.pid");
@@ -396,9 +392,7 @@ sub proc_status {
 
 
 sub run {
-	
 	$logfile = 'get_gmail.log';
-	open($FH, '>>', catfile(config->{appdir}, 'logs', $logfile));
 	if (!$pid) {
 		print "Starting...\n";
 		if ($daemonize) {
@@ -428,7 +422,7 @@ sub run {
 			    };
 			};			
                         # this example writes to a filehandle every 5 seconds.
-            logt "Sleep $sleep s";
+            logt "Sleeping $sleep seconds.";
 			sleep $sleep;
 		}
 	} else {
@@ -440,7 +434,6 @@ sub run {
 sub init_import {
 		print "Starting initial import...\n";
 		$logfile = 'get_gmail_init.log';
-		open($FH, '>>', catfile(config->{appdir}, 'logs', $logfile));
 		logt "Service starting...";
 			
 		$initial = 1; #$args{'-i'};
