@@ -22,7 +22,7 @@ use Dancer::Plugin::Email;
 use File::Spec::Functions;
 use Digest::MD5 qw(md5_hex);
 sub trim {	my $str = shift; $str =~ s/^\s+|\s+$//g if $str; return $str;}
-my ($imap, $initial, $appdir, $logfile);
+my ($imap, $initial, $appdir, $logfile, $account_emails);
 
 sub logl { 
 	my($txt) = @_;
@@ -45,6 +45,7 @@ sub logi {
 
 sub fetch_all {	
 	my $gmail = config->{gmail};
+	$account_emails  = {map {config->{gmail}->{accounts}->{$_}->{username} => 1} keys config->{gmail}->{accounts}};	
 	for my $account_name (keys config->{gmail}->{accounts}){
 		logl "$account_name:";
 		my $account = config->{gmail}->{accounts}->{$account_name};
@@ -104,11 +105,15 @@ sub process_emails {
 			$message_id = to_dumper $all unless $message_id;
 			$message_id = md5_hex $message_id;
 			$message_params->{message_id} = $message_id;
+			# From
+			$message_params->{from} = clean_parenthesis($headers->{From}[0]);
+
 			# End if already exists
 			my $existing = schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id});
 			if($existing){				
 				unless($initial){
 					logi '-';
+					next if $account_emails->{$message_params->{from}};
 					$found++;
 					last if $found >= 3;	# If for some reason they get mixed	 	
 					next;	
@@ -120,8 +125,6 @@ sub process_emails {
 			$found = 0;
 			my $mime = Email::MIME->new($imap->message_string($mail_id));
 	
-			# From
-			$message_params->{from} = clean_parenthesis($headers->{From}[0]);
 	
 			# To
 			$message_params->{to} = [map {clean_parenthesis($_)} split ',', $headers->{To}[0]] if defined $headers->{To}[0];
@@ -203,7 +206,6 @@ sub save_message {
 					my $name = "$dir/$1";
 					#logt "$0: writing $name...\n";
 					open my $att_fh, ">", $name or warn "$0: open $name: $!";
-					print $att_fh $part->body;
 					close $att_fh or warn "$0: close $name: $!";
 				});
 				logi '['.$message->id.": ".$message->frm.", ".$message->date.'] ';
