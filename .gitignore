@@ -2,7 +2,6 @@
 environments/
 attachments
 public/attachments
-config.yml
 logs
 *.log
 *log.txt

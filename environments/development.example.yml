@@ -1,0 +1,55 @@
+# configuration file for development environment
+
+# the logger engine to use
+# console: log messages to STDOUT (your console where you started the
+#          application server)
+# file:    log message to a file in log/
+logger: "file"
+
+# the log level for this environment
+# core is the lowest, it shows Dancer's core log messages as well as yours
+# (debug, info, warning and error)
+log: "debug"
+
+# should Dancer consider warnings as critical errors?
+warnings: 0
+
+# should Dancer show a stacktrace when an error is caught?
+show_errors: 1
+
+# auto_reload is a development and experimental feature
+# you should enable it by yourself if you want it
+# Module::Refresh is needed 
+# 
+# Be aware it's unstable and may cause a memory leak.
+# DO NOT EVER USE THIS FEATURE IN PRODUCTION 
+# OR TINY KITTENS SHALL DIE WITH LOTS OF SUFFERING
+auto_reload: 0
+
+plugins:
+  DBIC:
+    default:
+      dsn: dbi:mysql:dbname=storemail
+      schema_class: StoreMail::Schema
+      user: root
+      password: toor
+      options:
+        mysql_enable_utf8: 1
+
+gmail:
+    accounts:
+        AverageJoe:
+                domain: www.somewebsite.com
+                host: 'imap.gmail.com'
+                port: 993
+                username: 'average.joe@somewebsite.si'
+                password: 'Shhhhh'
+                ssl: 1
+                
+
+domain: www.somewebsite.com
+admin_email: admin@somewebsite.com
+notify_url: http://www.somewebsite.com/api/incoming_email
+timezone: 'Europe/Ljubljana'
+#pid_dir: /var/run
+

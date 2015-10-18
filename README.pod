@@ -49,13 +49,7 @@ Setup mailing provider and DB info in config.yml. Example below:
 	      pass: toor
 	      options:
 	        mysql_enable_utf8: 1
-	Email:
-	  transport:
-       SMTP:
-         host: 'smtp.mandrillapp.com'
-         port: 587
-         sasl_username: 'info@mail.com'
-         sasl_password: 'passss'
+
 	  
 =head2 DB deploy
 
@@ -108,111 +102,6 @@ By default it checks for new mail on queue every 3sec (setting in config mail_qu
 
 	mail_queue_sleep: 3
 
-
-=head3 Catchall service
-
-perl bin/catchall.pl [-s 5] 
-
--s --server 
--u --user
--p --password
---ssl
---port
---sleep (duration bettwen checks)
--d --direction (default i = incoming) [i, o]
-
-It is best to use separate inbox and service for outgoing mail.
-
-=head1 Conversations
-
-All API routes start with your domain. 
-
-=head2 Conversation
-
-New conversation is initiated automatically with first message, user adding or subject setting.
-
-=head3 Conversation data
-
-GET /:domain/conversation/:id
-	
-Returns:
-
-	{
-		subject: string
-		messages: [ 
-			{	
-			body: string,
-			conversation_id: string,  
-			date: string,  
-			id: string,  
-			sender: string,  
-			attachments: [string, string]
-			},
-		]
-		users: [
-			{
-			email: string,
-			name: stirng
-			}
-		]
-	}
-
-=head3 Conversation users
-
-GET /:domain/conversation/:id/users
-	
-Returns a list of all users bind to conversation:
-
-	{users: [ 
-		{
-			body: string,
-			conversation_id: string,  
-			date: string,  
-			id: string,  
-			sender: string,  
-		}	
-	]
-
-=head3 All conversations
-
-GET /:domain/conversation/:id/users
-	
-Returns a list of all conversations from current domain:
-
-	[ 
-		{ 
-			"id" : "10@prevajalska-agencija.si" 
-			"domain": string, 
-			"subject" : null, 
-			"date" : "2014-05-28 11:03:30", 	
-		}, 
-	]
-
-=head3 Conversation config
-
-POST /:domain/conversation/:id
-
-Used for: 
-- adding and removing users
-- setting conversation subject
-
-=head4 Adding user
-
-	{add_user: 1, name: string, email: string }
-
-=head4 Removing user
-
-	{remove_user: 1, email: string}
-
-=head4 Setting subject
-It can only be set once.
-
-	{subject: string}
-
-Returns:
-
-	1 if successful
-	0 if unsuccessful
 
 =head3 Adding messages
 
@@ -408,15 +297,6 @@ GET /:domain/message/:id/tag/check/get_all
 	   ]
 	}
 
-
-=head1 GUI
-
-=head2 Conversation thread
-
-GET '/:domain/gui/conversation/:id
-
-Shows messages and lets you reply. 
-Lets you manage users and subject of conversation
 
 
 =cut	
