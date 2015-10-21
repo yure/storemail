@@ -10,7 +10,7 @@ $eumm_version =~ s/_//;
 WriteMakefile(
     NAME                => 'StoreMail',
     AUTHOR              => q{GREGA POMPE <grega.pompe@informa.si>},
-    VERSION_FROM        => 'lib/Mail.pm',
+    VERSION_FROM        => 'lib/StoreMail.pm',
     ABSTRACT            => 'YOUR APPLICATION ABSTRACT',
     ($eumm_version >= 6.3001
       ? ('LICENSE'=> 'perl')
