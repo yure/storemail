@@ -155,7 +155,7 @@ __PACKAGE__->add_columns(
   "send_queue_fail_count",
   { data_type     => "tinyint", is_nullable   => 0, default_value => 0 },
   "send_queue_sleep",
-  { data_type     => "intiger", is_nullable   => 0, default_value => 0 },
+  { data_type     => "integer", is_nullable   => 0, default_value => 0 },
   "type",
   {
     data_type => "varchar",
