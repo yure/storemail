@@ -42,6 +42,7 @@ WriteMakefile(
 		'Proc::Daemon' => 0,
 		'File::Spec::Functions' => 0,
 		'Digest::MD5' => 0,
+		'DBIx::Class::Helper' => 0,
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'Mail-*' },
