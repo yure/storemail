@@ -14,6 +14,7 @@ use strict;
 use warnings;
 
 use base 'DBIx::Class::Core';
+__PACKAGE__->load_components('Helper::Schema::QuoteNames');
 
 =head1 TABLE: C<user>
 
