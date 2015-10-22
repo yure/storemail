@@ -8,7 +8,7 @@ StoreMail
  
 =head1 SYNOPSIS
  
-Mailing service with threaded conversation backend. 
+Emails API. 
  
 =head1 CONFIGURATION
 
@@ -16,27 +16,21 @@ Mailing service with threaded conversation backend.
  
 Setup mailing provider and DB info in config.yml. Example below:
 
-	domain: prevajalska-agencija.si
-	catch_all:
-	  host: 'imap.gmail.com'
-	  port: 993
-	  username: 'info@mail.com'
-	  password: 'passss'
-	  ssl: 1
+	domain: domain.com
 
 	gmail:
 	  accounts:
 	    Info:
 	      host: 'imap.gmail.com'
 	      port: 993
-	      username: 'info@prevajalska-agencija.si'
+	      username: 'info@domain.com'
 	      password: 'passss'
 	      ssl: 1
 	    Sales:
 	      domain: prevajalska-agencija.hr 
 	      host: 'imap.gmail.com'
 	      port: 993
-	      username: 'sales@prevajalska-agencija.si'
+	      username: 'sales@domain.com'
 	      password: 'passs'
 	      ssl: 1
 
@@ -59,12 +53,12 @@ You can easily deploy DB after you have set up config with
 	  
 =head2 Running services
 
-You need to run dancer application (bin/app.pl), to handle API requests and bin/catchall.pl script to fetch mail from inbox. 
+You need to run dancer application (bin/app.pl), to handle API requests 
 Mails sent are added to send queue so you have to mail queue service to actually send them. 
 
 =head3 Gmail fetch
 
-	bin/get_gmail.pl --start
+	bin/get_gmail_daemon.pl --start
 
 Options are:
 	
@@ -103,62 +97,7 @@ By default it checks for new mail on queue every 3sec (setting in config mail_qu
 	mail_queue_sleep: 3
 
 
-=head3 Adding messages
 
-POST /:domain/conversation/:id/message
-Adds message to conversation and sends it around.
-
-	{
-		sender_email: string (must be one of conversation users)		
-		body: string
-		send_copy: 1 (optional, send mail to sender)
-	}
-
-Returns:
-
-	{
-		error: String (optional)
-	}
-
-=head3 Attachments
-
-Attachments are added to conversation prior to sending message. 
-Any attachments waiting in temp folder will be sent with next message and moved to another folder bind to message and are accessible in 
-	
-	/attachments/:message_id/:filename
-
-File should be uploaded with form and file field named 'file'. enctype has to be multipart/form-data.
-
-	POST /conversation/:id/upload
-
-Example form:
-
-	<form 
-		method="post" 
-		action="/prevajalska-agencija.si/conversation/3/upload" 
-		enctype="multipart/form-data">
-		
-			<input name="file" type="file">
-			<button type="submit">Upload</button>
-	
-	</form>
-
-=head2 Message
-
-=head3 Conversation data
-
-GET /:domain/message/:id
-	
-Returns:
-
-	{ 
-		"id" : string, 
-		"conversation_id" : string, 
-		"body" : string, 		
-		"sender" : string, 
-		"date" : string, 			
-		"sender_email" : string, 
-	}
 	
 =head1 Provider
 
