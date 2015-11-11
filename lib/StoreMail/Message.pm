@@ -41,7 +41,7 @@ sub new_message{
 	    for my $raw_emails ( @{$arg{$type}} ){
 		    for my $raw_email ( split ',', $raw_emails ){
 		    	my ($name, $email) = extract_email($raw_email);
-		    	$message->add_to_emails({
+		    	$message->update_or_create_related('emails', {
 		    		email => $email, 
 		    		name => $name, 
 		    		type => $type, 
