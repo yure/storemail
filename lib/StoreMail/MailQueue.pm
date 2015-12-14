@@ -24,7 +24,7 @@ sub send {
 	my $messages = schema->resultset('Message')->search( {
 		send_queue => 1,
 		send_queue_sleep => {'<' => time()}
-	}, {order_by => '-date'} );
+	}, {order_by => { -desc => 'date' }} );
 	
 	if (my $count = $messages->search( {},{columns => [qw/id/]} )->count() ) {
 	
