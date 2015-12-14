@@ -315,7 +315,7 @@ sub add_attachments {
 		my $index = index($content, $start_tag);
 		my $offset;
 		$offset = length($start_tag) + $index unless $index == -1;
-		$content = substr($content, $offset);
+		$content = substr($content, $offset) if $offset;
 		
 	    my $decoded= MIME::Base64::decode_base64($content);
 		open my $fh, '>', "$dir".$file->{name} or die $!;
