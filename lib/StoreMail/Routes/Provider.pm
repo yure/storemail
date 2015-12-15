@@ -33,7 +33,7 @@ get '/provider/unread/:comma_separated_emails' => sub {
     	},
     	{ 
 			join => 'emails',
-		#	group_by => [ qw/id/ ],
+#			group_by => [ qw/id/ ],
     		order_by => 'date',
     	}
     );
@@ -97,14 +97,16 @@ get '/provider/:comma_separated_emails' => sub {
     push $where->{-and}, {date => { '<=', $to }} if $to;
     push $where->{-and}, {date => { '>=', $from }} if $from;
 
-    	
+    my $rs = schema->resultset('Message')->result_source;
+    my @columns = $rs->columns;	
+
     $where->{domain} = param('domain');
     my $messages = schema->resultset('Message')->search(
     	$where,
     	{ 
 			join => ['emails', 'tags'],    		 
     		order_by => 'date',
-	    #	group_by => [ qw/id/ ]		
+	   	group_by => [ map {"me.$_"} @columns ]		
     	}
     );
     
