@@ -14,6 +14,7 @@ sub new_message{
 	my $conversation_id = $arg{id} and $arg{domain} ? $arg{id}."@".$arg{domain} : undef;
 	my ($name, $email) = extract_email($arg{from});
 
+
 	# Save new message to DB
     my $message = schema->resultset('Message')->create({
     	conversation_id => $conversation_id,
@@ -32,6 +33,11 @@ sub new_message{
     	'new' => $arg{'new'} || 1,    	
     	type => $arg{type} || 'email',
     });
+
+	# Tracking
+	if($arg{track}){
+		add_tracking($message);
+	}
     
     # Add recipients
     my @types = ('to', 'cc', 'bcc');
@@ -65,6 +71,19 @@ sub new_message{
     $message->update;
     return $message;
 }
+
+
+sub add_tracking {
+	my $message = shift;
+	my $html = $message->body;
+	my $tracker_url = config->{tracker_url};
+	my $mid = $message->id_hash;
+	$tracker_url =~ s/\[MID\]/$mid/g;
+	$html =~ s/( href\=["']?)(.*?)(["'>])/$1$tracker_url$2$3/gi;
+	$message->body($html);
+	1;
+}
+
 
 
 sub extract_email {

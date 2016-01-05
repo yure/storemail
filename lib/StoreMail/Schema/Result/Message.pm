@@ -23,6 +23,7 @@ use Encode;
 use MIME::Base64 qw(encode_base64);
 my $appdir = realpath( "$FindBin::Bin/..");
 use Try::Tiny;
+use Digest::MD5 qw(md5 md5_hex md5_base64);
 
 
 =head1 TABLE: C<message>
@@ -392,6 +393,7 @@ sub send {
 		$self->send_queue_fail_count($fail_count+1);
 		$self->send_queue_sleep(time() + 10 ** $fail_count );
 		$self->update;
+		print $_;
 		return 0;
 	};
 }
@@ -434,6 +436,11 @@ sub hash_lite {
     	id => $self->id ,
     	tags => [map($_->value, $self->tags)],
 	}
+}
+ 
+sub id_hash {
+	my ($self) = @_;
+	return md5_hex($self->id . config->{salt});
 }
  
 1;
