@@ -53,6 +53,8 @@
 				<ul id="attachments">
 				
 				</ul>
+				<input type="checkbox" name="track" /> Track
+				<input type="hidden" name="body_type" value="html" />
 				
 				<button id="replay-btn" type="submit" class="btn btn-default">Send</button>
 				
@@ -104,6 +106,7 @@ $.fn.serializeObject = function() {
 				bcc: this.bcc.value,
 				body_type: this.type.value,
 				subject: this.subject.value,
+				track: this.track.value,
 				body: this.body.value,
 				attachments: attachments,
 			}

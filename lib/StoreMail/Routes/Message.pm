@@ -106,6 +106,7 @@ post '/message/send' => sub {
 					direction => 'o',
 					send_queue => 1,
 					domain => param('domain'),
+					track => param('track'),
 					%$params
 				);
     }
