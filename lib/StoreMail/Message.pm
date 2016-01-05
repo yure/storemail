@@ -76,7 +76,7 @@ sub new_message{
 sub add_tracking {
 	my $message = shift;
 	my $html = $message->body;
-	my $tracker_url = config->{tracker_url};
+	my $tracker_url = tracker_url($message);
 	my $mid = $message->id_hash;
 	$tracker_url =~ s/\[MID\]/$mid/g;
 	$html =~ s/( href\=["']?)(.*?)(["'>])/$1$tracker_url$2$3/gi;
@@ -84,6 +84,12 @@ sub add_tracking {
 	1;
 }
 
+
+sub tracker_url {
+	my $message = shift;
+	return config->{domains}->{$message->domain}->{tracker_url} if config->{domains} and config->{domains}->{$message->domain} and config->{domains}->{$message->domain}->{tracker_url};
+	return config->{tracker_url};
+}
 
 
 sub extract_email {
