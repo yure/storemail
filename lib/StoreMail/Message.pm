@@ -77,7 +77,11 @@ sub add_tracking {
 	my $message = shift;
 	my $html = $message->body;
 	my $tracker_url = tracker_url($message);
-	my $mid = $message->id_hash;
+	my $mid = $message->message_id;
+	unless($mid){
+		$mid = $message->id_hash;
+		$message->message_id($mid);
+	} 
 	$tracker_url =~ s/\[MID\]/$mid/g;
 	$html =~ s/( href\=["']?)(.*?)(["'>])/$1$tracker_url$2$3/gi;
 	$message->body($html);
