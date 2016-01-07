@@ -158,6 +158,9 @@ sub process_emails {
 			#$raw_body = undef if $raw_body eq '' or $body eq $raw_body;
 			
 			$message_params->{body} = $html_body || $plain_body;
+			# Remove emoticons (utf8 mysql issue)
+			$message_params->{body} =~ s/[^[:ascii:]\x{1F600}-\x{1F64F}]+//g;
+
 			$message_params->{domain} = $account->{domain} || config->{domain};			
 			$message_params->{body_type} = $html_body ? 'html' : 'plain';
 			$message_params->{raw_body} = $raw_html_body if defined $raw_html_body and $raw_html_body ne $html_body;
@@ -238,8 +241,6 @@ sub clean_body {
 	my ($clean_body, $wanted, $mailId);
 	$body = decode("UTF-8",decode_qp($body));
 	
-	#remove emoticons (utf8 mysql issue)
-	$body =~ s/[^[:ascii:]\x{1F600}-\x{1F64F}]+//g;
 	
 	#my $from = "";
 	#my $to = "\r\n";
