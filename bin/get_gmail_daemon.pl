@@ -238,6 +238,9 @@ sub clean_body {
 	my ($clean_body, $wanted, $mailId);
 	$body = decode("UTF-8",decode_qp($body));
 	
+	#remove emoticons (utf8 mysql issue)
+	$body =~ s/[^[:ascii:]\x{1F600}-\x{1F64F}]+//g;
+	
 	#my $from = "";
 	#my $to = "\r\n";
 	#($mailId) = $body =~ /$from(.*?)$to/s;
