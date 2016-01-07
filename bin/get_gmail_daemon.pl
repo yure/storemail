@@ -150,16 +150,16 @@ sub process_emails {
 			};
 			
 			# Body
-			my $raw_html_body = extract_body($struct, $imap, $mail_id, 'HTML', $mime);
+			my $raw_html_body = remove_emoji( extract_body($struct, $imap, $mail_id, 'HTML', $mime) );
 			my $html_body = clean_html($raw_html_body);			
 			
-			my $plain_body = extract_body($struct, $imap, $mail_id, 'PLAIN') ;
+			my $plain_body = remove_emoji( extract_body($struct, $imap, $mail_id, 'PLAIN') );
 			
 			#$raw_body = undef if $raw_body eq '' or $body eq $raw_body;
 			
 			$message_params->{body} = $html_body || $plain_body;
 			# Remove emoticons (utf8 mysql issue)
-			$message_params->{body} =~ s/[^[:ascii:]\x{1F600}-\x{1F64F}]+//g;
+			
 
 			$message_params->{domain} = $account->{domain} || config->{domain};			
 			$message_params->{body_type} = $html_body ? 'html' : 'plain';
@@ -189,6 +189,13 @@ sub process_emails {
 		try {save_message($message_params)}
 		catch {logt "Saving email with id ".$message_params->{message_id}." was not successfull!!! $_";};
 	}
+}
+
+sub remove_emoji {
+	my $str = shift;
+	return $str unless defined $str;
+	$str =~ s/[^[:ascii:]\x{1F600}-\x{1F64F}]+//g;
+	return $str;
 }
 
 sub save_message {
