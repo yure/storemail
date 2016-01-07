@@ -88,7 +88,7 @@ sub add_tracking {
 	
 	# Tracking pixle
 	my $pixle = tracker_pixle_url();
-	$html .= "<img src=\"$pixle\" >";
+	$html .= "<img src=\"$pixle\" height=\"1\" width=\"1\">";
 	
 	$message->body($html);
 	1;
