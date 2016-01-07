@@ -83,7 +83,13 @@ sub add_tracking {
 		$message->message_id($mid);
 	} 
 	$tracker_url =~ s/\[MID\]/$mid/g;
+	# Links
 	$html =~ s/( href\=["']?)(.*?)(["'>])/$1$tracker_url$2$3/gi;
+	
+	# Tracking pixle
+	my $pixle = tracker_pixle_url();
+	$html .= "<img src=\"$pixle\" >";
+	
 	$message->body($html);
 	1;
 }
@@ -93,6 +99,12 @@ sub tracker_url {
 	my $message = shift;
 	return config->{domains}->{$message->domain}->{tracker_url} if config->{domains} and config->{domains}->{$message->domain} and config->{domains}->{$message->domain}->{tracker_url};
 	return config->{tracker_url};
+}
+
+sub tracker_pixle_url {
+	my $message = shift;
+	return config->{domains}->{$message->domain}->{tracker_pixle} if config->{domains} and config->{domains}->{$message->domain} and config->{domains}->{$message->domain}->{tracker_pixle};
+	return config->{tracker_pixle};
 }
 
 
