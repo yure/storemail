@@ -175,6 +175,10 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 36 },
   "source",
   { data_type => "varchar", is_nullable => 1, size => 45 },
+  "sent",
+  { data_type => "integer", is_nullable   => 1, },
+  "read",
+  { data_type => "integer", is_nullable   => 1, },
 );
 
 =head1 PRIMARY KEY
@@ -418,12 +422,14 @@ sub hash {
     	date => $self->date ,
     	attachments => $self->attachments ? [$self->attachments] : [],
     	direction => $self->direction,
-    	read => $self->get_column('new') ? 0 : 1,
+    	new => $self->get_column('new') ? 0 : 1,
     	type => $self->type,
     	send_queue => $self->send_queue ? 1 : 0,
     	send_queue_fail_count => $self->send_queue_fail_count,
     	type => $self->type,
     	tags => [map($_->value, $self->tags)],
+    	read => $self->read,
+    	sent => $self->sent,
 	}
 }
 

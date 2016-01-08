@@ -35,7 +35,7 @@ sub new_message{
     });
 
 	# Tracking
-	if($arg{track}){
+	if(domain_setting($message->domain, 'track') or (defined $arg{track} and $arg{track} == '1') ){
 		add_tracking($message);
 	}
     
@@ -76,7 +76,7 @@ sub new_message{
 sub add_tracking {
 	my $message = shift;
 	my $html = $message->body;
-	my $tracker_url = tracker_url($message);
+	my $tracker_url = domain_setting($message->domain, 'tracker_url');
 	my $mid = $message->message_id;
 	unless($mid){
 		$mid = $message->id_hash;
@@ -87,7 +87,7 @@ sub add_tracking {
 	$html =~ s/( href\=["']?)(.*?)(["'>])/$1$tracker_url$2$3/gi;
 	
 	# Tracking pixle
-	my $pixle_url = tracker_pixle_url($message);
+	my $pixle_url = domain_setting($message->domain, 'tracker_pixle');
 	$pixle_url =~ s/\[MID\]/$mid/g;
 	$html .= "<img src=\"$pixle_url\" height=\"1\" width=\"1\">";
 	
@@ -96,16 +96,10 @@ sub add_tracking {
 }
 
 
-sub tracker_url {
-	my $message = shift;
-	return config->{domains}->{$message->domain}->{tracker_url} if config->{domains} and config->{domains}->{$message->domain} and config->{domains}->{$message->domain}->{tracker_url};
-	return config->{tracker_url};
-}
-
-sub tracker_pixle_url {
-	my $message = shift;
-	return config->{domains}->{$message->domain}->{tracker_pixle} if config->{domains} and config->{domains}->{$message->domain} and config->{domains}->{$message->domain}->{tracker_pixle};
-	return config->{tracker_pixle};
+sub domain_setting {
+	my ($domain, $var) = @_;
+	return config->{domains}->{$domain}->{$var} if defined config->{domains} and defined config->{domains}->{$domain} and defined config->{domains}->{$domain}->{$var};
+	return config->{$var};
 }
 
 
