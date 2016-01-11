@@ -41,7 +41,7 @@ sub authenticate {
 any '/:domain/**' => sub {
 	my $req	= request;
 	unless(authenticate(param('domain'))) {
-		debug "Access denied for ". param('domain') . ' - ' . request->{env}->{REMOTE_ADDR};
+		debug "Access denied for ". param('domain') . ' - ' . request->{path} . ' - ' . request->{env}->{REMOTE_ADDR};
 		return 'Access denied' ;
 	}
 	else {
