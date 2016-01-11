@@ -5,13 +5,15 @@ use Dancer::Plugin::Ajax;
 
 use DBI;
 
-use StoreMail::Routes::GUI;
 
 # API routes
 get '**' => sub {
 	content_type('application/json');
 	pass;
 };
+
+use StoreMail::Auth;
+use StoreMail::Routes::GUI;
 use StoreMail::Routes::Message;
 use StoreMail::Routes::Conversation;
 use StoreMail::Routes::Provider;
