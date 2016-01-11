@@ -26,5 +26,5 @@ template: "simple"
 #     start_tag: '[%'
 #     end_tag:   '%]'
 
-get_gmail_sleep: 10
-mail_queue_sleep: 1
+logger_format: %T | %m 
+   
