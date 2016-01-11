@@ -23,12 +23,13 @@ sub token_yesterday {
 
 
 sub authenticate {
+	my $domain = shift;
 	return 1 if config->{'debug'};
 	# Today's key
-	return 1 if param('key') and param('key') eq token_today(param('domain'));
+	return 1 if param('key') and param('key') eq token_today($domain);
 	
 	# Yesterday's key
-	return 1 if param('key') and param('key') eq token_yesterday(param('domain'));
+	return 1 if param('key') and param('key') eq token_yesterday($domain);
 	
 	return 0;
 }
@@ -39,12 +40,12 @@ sub authenticate {
 
 any '/:domain/**' => sub {
 	my $req	= request;
-	unless(authenticate) {
-		debug "Access denied for " . request->{env}->{REMOTE_ADDR};
+	unless(authenticate(param('domain'))) {
+		debug "Access denied for " param('domain') . ' - ' . request->{env}->{REMOTE_ADDR};
 		#return 'Access denied' ;
 	}
 	else {
-		debug "Access granted for " . request->{env}->{REMOTE_ADDR};
+		debug "Access granted for " param('domain') . ' - ' . request->{env}->{REMOTE_ADDR};
 	}
 	
 	content_type('application/json');
