@@ -26,5 +26,5 @@ template: "simple"
 #     start_tag: '[%'
 #     end_tag:   '%]'
 
-logger_format: %T | %m 
+logger_format: "%T | %m" 
    
