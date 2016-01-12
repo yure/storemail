@@ -150,10 +150,10 @@ sub process_emails {
 			};
 			
 			# Body
-			my $raw_html_body = remove_emoji( extract_body($struct, $imap, $mail_id, 'HTML', $mime) );
+			my $raw_html_body = extract_body($struct, $imap, $mail_id, 'HTML', $mime);
 			my $html_body = clean_html($raw_html_body);			
 			
-			my $plain_body = remove_emoji( extract_body($struct, $imap, $mail_id, 'PLAIN') );
+			my $plain_body = extract_body($struct, $imap, $mail_id, 'PLAIN');
 			
 			#$raw_body = undef if $raw_body eq '' or $body eq $raw_body;
 			
