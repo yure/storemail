@@ -59,6 +59,27 @@ get '/message/:id' => sub {
 };
 
 
+get '/message/:hash_id/read' => sub {
+    content_type('application/json');
+    my $message = schema->resultset('Message')->find({message_id => param('hash_id')});
+    return 'message not found!' unless $message;
+    unless($message->read){
+    	$message->read(time);
+    	$message->update;
+    }
+    return 1;
+};
+
+
+get '/message/hash-id/:hash_id' => sub {
+    content_type('application/json');
+    my $message = schema->resultset('Message')->find({message_id => param('hash_id')});
+    return 'message not found!' unless $message;
+    my $to = $message->to;
+    return to_json {domain => $message->domain, emails => [map {$_->email} $to->all]};
+};
+
+
 get '/message/:id/tag/set/:tag' => sub {
     content_type('application/json');
     my $message = schema->resultset('Message')->find({id => param('id'), domain => param('domain')});
@@ -111,6 +132,7 @@ post '/message/send' => sub {
 				);
     }
     catch {
+    	warn "FAILED TO SEND: " . to_json $params;
     	return to_json {error => $_};
     };
     
