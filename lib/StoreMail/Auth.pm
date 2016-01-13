@@ -23,6 +23,7 @@ sub token_yesterday {
 
 
 sub authenticate {
+	return 1 if session('admin');
 	my $domain = shift;
 	return 1 if config->{'debug'};
 	# Today's key
@@ -35,14 +36,28 @@ sub authenticate {
 }
 
 
+get '/login' => sub {
+	return template 'login.html';
+};
+
+
+post '/login' => sub {
+	if(param('password') and config->{admin_pass} and param('password') eq config->{admin_pass}){
+		session 'admin' => 1;
+		return 'logged in';
+	}
+	return 'No.';
+};
+
 
 # API
 
 any '/:domain/**' => sub {
 	my $req	= request;
 	unless(authenticate(param('domain'))) {
-		debug "Access denied for ". param('domain') . ' - ' . request->{path} . ' - ' . request->{env}->{REMOTE_ADDR};
-		return 'Access denied' ;
+		debug "Access denied for ". param('domain') . ' - ' . request->{path} . ' - ' . request->{env}->{REMOTE_ADDR} . ' Params: ' . to_json {params};
+		status 403;
+		return "Access denied" ;
 	}
 	else {
 		#debug "Access granted for ". param('domain') . ' - ' . request->{env}->{REMOTE_ADDR};

@@ -27,3 +27,5 @@ template: "simple"
 #     end_tag:   '%]'
 
 logger_format: %T %L | %m | %f %l 
+
+session: "YAML"
