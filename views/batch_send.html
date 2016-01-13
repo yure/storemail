@@ -1,0 +1,150 @@
+<script src="//cdn.tinymce.com/4/tinymce.min.js"></script>
+<script>
+//tinymce.init({ selector:'textarea#html' });
+
+
+</script>
+
+<input id="domain" type="hidden" value="<% domain %>" />
+<h1>
+	Batch send
+</h1>
+
+<div class="row">
+
+	<div class="col-md-12">
+		
+		<div class="replay" style="backgorund: white">
+			<form role="form" id="replay-form" enctype='application/json'>
+				
+				<div class="form-group">
+					<label>From</label> <input required="1" class="form-control" type="text" name="from"  />					
+				</div>
+
+				<div class="form-group">
+					<label>To (comma separated list)</label> <textarea placeholder="joe@googl.com, will@gmail.com, Primerjam.si <primerjam@primerjam.si>" class="form-control" type="text" name="to"  /></textarea>
+					
+				</div>
+				<div class="form-group">
+					<label>Cc</label> <input class="form-control" type="text" name="cc"  />
+					
+				</div>
+				<div class="form-group">
+					<label>Bcc</label> <input class="form-control" type="text" name="bcc"  />
+					
+				</div>
+
+				<div class="form-group">
+					<label>Subject</label> <input required="1" class="form-control" type="text" name="subject"  />
+					
+				</div>
+
+				<div class="form-group">
+					<label>Message</label>
+					<textarea id="html" name="body" class="form-control" rows="" cols=""></textarea>
+				</div>
+
+				<div class="form-group">
+					<label>Attachments</label>
+					<input id="att" name="file" type="file"/>
+				</div>
+				<img id="img" src="" />				
+				<ul id="attachments">
+				
+				</ul>
+				<input type="hidden" name="body_type" value="html" />
+				
+				<button id="replay-btn" type="submit" class="btn btn-default">Send</button>
+				
+			</form>
+		</div>
+
+		<div id="mails"></div>
+	
+	</div>
+
+</div>
+
+
+<script type="text/javascript">
+
+
+<!--
+	var domain = $("#domain").val();
+	var attachments = [];
+	$(function() {
+
+		$("#replay-form").submit(function(e) {
+			var message = {
+				from: this.from.value,
+				to: this.to.value,
+				cc: this.cc.value,
+				bcc: this.bcc.value,
+				body_type: 'html',
+				subject: this.subject.value,
+				body: tinyMCE.get('html').getContent(),
+				attachments: attachments,
+			}
+
+			$.ajax({
+				type : "POST",
+				url : '/' + domain + '/batch/message/send',
+				data : {data: JSON.stringify(message)},
+				dataType : 'json',
+				success: function(data) {
+					attachments = [];
+					alert('Sent!');
+				},
+				fail: function(jqXHR, textStatus) {
+					attachments = [];
+					alert('Failed!'  + textStatus);
+				},
+			});
+			return false; // avoid to execute the actual submit of the form.
+		});	
+		
+		function readFile(input) {
+		    if ( input.files && input.files[0] ) {
+		    	var filename = input.files[0].name;
+		        var FR= new FileReader();
+		        FR.onload = function(e) {
+		             $('#img').attr( "src", e.target.result );
+		             attachments.push({name: filename, content: e.target.result});
+		        };       
+		        FR.readAsDataURL( input.files[0] );
+		    }
+		}
+		
+		$("#att").change(function(){
+		    readFile( this );
+		});
+
+	})	
+		
+	
+	
+tinymce.init({
+  selector: 'textarea#html',
+  height: 500,
+  theme: 'modern',
+  plugins: [
+    'advlist autolink lists link image charmap print preview hr anchor pagebreak',
+    'searchreplace wordcount visualblocks visualchars code fullscreen',
+    'insertdatetime media nonbreaking save table contextmenu directionality',
+    'emoticons template paste textcolor colorpicker textpattern imagetools'
+  ],
+  toolbar1: 'insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image',
+  toolbar2: 'print preview media | forecolor backcolor emoticons',
+  image_advtab: true,
+  templates: [
+    { title: 'Test template 1', content: 'Test 1' },
+    { title: 'Test template 2', content: 'Test 2' }
+  ],
+  content_css: [
+    '//fast.fonts.net/cssapi/e6dc9b99-64fe-4292-ad98-6974f93cd2a2.css',
+    '//www.tinymce.com/css/codepen.min.css'
+  ]
+ });	
+//-->
+</script>
+<script src='https://javascriptbase64.googlecode.com/files/base64.js' type='text/javascript'></script>
