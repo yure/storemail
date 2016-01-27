@@ -123,6 +123,8 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 90 },
   "conversation_id",
   { data_type => "varchar", is_foreign_key => 1, is_nullable => 1, size => 45 },
+  "batch_id",
+  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
   "frm",
   { data_type => "varchar", is_nullable => 0, size => 90 },
   "name",
@@ -221,6 +223,19 @@ __PACKAGE__->belongs_to(
   "conversation",
   "StoreMail::Schema::Result::Conversation",
   { id => "conversation_id" },
+  {
+    is_deferrable => 1,
+    join_type     => "LEFT",
+    on_delete     => "SET NULL",
+    on_update     => "CASCADE",
+  },
+);
+
+
+__PACKAGE__->belongs_to(
+  "batch",
+  "StoreMail::Schema::Result::Batch",
+  { id => "batch_id" },
   {
     is_deferrable => 1,
     join_type     => "LEFT",
@@ -382,6 +397,11 @@ sub send {
 		$email->{bcc} = _csv_named_emails($self->bcc) if $self->bcc;
 	}
 	$email->{attach} = [$self->attachments_paths] if $self->attachments;
+	
+	unless($email->{to}){
+		warn 'No reciepients, cannot send.';
+		return 0;
+	}
 	
 	try{
 		my $msg = Dancer::Plugin::Email::email $email;
