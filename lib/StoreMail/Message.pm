@@ -74,6 +74,16 @@ sub new_message{
 }
 
 
+sub campaing_link_replace {
+	my ($p1,$p2,$p3,$campaign_params) = @_;
+	if(index($2, '?') > -1){
+		return "$p1$p2&$campaign_params$p3\n";
+	} 
+	else {
+		return "$p1$p2?$campaign_params$p3\n";
+	}
+}
+
 sub add_tracking {
 	my $message = shift;
 	my $html = $message->body;
@@ -88,8 +98,8 @@ sub add_tracking {
 	my $batch_name = '';
 	$batch_name = $message->batch->name if $message->batch and $message->batch->name;
 	if($batch_name){
-		my $campaign_params = "?utm_source=storemail&utm_medium=email&utm_campaign=$batch_name";
-		$html =~ s/( href\=["']?)(.*?)(["'>])/$1$2$campaign_params$3/gi;
+		my $campaign_params = "utm_source=storemail&utm_medium=email&utm_campaign=$batch_name";
+		$html =~ s/( href\=["']?)(.*?)(["'>])/campaing_link_replace($1,$2,$3,$campaign_params)/gie;
 	}
 
 	# Tracker
