@@ -85,7 +85,9 @@ sub add_tracking {
 	} 
 
 	# Campaign
-	my $campaign_params = "?utm_source=storemail&utm_medium=email&utm_campaign=".$message->batch->name;
+	my $batch_name = '';
+	$batch_name = $message->batch->name if $message->batch and $message->batch->name;
+	my $campaign_params = "?utm_source=storemail&utm_medium=email&utm_campaign=$batch_name";
 	$html =~ s/( href\=["']?)(.*?)(["'>])/$1$2$campaign_params$3/gi;
 
 	# Tracker
