@@ -4,6 +4,7 @@ use Dancer ':syntax';
 use Dancer::Plugin::Ajax;
 use Dancer::Plugin::DBIC qw(schema resultset rset);
 use StoreMail::Helper;;
+use HTML::Entities;
 use DBI;
 
 our $VERSION = '0.1';
@@ -30,10 +31,14 @@ get '/gui/provider/:comma_separated_emails' => sub {
 
 get '/gui/send-batch' => sub {
 	content_type('text/html');
+	my $emails = domain_setting(param('domain'), 'from_emails');
+	my @clean_emails;
+	push @clean_emails, encode_entities($_) for @$emails;
+
     return template 'batch_send.html', {
     	title=> 'Batch send', 
     	domain => param('domain'),
-    	from_emails => domain_setting(param('domain'), 'from_emails'),
+    	from_emails => \@clean_emails,
     };
 };
 
