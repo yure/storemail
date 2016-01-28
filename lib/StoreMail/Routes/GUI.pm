@@ -3,6 +3,7 @@ use Dancer ':syntax';
 
 use Dancer::Plugin::Ajax;
 use Dancer::Plugin::DBIC qw(schema resultset rset);
+use StoreMail::Helper;;
 use DBI;
 
 our $VERSION = '0.1';
@@ -29,7 +30,11 @@ get '/gui/provider/:comma_separated_emails' => sub {
 
 get '/gui/send-batch' => sub {
 	content_type('text/html');
-    return template 'batch_send.html', {title=> 'Provider', domain => param('domain')};
+    return template 'batch_send.html', {
+    	title=> 'Batch send', 
+    	domain => param('domain'),
+    	from_emails => domain_setting(param('domain'), 'from_emails'),
+    };
 };
 
 

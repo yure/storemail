@@ -147,6 +147,11 @@ post '/batch/message/send' => sub {
 	my $params = from_json encode('utf8', $rawparams);
     my @emails = split(',', $params->{to});
     my @sent;
+    
+    # Batch 
+    my $batch = schema->resultset('Batch')->create({name => $params->{campaign_name}});
+    $params->{batch_id} = $batch->id;
+    
     for my $email (@emails){
     	$params->{to} = $email;
 	    my $message = StoreMail::Message::new_message(							

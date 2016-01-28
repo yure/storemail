@@ -5,8 +5,8 @@ our $VERSION = '0.1';
 
 use Dancer::Plugin::DBIC qw(schema resultset rset);
 use StoreMail::Email;
+use StoreMail::Helper;;
 use Encode;
-sub trim {	my $str = shift; $str =~ s/^\s+|\s+$//g if $str; return $str;}
 
 sub new_message{
 	my (%arg) = @_;
@@ -27,6 +27,7 @@ sub new_message{
     	plain_body => $arg{plain_body},
     	message_id => $arg{message_id},
     	source => $arg{source},
+    	batch_id => $arg{batch_id},
     	subject => decode("MIME-Header", $arg{subject}),
     	direction => $arg{direction},
     	date => $arg{date},
@@ -76,14 +77,20 @@ sub new_message{
 sub add_tracking {
 	my $message = shift;
 	my $html = $message->body;
-	my $tracker_url = domain_setting($message->domain, 'tracker_url');
+	
 	my $mid = $message->message_id;
 	unless($mid){
 		$mid = $message->id_hash;
 		$message->message_id($mid);
 	} 
+
+	# Campaign
+	my $campaign_params = "?utm_source=storemail&utm_medium=email&utm_campaign=".$message->batch->name;
+	$html =~ s/( href\=["']?)(.*?)(["'>])/$1$2$campaign_params$3/gi;
+
+	# Tracker
+	my $tracker_url = domain_setting($message->domain, 'tracker_url');
 	$tracker_url =~ s/\[MID\]/$mid/g;
-	# Links
 	$html =~ s/( href\=["']?)(.*?)(["'>])/$1$tracker_url$2$3/gi;
 	
 	# Tracking pixle
@@ -91,15 +98,9 @@ sub add_tracking {
 	$pixle_url =~ s/\[MID\]/$mid/g;
 	$html .= "<img src=\"$pixle_url\" height=\"1\" width=\"1\">";
 	
+	
 	$message->body($html);
 	1;
-}
-
-
-sub domain_setting {
-	my ($domain, $var) = @_;
-	return config->{domains}->{$domain}->{$var} if defined config->{domains} and defined config->{domains}->{$domain} and defined config->{domains}->{$domain}->{$var};
-	return config->{$var};
 }
 
 
