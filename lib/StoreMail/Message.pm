@@ -87,8 +87,10 @@ sub add_tracking {
 	# Campaign
 	my $batch_name = '';
 	$batch_name = $message->batch->name if $message->batch and $message->batch->name;
-	my $campaign_params = "?utm_source=storemail&utm_medium=email&utm_campaign=$batch_name";
-	$html =~ s/( href\=["']?)(.*?)(["'>])/$1$2$campaign_params$3/gi;
+	if($batch_name){
+		my $campaign_params = "?utm_source=storemail&utm_medium=email&utm_campaign=$batch_name";
+		$html =~ s/( href\=["']?)(.*?)(["'>])/$1$2$campaign_params$3/gi;
+	}
 
 	# Tracker
 	my $tracker_url = domain_setting($message->domain, 'tracker_url');
