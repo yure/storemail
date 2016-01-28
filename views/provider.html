@@ -1,8 +1,8 @@
 
-<input id="from" type="hidden" value="<% from %>" />
-<input id="domain" type="hidden" value="<% domain %>" />
+<input id="from" type="hidden" value="[% from %]" />
+<input id="domain" type="hidden" value="[% domain %]" />
 <h1>
-	Conversation <% subject %>
+	Conversation [% subject %]
 </h1>
 
 <div class="row">
@@ -106,7 +106,7 @@ $.fn.serializeObject = function() {
 				bcc: this.bcc.value,
 				body_type: this.type.value,
 				subject: this.subject.value,
-				track: this.track.value,
+			//	track: 1,
 				body: this.body.value,
 				attachments: attachments,
 			}

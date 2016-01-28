@@ -5,7 +5,7 @@
 
 </script>
 
-<input id="domain" type="hidden" value="<% domain %>" />
+<input id="domain" type="hidden" value="[% domain %]" />
 <h1>
 	Batch send
 </h1>
@@ -15,14 +15,21 @@
 	<div class="col-md-12">
 		
 		<div class="replay" style="backgorund: white">
-			<form role="form" id="replay-form" enctype='application/json'>
+			<form role="form" id="replay-form" enctype='application/json' onsubmit="return confirm('Submit this form?')">
 				
 				<div class="form-group">
-					<label>From</label> <input required="1" class="form-control" type="text" name="from"  />					
+					
+					<label>From</label> 
+					<select class="form-control" required="1"  name="from">
+						[% FOREACH email = from_emails %]
+							<option>[% email %]</option>					
+						[% END %]					
+					</select>
 				</div>
 
 				<div class="form-group">
-					<label>To (comma separated list)</label> <textarea placeholder="joe@googl.com, will@gmail.com, Primerjam.si <primerjam@primerjam.si>" class="form-control" type="text" name="to"  /></textarea>
+					<label>To (comma separated list)</label> 
+					<textarea required="1" placeholder="joe@googl.com, will@gmail.com, Primerjam.si <primerjam@primerjam.si>" class="form-control" type="text" name="to"  /></textarea>
 					
 				</div>
 				<div class="form-group">
@@ -48,11 +55,19 @@
 					<label>Attachments</label>
 					<input id="att" name="file" type="file"/>
 				</div>
-				<img id="img" src="" />				
+				<img id="img" />				
 				<ul id="attachments">
 				
 				</ul>
 				<input type="hidden" name="body_type" value="html" />
+				
+				<hr>
+				
+								
+				<div class="form-group">
+					<label>Campaign name*</label> <input required="1" class="form-control" type="text" name="campaign_name"  />
+					
+				</div>
 				
 				<button id="replay-btn" type="submit" class="btn btn-default">Send</button>
 				
@@ -82,6 +97,7 @@
 				bcc: this.bcc.value,
 				body_type: 'html',
 				subject: this.subject.value,
+				campaign_name: this.campaign_name.value,
 				body: tinyMCE.get('html').getContent(),
 				attachments: attachments,
 			}
