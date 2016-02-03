@@ -385,7 +385,6 @@ sub attachment_id_dir {
 sub send {
 	my ($self, $redirect) = @_;
 	my $to = $redirect || join(", ", map( $_->email, $self->emails));
-	print localtime()."Sending mail to $to from " . $self->frm. ": " . $self->subject.'. ';
 	
 	my $email = {
 		from    => $self->named_from,
@@ -406,27 +405,20 @@ sub send {
 	}
 	$email->{attach} = [$self->attachments_paths] if $self->attachments;
 	
-	unless($email->{to}){
-		warn 'No reciepients, cannot send.';
-		return 0;
+	unless($email->{to}){		
+		return 0, 'No reciepients, cannot send.';
 	}
 	
 	try{
 		my $msg = Dancer::Plugin::Email::email $email;
 		if ($msg->{type} and $msg->{type} eq 'failure'){
-			warn $msg->{string};
-			return 0;
+			return 0, $msg->{string};
 		}		
-		print "Sent.\n";
-		return 1;
+		return 1, "Sent";
 	} 
 	catch {
-		my $fail_count = $self->send_queue_fail_count;
-		$self->send_queue_fail_count($fail_count+1);
-		$self->send_queue_sleep(time() + 10 ** $fail_count );
-		$self->update;
-		print $_;
-		return 0;
+		
+		return 0, 'FAILURE. '.$_;
 	};
 }
 

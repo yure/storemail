@@ -143,7 +143,11 @@ sub run_once {
 sub usage
 {
     my ($opt_name, $opt_value) = @_;
-    print "your usage text goes here...\n";
+    print 
+'    --start
+    --stop
+    --redirect name@mail.com | redirects everything
+';
     exit(0);
 }
 

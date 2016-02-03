@@ -26,21 +26,29 @@ sub send {
 		send_queue_sleep => {'<' => time()}
 	}, {order_by => { -desc => 'date' }} );
 	
-	if (my $count = $messages->search( {},{columns => [qw/id/]} )->count() ) {
+	if (my $count = $messages->search( {'send_queue_fail_count' => {'<' => 6}},{columns => [qw/id/]} )->count() ) {
 	
 		printt ("$count emails found. Processing..." . ($args->{redirect} ? 'with redirect to '.$args->{redirect}.' ...' : '') );
 	
-		#splice @unread, 5;
 		while (my $message = $messages->next) {
-			if($message->send($args->{redirect})){
+			my $fc = $message->send_queue_fail_count;
+			
+			printt "[".$message->frm." to " . join(', ', $message->toccbcc) . "] " . ($fc ? "[TRY ".($fc+1)."] " : '') . $message->subject.' | ';
+			
+			my ($status, $msg) = $message->send($args->{redirect});
+			if($status){
 				$message->send_queue(undef);
 				$message->update;				
 			}
 			else {
-				print ' - FAILED ';
+				my $fail_count = $message->send_queue_fail_count;
+				$message->send_queue_fail_count($fail_count+1);
+				$message->send_queue_sleep(time() + 10 ** $fail_count );
+				$message->update;
 			}
+			print $msg;
 		}
-		print 'Done.\n'
+		print "\n"
 	}
 	else{
 		print ".";
