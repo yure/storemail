@@ -168,10 +168,32 @@ post '/batch/message/send' => sub {
 };
 
 
+post '/message/:id/clicked' => sub {
+    content_type('application/json');
+    
+    my $message = schema->resultset('Message')->find({message_id => param('id'), domain => param('domain')});    
+	return 'message not found!' unless $message;    
+    
+    my ($protocol, $url_no_protocol) = split( '//', param('url'), 2);
+    my ($host_path, $params) = split('\?', $url_no_protocol, 2);
+    my ($host, $path) = split('/', $host_path, 2);
+    
+    $message->add_to_clicks({
+    	'date' => param('datetime'), 
+    	'url' => param('url'), 
+    	'host' => $host, 
+    	'path' => $path, 
+    	'params' => $params, 
+    });
+   
+	return 1;
+};
+
+
 get '/message/:id/read' => sub {
     content_type('application/json');
     
-    my $message = schema->resultset('Message')->find({id => param('id'), domain => param('domain')});    
+    my $message = schema->resultset('Message')->find({message_id => param('id'), domain => param('domain')});    
     $message->update({'new' => 0 });
    
     return to_json $message->hash;
@@ -181,7 +203,7 @@ get '/message/:id/read' => sub {
 get '/message/:id/unread' => sub {
     content_type('application/json');
     
-    my $message = schema->resultset('Message')->find({id => param('id'), domain => param('domain')});    
+    my $message = schema->resultset('Message')->find({message_id => param('id'), domain => param('domain')});    
     $message->update({'new' => 1 });
    
     return to_json $message->hash;

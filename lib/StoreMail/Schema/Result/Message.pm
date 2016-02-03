@@ -261,6 +261,14 @@ __PACKAGE__->has_many(
 );
 
 
+__PACKAGE__->has_many(
+  "clicks",
+  "StoreMail::Schema::Result::Click",
+  { "foreign.message_id" => "self.id" },
+  { cascade_copy => 1, cascade_delete => 1 },
+);
+
+
 
 sub to {
 	my ($self) = @_;

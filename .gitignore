@@ -3,6 +3,7 @@ environments/
 attachments
 public/attachments
 logs
+sessions
 *.log
 *log.txt
 *.pid
