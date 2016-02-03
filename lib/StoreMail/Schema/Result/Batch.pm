@@ -11,6 +11,7 @@ __PACKAGE__->table("batch");
 
 __PACKAGE__->add_columns(
   "id" => { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  "domain" => { data_type => "varchar", is_nullable => 1, size => 90 },
   "name" => { data_type => "varchar", is_nullable => 1, size => 255 },  
 );
 
@@ -22,6 +23,33 @@ __PACKAGE__->has_many(
   { "foreign.batch_id" => "self.id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
+
+
+sub hash {
+	my ($self) = @_;
+	return {
+		id => $self->id,
+		domain => $self->domain,
+		name => $self->name,
+	}
+}
+
+sub sibling_ids {
+	my ($self) = @_;
+	my $schema = $self->result_source->schema; 
+
+	my $siblings = $schema->resultset('Batch')->search({name => $self->name, domain => $self->domain});
+
+	return map {$_->id} $siblings->all; 
+	
+}
+
+sub campaign_messages {
+	my ($self) = @_;
+	my $schema = $self->result_source->schema; 
+	my @siblings = $self->sibling_ids;
+	return $schema->resultset('Message')->search({ batch_id => {'-in' => \@siblings} });
+}
 
 
 1;

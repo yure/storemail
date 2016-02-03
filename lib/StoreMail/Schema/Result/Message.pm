@@ -179,7 +179,7 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 45 },
   "sent",
   { data_type => "integer", is_nullable   => 1, },
-  "read",
+  "opened",
   { data_type => "integer", is_nullable   => 1, },
 );
 
@@ -448,10 +448,11 @@ sub hash {
     	send_queue_fail_count => $self->send_queue_fail_count,
     	type => $self->type,
     	tags => [map($_->value, $self->tags)],
-    	read => $self->read,
+    	opened => $self->opened,
     	sent => $self->sent,
 	}
 }
+
 
 sub hash_lite {
 	my ($self) = @_;
@@ -462,6 +463,22 @@ sub hash_lite {
     	id => $self->id ,
     	tags => [map($_->value, $self->tags)],
 	}
+}
+
+
+sub hash_campaign {
+	my ($self) = @_;
+	my $hash = {
+		from => $self->frm,
+    	to => [map {$_->email} $self->to],
+    	date => $self->date ,
+    	id => $self->id ,
+    	opened => $self->opened,
+	};
+    
+    $hash->{clicks} = [map($_->url, $self->clicks)] if $self->clicks->count;
+	
+	return $hash
 }
  
 sub id_hash {
