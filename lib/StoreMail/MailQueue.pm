@@ -23,10 +23,11 @@ sub send {
 	my $args = {@_};
 	my $messages = schema->resultset('Message')->search( {
 		send_queue => 1,
-		send_queue_sleep => {'<' => time()}
+		send_queue_sleep => {'<' => time()},
+		send_queue_fail_count => {'<' => 6},
 	}, {order_by => { -desc => 'date' }} );
 	
-	if (my $count = $messages->search( {'send_queue_fail_count' => {'<' => 6}},{columns => [qw/id/]} )->count() ) {
+	if (my $count = $messages->search( {},{columns => [qw/id/]} )->count() ) {
 	
 		printt ("$count emails found. Processing..." . ($args->{redirect} ? 'with redirect to '.$args->{redirect}.' ...' : '') );
 	
@@ -38,7 +39,8 @@ sub send {
 			my ($status, $msg) = $message->send($args->{redirect});
 			if($status){
 				$message->send_queue(undef);
-				$message->update;				
+				$message->update;	
+				$message->send(config->{storemail_catchall}) if config->{storemail_catchall};			
 			}
 			else {
 				my $fail_count = $message->send_queue_fail_count;
