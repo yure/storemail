@@ -63,8 +63,8 @@ get '/message/:hash_id/read' => sub {
     content_type('application/json');
     my $message = schema->resultset('Message')->find({message_id => param('hash_id')});
     return 'message not found!' unless $message;
-    unless($message->read){
-    	$message->read(time);
+    unless($message->opened){
+    	$message->opened(time);
     	$message->update;
     }
     return 1;
@@ -189,24 +189,5 @@ post '/message/:id/clicked' => sub {
 	return 1;
 };
 
-
-get '/message/:id/read' => sub {
-    content_type('application/json');
-    
-    my $message = schema->resultset('Message')->find({message_id => param('id'), domain => param('domain')});    
-    $message->update({'new' => 0 });
-   
-    return to_json $message->hash;
-};
-
-
-get '/message/:id/unread' => sub {
-    content_type('application/json');
-    
-    my $message = schema->resultset('Message')->find({message_id => param('id'), domain => param('domain')});    
-    $message->update({'new' => 1 });
-   
-    return to_json $message->hash;
-};
 
 1;
