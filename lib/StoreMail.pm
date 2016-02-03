@@ -18,6 +18,7 @@ use StoreMail::Routes::Message;
 use StoreMail::Routes::Conversation;
 use StoreMail::Routes::Provider;
 use StoreMail::Routes::Tag;
+use StoreMail::Routes::Batch;
 
 
 our $VERSION = '0.1';
