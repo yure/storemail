@@ -1,0 +1,20 @@
+<input id="domain" type="hidden" value="[% domain %]" />
+
+<h1>Campaigns from [% domain %]</h1>
+
+<div id="mails">
+	[% FOREACH c = campaigns %]
+		<h2>
+			<a href="/[% domain %]/gui/campaign/[% c.name %]">
+				[% c.name %]
+			</a>
+		</h2>
+		<div>
+		<ul>
+			[% FOREACH m = c.campaign_messages %]
+				<li>[% m.toccbcc %]</li>			
+			[% END %]
+		</ul>
+		</div>
+	[% END %]
+</div>

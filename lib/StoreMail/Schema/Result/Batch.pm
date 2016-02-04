@@ -52,4 +52,24 @@ sub campaign_messages {
 }
 
 
+sub campaign_groupped_messages {
+	my ($self) = @_;
+	
+	my (@clicked, @opened, @not_opened);
+    
+    for my $message ($self->campaign_messages->search()->all){
+    	if($message->clicks->count){
+    		push @clicked, $message->hash_campaign;
+    	}
+    	elsif($message->opened){
+    		push @opened, $message->hash_campaign;
+    	}
+    	else{
+    		push @not_opened, $message->hash_campaign;
+    	}
+    }
+    
+    return (\@clicked, \@opened, \@not_opened);
+}
+
 1;

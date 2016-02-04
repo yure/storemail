@@ -42,5 +42,34 @@ get '/gui/send-batch' => sub {
     };
 };
 
+get '/gui/campaign' => sub {
+	content_type('text/html');
+	my $campaigns = schema->resultset('Batch')->search({domain => param('domain')}, {group_by => 'name'});
+
+    return template 'campaign_list.html', {
+    	title=> 'Campaign manager', 
+    	domain => param('domain'),
+    	campaigns => [$campaigns->all],
+    };
+};
+
+get '/gui/campaign/:name' => sub {
+	content_type('text/html');
+	my $campaign = schema->resultset('Batch')->search({domain => param('domain'), name => param('name')})->first;
+
+	return 'Campaign not found!' unless $campaign;
+
+    my ($clicked, $opened, $not_opened) = $campaign->campaign_groupped_messages;
+
+    return template 'campaign.html', {
+    	title=> 'Campaign manager', 
+    	domain => param('domain'),
+    	clicked => $clicked,
+    	opened => $opened,
+    	not_opened => $not_opened,
+    	campaign => $campaign,
+    };
+};
+
 
 true;

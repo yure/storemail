@@ -1,0 +1,67 @@
+<input id="domain" type="hidden" value="[% domain %]" />
+
+<span>Campaign manager</span>
+<h1><strong>[% campaign.name %]</strong> details</h1>
+
+
+<h2>Clicked</h2>
+<table class="table table-striped table-hover">
+[% FOREACH m = clicked %]
+
+				<tr>
+				<td class="id">
+					[% m.id %]
+				</td>
+				
+				<td style="width:100%">
+				 [% FOREACH t = m.to %][% t %] [% END %] 
+				</td>
+				<tr>
+				<td colspan=2>
+				<ul class="clicks">[% FOREACH c = m.clicks %]<li>[% c %] </li>[% END %]</ul>
+				<td>
+				</tr>			
+[% END %]
+</table>
+
+<h2>Opened</h2>
+<table class="table table-striped table-hover">
+[% FOREACH m = opened %]
+
+				<tr>
+				<td class="id">
+					[% m.id %]
+				</td>
+				
+				<td style="width:100%"> 
+				 [% FOREACH t = m.to %][% t %] [% END %] 
+				</td>
+						
+[% END %]
+</table>
+
+
+<h2>Not opened</h2>
+<table class="table table-striped table-hover">
+[% FOREACH m = not_opened %]
+
+				<tr>
+				<td class="id">
+					[% m.id %]
+				</td>
+				
+				<td style="width:100%">
+				 [% FOREACH t = m.to %][% t %] [% END %] 
+				</td>
+						
+[% END %]
+</table>
+
+
+
+
+<script lang="JavaScript">
+	$('.clicks').click(function(){
+		$(this).toggle
+	})
+</script>

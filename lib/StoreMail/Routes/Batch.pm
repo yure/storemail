@@ -26,24 +26,14 @@ get '/campaign/:name' => sub {
     return "Campaign not found" unless $batch;
     my @messages = $batch->campaign_messages;
     
+    my ($clicked, $opened, $not_opened) = $batch->campaign_groupped_messages;
+    
     my $context = {
     	name => param('name'),
-    	clicked => [],
-    	opened => [],
-    	not_opened => [],
+    	clicked => $clicked,
+    	opened => $opened,
+    	not_opened => $not_opened,
     };
-    
-    for my $message ($batch->campaign_messages->search()->all){
-    	if($message->clicks->count){
-    		push $context->{clicked}, $message->hash_campaign;
-    	}
-    	elsif($message->opened){
-    		push $context->{opened}, $message->hash_campaign;
-    	}
-    	else{
-    		push $context->{not_opened}, $message->hash_campaign;
-    	}
-    }
     
     return to_json $context;
 };
