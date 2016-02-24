@@ -44,7 +44,7 @@ get '/gui/send-batch' => sub {
 
 get '/gui/campaign' => sub {
 	content_type('text/html');
-	my $campaigns = schema->resultset('Batch')->search({domain => param('domain')}, {group_by => qw/name id domain/});
+	my $campaigns = schema->resultset('Batch')->search({domain => param('domain')}, {group_by => qw/name id domain/, order_by => {'-desc' => 'id'}});
 
     return template 'campaign_list.html', {
     	title=> 'Campaign manager', 
@@ -65,6 +65,7 @@ get '/gui/campaign/:name' => sub {
     	title=> 'Campaign manager', 
     	domain => param('domain'),
     	clicked => $clicked,
+    	clicked_count => scalar @$clicked,
     	opened => $opened,
     	not_opened => $not_opened,
     	campaign => $campaign,

@@ -2,19 +2,16 @@
 
 <h1>Campaigns from [% domain %]</h1>
 
+<a class="btn btn-primary" href="/[% domain %]/gui/send-batch">+ New campaign</a>
+
 <div id="mails">
+<h2>Campaigns</h2>
 	[% FOREACH c = campaigns %]
-		<h2>
+		<div>
 			<a href="/[% domain %]/gui/campaign/[% c.name %]">
 				[% c.name %]
 			</a>
-		</h2>
-		<div>
-		<ul>
-			[% FOREACH m = c.campaign_messages %]
-				<li>[% m.toccbcc %]</li>			
-			[% END %]
-		</ul>
+			([% c.date %])
 		</div>
 	[% END %]
 </div>

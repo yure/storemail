@@ -25,6 +25,13 @@ __PACKAGE__->has_many(
 );
 
 
+sub date {
+	my ($self) = @_;
+	my $msg = $self->messages->first;
+	return undef unless $msg;
+	return $msg->date;
+}
+
 sub hash {
 	my ($self) = @_;
 	return {
