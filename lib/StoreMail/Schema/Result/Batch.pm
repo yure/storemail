@@ -79,4 +79,6 @@ sub campaign_groupped_messages {
     return (\@clicked, \@opened, \@not_opened);
 }
 
+
+
 1;

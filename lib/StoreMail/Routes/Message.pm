@@ -140,34 +140,6 @@ post '/message/send' => sub {
 };
 
 
-post '/batch/message/send' => sub {
-    content_type('application/json');
-    
-	my $rawparams = param('data');
-	my $params = from_json encode('utf8', $rawparams);
-    my @emails = split(',', $params->{to});
-    my @sent;
-    
-    # Batch 
-    my $batch = schema->resultset('Batch')->create({name => $params->{campaign_name}});
-    $params->{batch_id} = $batch->id;
-    
-    for my $email (@emails){
-    	$params->{to} = $email;
-	    my $message = StoreMail::Message::new_message(							
-					direction => 'o',
-					send_queue => 1,
-					domain => param('domain'),
-					%$params
-				);
-	    
-	    push @sent, $email;
-    }
-   
-    return to_json \@sent;
-};
-
-
 post '/message/:id/clicked' => sub {
     content_type('application/json');
     

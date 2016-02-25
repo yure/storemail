@@ -13,6 +13,18 @@
 <div class="row">
 
 	<div class="col-md-12">
+
+		<div id="confirm" style="display:none">
+			<h2>Confirm</h2>
+			<p>Preview has been send to <span id="preview-email"></span></p>
+			<hr>
+			
+			<h3>Sending batch to:</h3>
+			<p id="to-list"></p>
+			<button id="confirm-send" class="btn btn-success">Send to all!</button>
+			<hr style="margin-bottom: 20px" />
+		</div>
+			
 		
 		<div id="mail-form" class="replay" style="backgorund: white">
 			<form role="form" id="replay-form" enctype='application/json'" onsubmit="return confirm('Send preview?')">
@@ -59,6 +71,11 @@
 				</div>
 
 				<div class="form-group">
+					<label>Unsubscibe text</label>
+					<textarea id="unsub_text" name="unsub_text" class="form-control" rows="" cols="">[[[ Unsubscibe ]]] from this list.</textarea>
+				</div>
+
+				<div class="form-group">
 					<label>Attachments</label>
 					<input id="att" name="file" type="file"/>
 				</div>
@@ -83,18 +100,7 @@
 			</form>
 		</div>
 
-		
 
-		<div id="confirm" style="display:none">
-			<h2>Confirm</h2>
-			<p>Preview has been send to <span id="preview-email"></span></p>
-			<hr>
-			
-			<h3>Sending batch to:</h3>
-			<p id="to-list"></p>
-			<button id="confirm-send" class="btn btn-success">Send to all!</button>
-		</div>
-	
 	</div>
 
 </div>
@@ -124,6 +130,7 @@
 				subject: this.subject.value,
 				campaign_name: this.campaign_name.value,				
 				body: tinyMCE.get('html').getContent(),
+				unsub_text: this.unsub_text.value,
 				attachments: attachments,
 			};
 			
@@ -135,8 +142,9 @@
 			// Send preview
 			send_one(message, preview_email)
 			
-			$('#mail-form').hide();
+			//$('#mail-form').hide();
 			$('#confirm').show();
+			$('html,body').scrollTop(0);
 			
 			return false; // avoid to execute the actual submit of the form.
 		});
