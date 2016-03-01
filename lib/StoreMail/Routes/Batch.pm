@@ -50,7 +50,10 @@ post '/batch/message/send' => sub {
     my @sent;
     
     # Batch 
-    my $batch = schema->resultset('Batch')->create({name => $params->{campaign_name}});
+    my $batch = schema->resultset('Batch')->create({
+    	name => $params->{campaign_name},
+    	domain => param('domain'),
+    });
     $params->{batch_id} = $batch->id;
     
     
