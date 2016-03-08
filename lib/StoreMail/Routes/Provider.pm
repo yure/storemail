@@ -59,11 +59,9 @@ get '/provider/:comma_separated_emails' => sub {
 	$where->{-and} = [];
 	push $where->{-and}, [ -or => [
 	    		-and => [
-	    			direction => 'i',
 	    			-or => [map( (frm => $_), @emails )]
     			],    		
 	    		-and => [
-	    			direction => 'o',
 	    			-or => [map( ('emails.email' => $_), @emails )]
     			],    		
     		]];
