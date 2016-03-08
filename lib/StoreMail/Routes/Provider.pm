@@ -22,11 +22,9 @@ get '/provider/unread/:comma_separated_emails' => sub {
     		domain => param('domain'),
     		-or => [
 	    		-and => [
-	    			direction => 'i',
 	    			-or => [map( (frm => $_), @emails )]
     			],    		
 	    		-and => [
-	    			direction => 'o',
 	    			-or => [map( ('emails.email' => $_), @emails )]
     			],    		
     		],
