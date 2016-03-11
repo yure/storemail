@@ -35,6 +35,9 @@ sub new_message{
     	type => $arg{type} || 'email',
     });
 
+	# Generate msg id
+	$message->message_id($message->id_hash) unless $message->message_id;
+
 	# Tracking
 	if(domain_setting($message->domain, 'track') or (defined $arg{track} and $arg{track} == '1') ){
 		add_tracking($message);
@@ -88,11 +91,7 @@ sub add_tracking {
 	my $message = shift;
 	my $html = $message->body;
 	
-	my $mid = $message->message_id;
-	unless($mid){
-		$mid = $message->id_hash;
-		$message->message_id($mid);
-	} 
+	my $mid = $message->message_id;	
 
 	# Campaign
 	my $batch_name = '';

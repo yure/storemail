@@ -327,6 +327,17 @@ sub attachments {
 }
 
 
+sub attachment_links {
+	my $self = shift;
+	my $id = $self->id;
+	my @hash_chunks = ( $self->message_id =~ m/../g );
+	my $hash_path = join '/', @hash_chunks;
+	return [
+		map {{	filename => $_,	link => "/attachments/$hash_path/$_" }} $self->attachments
+	]
+}
+
+
 sub add_attachments {
 	my ($self, @files) = @_;
 	my $id = $self->attachment_id_dir;
@@ -440,7 +451,7 @@ sub hash {
     	subject => $self->subject,
     	body => $self->body,
     	date => $self->date ,
-    	attachments => $self->attachments ? [$self->attachments] : [],
+    	attachments => $self->attachments ? $self->attachment_links : [],
     	direction => $self->direction,
     	new => $self->get_column('new') ? 0 : 1,
     	type => $self->type,
@@ -485,5 +496,6 @@ sub id_hash {
 	my ($self) = @_;
 	return md5_hex($self->id . config->{salt});
 }
+ 
  
 1;
