@@ -108,7 +108,7 @@ use overload
 
 sub named_email {
 	my $self = shift;
-	return encode("MIME-Header", $self->name ? $self->name."<".$self->email.">" : $self->email); 
+	return $self->name ? encode("MIME-Q",$self->name)." <".$self->email.">" : $self->email; 
 }
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

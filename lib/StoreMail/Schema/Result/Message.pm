@@ -400,7 +400,7 @@ sub send {
 	my $email = {
 		from    => $self->named_from,
 		subject => '=?UTF-8?B?'.encode_base64(encode("UTF-8",$self->subject)).'?=',
-		body => $self->body || " ",
+		body => encode("UTF-8",$self->body) || " ",
 		type => $self->body_type,
 	};
 	
@@ -429,13 +429,13 @@ sub send {
 	} 
 	catch {
 		
-		return 0, 'FAILURE. '.$_;
+		return 0, 'FAILURE. '. to_json($email) .' '.$_;
 	};
 }
 
 sub named_from {
 	my $self = shift;
-	return encode("MIME-Header", $self->name ? $self->name." <".$self->frm.">" : $self->frm); 
+	return  $self->name ? encode("MIME-Q",$self->name)." <".$self->frm.">" : $self->frm; 
 }
 
 
