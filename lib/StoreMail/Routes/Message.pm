@@ -121,22 +121,34 @@ post '/message/send' => sub {
     
 	my $rawparams = param('data');
 	my $params = from_json encode('utf8', $rawparams);
+	$params->{send_queue} = 1;
+	
     my $message;
+    my $error_message;
     try{
+		# Send
 	    $message = StoreMail::Message::new_message(							
 					direction => 'o',
-					send_queue => 1,
 					domain => param('domain'),
 					track => param('track'),
 					%$params
 				);
     }
-    catch {
+    catch {	
     	warn "FAILED TO SEND: " . to_json $params;
-    	return to_json {error => $_};
+    	$error_message = $_;
     };
+
+	if ($error_message or !$message){
+		status 400;    
+	}
     
-    return to_json {success => $message ? 1 : 0};
+    return $error_message->{msg} if $error_message;
+    return 'Error' unless $message;
+    
+    # Message created
+    status 201;
+    return $message->id;
 };
 
 
