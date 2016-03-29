@@ -24,6 +24,7 @@ use MIME::Base64 qw(encode_base64);
 my $appdir = realpath( "$FindBin::Bin/..");
 use Try::Tiny;
 use Digest::MD5 qw(md5 md5_hex md5_base64);
+use URI::Escape;
 
 
 =head1 TABLE: C<message>
@@ -333,7 +334,7 @@ sub attachment_links {
 	my @hash_chunks = ( $self->message_id =~ m/../g );
 	my $hash_path = join '/', @hash_chunks;
 	return [
-		map {{	filename => $_,	link => "/attachments/$hash_path/$_" }} $self->attachments
+		map {{	filename => $_,	link => "/attachments/$hash_path/" . uri_escape $_ }} $self->attachments
 	]
 }
 
