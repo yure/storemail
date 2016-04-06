@@ -57,22 +57,41 @@ post '/batch/message/send' => sub {
     $params->{batch_id} = $batch->id;
     
     
+    my $error_message;
+    try{
+	    for my $email (@emails){
+		    # Unsubscribe msg
+	    	add_unsub_link($params, $email);
+	    	
+	    	$params->{to} = $email;
+		    my $message = StoreMail::Message::new_message(							
+						direction => 'o',
+						send_queue => 1,
+						domain => param('domain'),
+						%$params
+					);
+		    
+		    push @sent, $message->id;
+	    }
+    }	    
+    catch {	
+    	warn "FAILED TO SEND: " . to_json $params;
+    	$error_message = $_;
+    };
+
+	if ($error_message){
+		status 400;    
+	    return $error_message->{msg} if $error_message;
+	}
+
+	unless(@sent){
+		status 400;    
+	    return 'Error' unless @sent;
+	}
     
-    for my $email (@emails){
-	    # Unsubscribe msg
-    	add_unsub_link($params, $email);
-    	
-    	$params->{to} = $email;
-	    my $message = StoreMail::Message::new_message(							
-					direction => 'o',
-					send_queue => 1,
-					domain => param('domain'),
-					%$params
-				);
-	    
-	    push @sent, $email;
-    }
-   
+    
+   # Messages created
+    status 201;
     return to_json \@sent;
 };
 
