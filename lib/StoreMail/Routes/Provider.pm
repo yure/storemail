@@ -7,10 +7,10 @@ use StoreMail::Message;
 use Dancer::Plugin::DBIC qw(schema resultset rset);
 
 
-prefix '/:domain';
+prefix '/:domain/provider';
 
 
-get '/provider/unread/:comma_separated_emails' => sub {
+get '/unread/:comma_separated_emails' => sub {
 	content_type('application/json');
 	
 	return to_json {error => 'No emails specified'} if (index (param('comma_separated_emails'), '@') < 0); 
@@ -42,7 +42,7 @@ get '/provider/unread/:comma_separated_emails' => sub {
 };
 
 
-get '/provider/:comma_separated_emails' => sub {
+get '/:comma_separated_emails' => sub {
 	content_type('application/json');
 	
 	return to_json {error => 'No emails specified'} if (index (param('comma_separated_emails'), '@') < 0);
@@ -53,18 +53,48 @@ get '/provider/:comma_separated_emails' => sub {
 	my %hash   = map { $_, 1 } @emails;
    	@emails = keys %hash;
 
-	#debug('emails :', \@emails);
+	# SQL
+	
+	my $sql = q|
+			SELECT id FROM (
+
+				SELECT e.message_id as id, m.date
+				FROM email e
+				LEFT JOIN message m  ON e.message_id = m.id 
+				WHERE  
+				domain = ? 
+				AND 
+				( |. (join ' OR ', map {"e.email = ?"} @emails) .q|  )
+				
+				UNION
+				
+				SELECT id, date
+				FROM message m
+				WHERE  
+				domain = ? 
+				
+				AND  
+				( |. (join ' OR ', map {"frm = ?"} @emails) .q|  ) 
+			
+			) a
+			
+			ORDER BY date 
+			
+			;|;
+	#return $sql;
+	my $dbh = schema->storage->dbh;
+	my $sth = $dbh->prepare($sql) or die "Couldn't prepare statement: " . $dbh->errstr;
+	$sth->execute(param('domain'), @emails, param('domain'), @emails);
+	
+	my @ids;
+	while (my @data = $sth->fetchrow_array()) {
+            push @ids, $data[0];
+          }
 
 	my $where;
+	my @join;
 	$where->{-and} = [];
-	push $where->{-and}, [ -or => [
-	    		-and => [
-	    			-or => [map( (frm => $_), @emails )]
-    			],    		
-	    		-and => [
-	    			-or => [map( ('emails.email' => $_), @emails )]
-    			],    		
-    		]];
+	push $where->{-and}, {id => {'-in' => \@ids}};
 
 	# Search
 	my $search =  param('search');
@@ -76,6 +106,7 @@ get '/provider/:comma_separated_emails' => sub {
 	# Tag Search
 	my $tags =  param('tags');
 	if($tags){
+		push @join, 'tags';
 		my @tags_condition;
 		for my $tag (split ',', $tags){
 			#push $where->{-and}, {'tags.value' => $tag};
@@ -96,13 +127,11 @@ get '/provider/:comma_separated_emails' => sub {
     my $rs = schema->resultset('Message')->result_source;
     my @columns = $rs->columns;	
 
-    $where->{domain} = param('domain');
     my $messages = schema->resultset('Message')->search(
     	$where,
     	{ 
-			join => ['emails', 'tags'],    		 
-    		order_by => 'date',
-	   	group_by => [ map {"me.$_"} @columns ]		
+			join => [@join],    		 
+		   	#group_by => [ map {"me.$_"} @columns ]	,			 
     	}
     );
     
