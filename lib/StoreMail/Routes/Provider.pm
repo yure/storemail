@@ -58,7 +58,7 @@ get '/:comma_separated_emails' => sub {
 	my $sql = q|
 			SELECT id FROM (
 
-				SELECT e.message_id as id, m.date
+				SELECT m.id, m.date
 				FROM email e
 				LEFT JOIN message m  ON e.message_id = m.id 
 				WHERE  
@@ -68,7 +68,7 @@ get '/:comma_separated_emails' => sub {
 				
 				UNION
 				
-				SELECT id, date
+				SELECT id, m.date
 				FROM message m
 				WHERE  
 				domain = ? 
@@ -81,7 +81,7 @@ get '/:comma_separated_emails' => sub {
 			ORDER BY date 
 			
 			;|;
-	#return $sql;
+	
 	my $dbh = schema->storage->dbh;
 	my $sth = $dbh->prepare($sql) or die "Couldn't prepare statement: " . $dbh->errstr;
 	$sth->execute(param('domain'), @emails, param('domain'), @emails);
@@ -90,9 +90,10 @@ get '/:comma_separated_emails' => sub {
 	while (my @data = $sth->fetchrow_array()) {
             push @ids, $data[0];
           }
-
+	
 	my $where;
-	my @join;
+	my @join = ('emails');
+	
 	$where->{-and} = [];
 	push $where->{-and}, {id => {'-in' => \@ids}};
 
@@ -105,8 +106,8 @@ get '/:comma_separated_emails' => sub {
 
 	# Tag Search
 	my $tags =  param('tags');
+	push @join, 'tags';
 	if($tags){
-		push @join, 'tags';
 		my @tags_condition;
 		for my $tag (split ',', $tags){
 			#push $where->{-and}, {'tags.value' => $tag};
@@ -130,7 +131,7 @@ get '/:comma_separated_emails' => sub {
     my $messages = schema->resultset('Message')->search(
     	$where,
     	{ 
-			join => [@join],    		 
+			prefetch => [@join],    		 
 		   	#group_by => [ map {"me.$_"} @columns ]	,			 
     	}
     );

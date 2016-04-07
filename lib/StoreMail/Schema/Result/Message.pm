@@ -293,6 +293,16 @@ sub toccbcc {
 	return $self->to, $self->cc, $self->bcc;
 }
 
+sub toccbcc_hash {
+	my ($self) = @_;
+	my $hash = {};
+	for my $email ($self->emails){
+		$hash->{$email->type} ||= [];
+		push $hash->{$email->type}, {email => $email->email, name => $email->name};
+	}
+	return %$hash;
+}
+
 sub _csv_emails {
 	my @items = @_;
 	return undef unless @items;
@@ -446,9 +456,7 @@ sub hash {
 		id => $self->id,
 		from => $self->frm,
 		from_name => $self->name,
-    	to => [map({email => $_->email, name => $_->name}, $self->to)],
-    	cc => [map({email => $_->email, name => $_->name}, $self->cc)],
-    	bcc => [map({email => $_->email, name => $_->name}, $self->bcc)],
+    	$self->toccbcc_hash,
     	subject => $self->subject,
     	body => $self->body,
     	date => $self->date ,
