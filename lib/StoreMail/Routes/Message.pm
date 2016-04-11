@@ -123,14 +123,14 @@ post '/message/send' => sub {
     
 	my $rawparams = param('data');
 	my $params = from_json encode('utf8', $rawparams);
-	$params->{send_queue} = 1;
+	
+	status 406 and return "FROM can't be empty" unless $params->{'from'};
+	status 406 and return "TO can't be empty" unless $params->{'to'};
+	status 406 and return "SUBJECT can't be empty" unless $params->{'subject'};
 	
     my $message;
     my $error_message;
     try{
-		# Process group logic
-		#$params = StoreMail::Group::new_group_from_message(param('domain'), $params) if $params->{group};
-		
 		# Create
 	    my $response = StoreMail::Message::new_message(							
 					direction => 'o',
