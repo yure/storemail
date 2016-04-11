@@ -7,6 +7,8 @@ use DBI;
 use Dancer::Plugin::DBIC qw(schema resultset rset);
 use Encode;
 use Try::Tiny;
+require StoreMail::Group;
+require StoreMail::Message;
 
 prefix '/:domain';
 set serializer => 'JSON';
@@ -115,7 +117,7 @@ get '/message/:id/tag/get_all' => sub {
     return to_json { tags =>  [map { $_->value } $message->tags->all] };
 };
 
-
+ 
 post '/message/send' => sub {
     content_type('application/json');
     
@@ -126,25 +128,38 @@ post '/message/send' => sub {
     my $message;
     my $error_message;
     try{
-		# Send
-	    $message = StoreMail::Message::new_message(							
+		# Process group logic
+		#$params = StoreMail::Group::new_group_from_message(param('domain'), $params) if $params->{group};
+		
+		# Create
+	    my $response = StoreMail::Message::new_message(							
 					direction => 'o',
 					domain => param('domain'),
 					track => param('track'),
 					%$params
 				);
+		$message = $response->{message};
+		
+		# Send
+		unless($response->{group_send} == 1){
+			$message->send_queue(1);
+	    	$message->update;
+		}
     }
     catch {	
     	warn "FAILED TO SEND: " . to_json $params;
     	$error_message = $_;
     };
 
-	if ($error_message or !$message){
+	if ($error_message){
 		status 400;    
+	    return $error_message->{msg};
 	}
-    
-    return $error_message->{msg} if $error_message;
-    return 'Error' unless $message;
+
+	if (!$message){
+		status 400;    
+	    return 'Error';
+	}
     
     # Message created
     status 201;

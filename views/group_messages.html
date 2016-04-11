@@ -1,0 +1,46 @@
+<script src="//cdn.tinymce.com/4/tinymce.min.js"></script>
+<script>
+	//tinymce.init({ selector:'textarea#html' });
+</script>
+
+<input id="domain" type="hidden" value="[% domain %]" />
+<h1>
+	Group <strong>[% group.name %]</strong>
+</h1>
+
+<div class="row">
+
+	<div class="col-md-12">
+
+		<div id="confirm" style="display: none">
+			<h2>Confirm</h2>
+			<p>
+				Preview has been send to <span id="preview-email"></span>
+			</p>
+			<hr>
+
+			<h3>Sending batch to:</h3>
+			<p id="to-list"></p>
+			<button id="confirm-send" class="btn btn-success">Send to all!</button>
+			<hr style="margin-bottom: 20px" />
+		</div>
+
+	[% FOREACH e = group.messages %]
+	<div style="margin: 10px">
+		From: [% e.name %] [% e.frm %]
+		<div id="mail-form" class="replay" style="backgorund: white">
+		[% e.body %]
+			
+		</div>
+	</div>
+	<hr>
+	[% END%]
+
+	</div>
+	
+	
+
+</div>
+
+<div style="padding: 20px; word-wrap: break-word; font-family: monospace;" id="response"></div>
+

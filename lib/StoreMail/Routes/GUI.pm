@@ -29,6 +29,11 @@ get '/gui/provider/:comma_separated_emails' => sub {
     return template 'provider.html', {title=> 'Provider', domain => param('domain'), from => param('comma_separated_emails')};
 };
 
+get '/gui/send' => sub {
+	content_type('text/html');	
+    return template 'send.html', {title=> 'Simple send', domain => param('domain')};
+};
+
 get '/gui/send-batch' => sub {
 	content_type('text/html');
 	my $emails = domain_setting(param('domain'), 'from_emails');
@@ -39,6 +44,42 @@ get '/gui/send-batch' => sub {
     	title=> 'Batch send', 
     	domain => param('domain'),
     	from_emails => \@clean_emails,
+    };
+};
+
+get '/gui/send-group' => sub {
+	content_type('text/html');
+	my $emails = domain_setting(param('domain'), 'from_emails');
+	my @clean_emails;
+	push @clean_emails, encode_entities($_) for @$emails;
+
+    return template 'group_send.html', {
+    	title=> 'Group send', 
+    	domain => param('domain'),
+    	from_emails => \@clean_emails,
+    };
+};
+
+get '/gui/group' => sub {
+	content_type('text/html');
+	my $emails = domain_setting(param('domain'), 'from_emails');
+	my @clean_emails;
+	push @clean_emails, encode_entities($_) for @$emails;
+
+    return template 'group.html', {
+    	title=> 'Group send', 
+    	domain => param('domain'),
+    	from_emails => \@clean_emails,
+    };
+};
+
+get '/gui/group/:email' => sub {
+	content_type('text/html');
+	my $group = schema->resultset('Group')->find({domain => param('domain'), email => param('email')});
+
+    return template 'group_messages.html', {
+    	group => $group, 
+    	domain => param('domain'),
     };
 };
 

@@ -1,6 +1,5 @@
-#!/usr/bin/env perl
 package StoreMail::MailQueue;
-use Dancer ':script';
+use Dancer ':syntax';
 
 use Mail::IMAPClient;
 use Dancer::Plugin::DBIC qw(schema resultset rset);

@@ -64,12 +64,17 @@ post '/batch/message/send' => sub {
 	    	add_unsub_link($params, $email);
 	    	
 	    	$params->{to} = $email;
+	    	
+	    	# Create
 		    my $message = StoreMail::Message::new_message(							
-						direction => 'o',
-						send_queue => 1,
+						direction => 'o',			
 						domain => param('domain'),
 						%$params
 					);
+		    
+		    # Send 
+		    $message->send_queue(1);
+    		$message->update;
 		    
 		    push @sent, $message->id;
 	    }

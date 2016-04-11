@@ -1,0 +1,109 @@
+<script src="//cdn.tinymce.com/4/tinymce.min.js"></script>
+<script>
+	//tinymce.init({ selector:'textarea#html' });
+</script>
+
+<input id="domain" type="hidden" value="[% domain %]" />
+<h1>
+	Group send <strong>[% domain %]</strong>
+</h1>
+
+<div class="row">
+
+	<div class="col-md-12">
+
+		<div id="confirm" style="display: none">
+			<h2>Confirm</h2>
+			<p>
+				Preview has been send to <span id="preview-email"></span>
+			</p>
+			<hr>
+
+			<h3>Sending batch to:</h3>
+			<p id="to-list"></p>
+			<button id="confirm-send" class="btn btn-success">Send to all!</button>
+			<hr style="margin-bottom: 20px" />
+		</div>
+
+
+		<div id="mail-form" class="replay" style="backgorund: white">
+			<form id="replay-form" enctype='application/json'>
+
+				<div class="form-group">
+					<label>A (comma separated list)</label> <input required="required" placeholder="joe@googl.com, will@gmail.com, Primerjam.si <primerjam@primerjam.si>" class="form-control" type="text" name="a" />
+
+				</div>
+				<div class="form-group">
+					<label>B (comma separated list)</label> <input required="required" placeholder="joe@googl.com, will@gmail.com, Primerjam.si <primerjam@primerjam.si>" class="form-control" type="text" name="b" />
+
+				</div>
+				<div class="form-group">
+					<label>Send only (comma separated list)</label> <input placeholder="joe@googl.com, will@gmail.com, Primerjam.si <primerjam@primerjam.si>" class="form-control" type="text" name="send_only" />
+				</div>
+				<div class="form-group">
+					<label>Group ID</label> <input required="1" class="form-control" type="text" name="group_id" />
+
+				</div>
+
+				<div class="form-group">
+					<label>Group name</label> <input required="1" class="form-control" type="text" name="group_name" />
+
+				</div>
+
+
+
+				<hr>
+
+				<button id="replay-btn" type="submit" class="btn btn-primary">Send</button>
+
+			</form>
+		</div>
+
+
+	</div>
+	
+	
+
+</div>
+
+<div style="padding: 20px; word-wrap: break-word; font-family: monospace;" id="response"></div>
+
+
+<script type="text/javascript">
+<!--
+	var domain = $("#domain").val();
+	var attachments = [];
+	var message;
+	var to;
+	$(function() {
+
+		$("#replay-form").submit(function(e) {
+			data = {
+				a : this.a.value,
+				b : this.b.value,
+				send_only : this.send_only.value,
+				id : this.group_id.value,
+				name : this.group_name.value
+			};
+
+			$.ajax({
+				type : "POST",
+				url : '/' + domain + '/group/create',
+				data : {
+					data : JSON.stringify(data)
+				},
+				dataType : 'json',
+				success : function(data) {
+					$('#response').html(JSON.stringify(data));
+				},
+				fail : function(jqXHR, textStatus) {
+					attachments = [];
+					alert('Preview sending failed!' + textStatus);
+				},
+			});
+
+			return false; // avoid to execute the actual submit of the form.
+		});
+
+	})
+</script>
