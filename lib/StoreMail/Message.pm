@@ -5,75 +5,93 @@ our $VERSION = '0.1';
 
 use Dancer::Plugin::DBIC qw(schema resultset rset);
 use StoreMail::Email;
-use StoreMail::Helper;;
+use StoreMail::Helper;
+use StoreMail::Group;
 use Encode;
+use Email::MIME;
+my $appdir = config->{appdir};
+
 
 sub new_message{
-	my (%arg) = @_;
-
-	my $conversation_id = $arg{id} and $arg{domain} ? $arg{id}."@".$arg{domain} : undef;
-	my ($name, $email) = extract_email($arg{from});
-
+	my $arg = {@_};
 
 	# Save new message to DB
+	my ($name, $email) = extract_email($arg->{from});
+
     my $message = schema->resultset('Message')->create({
-#    	conversation_id => $conversation_id,
-    	domain => $arg{domain},
+    	domain => $arg->{domain},
+    	group_id => $arg->{group_id},
+    	group_message_parent_id => $arg->{group_message_parent_id},
     	frm => $email,
+    	reply_to => $arg->{reply_to},
     	name => $name,
-    	body => $arg{body},
-    	body_type => $arg{body_type},
-    	raw_body => $arg{raw_body},
-    	plain_body => $arg{plain_body},
-    	message_id => $arg{message_id},
-    	source => $arg{source},
-    	batch_id => $arg{batch_id},
-    	subject => decode("MIME-Header", $arg{subject}),
-    	direction => $arg{direction},
-    	date => $arg{date},
-    	'new' => $arg{'new'} || 1,    	
-    	type => $arg{type} || 'email',
+    	body => $arg->{body},
+    	body_type => $arg->{body_type},
+    	raw_body => $arg->{raw_body},
+    	plain_body => $arg->{plain_body},
+    	message_id => $arg->{message_id},
+    	source => $arg->{source},
+    	batch_id => $arg->{batch_id},
+    	subject => decode("MIME-Header", $arg->{subject}),
+    	direction => $arg->{direction},
+    	date => $arg->{date},
+    	'new' => $arg->{'new'} || 1,    	
+    	type => $arg->{type} || 'email',
     });
 
 	# Generate msg id
 	$message->message_id($message->id_hash) unless $message->message_id;
 
 	# Tracking
-	if(domain_setting($message->domain, 'track') or (defined $arg{track} and $arg{track} == '1') ){
+	if(domain_setting($message->domain, 'track') or (defined $arg->{track} and $arg->{track} == '1') ){
 		add_tracking($message);
 	}
     
     # Add recipients
     my @types = ('to', 'cc', 'bcc');
-    for my $type (@types){
-    	next unless $arg{$type};
-	    $arg{$type} = [$arg{$type}] unless ref $arg{$type} eq 'ARRAY';
-	    for my $raw_emails ( @{$arg{$type}} ){
-		    for my $raw_email ( split ',', $raw_emails ){
-		    	my ($name, $email) = extract_email($raw_email);
+    for my $type (@types){    	
+    	for my $p (extract_emails($arg->{$type})){
 		    	$message->update_or_create_related('emails', {
-		    		email => $email, 
-		    		name => $name, 
+		    		email => $p->{email}, 
+		    		name => $p->{name}, 
 		    		type => $type, 
 		    	});
-		    }
-	    }
+    	}
+    	
     }   
     
     # Add tags
-    if($arg{tags}){
-	    for my $tag ( split ',', $arg{tags} ){
+    if($arg->{tags}){
+	    for my $tag ( split ',', $arg->{tags} ){
 	    	my $related = $message->search_related('tags', { value => $tag });
 	    	$message->create_related('tags', {value => $tag}) unless $related->count;
 	    }
     }
        
     
-    # Save attachments
-   $message->add_attachments(@{$arg{attachments}}) if $arg{attachments};
-    $message->send_queue($arg{send_queue});
-    $message->update;
-    return $message;
+    # Save POST attachments
+    $message->add_attachments(@{$arg->{attachments}}) if $arg->{attachments};
+
+	# Save IMAP attachments
+	my $mail_str = $arg->{mail_str};
+	if($mail_str){
+		my $dir = "$appdir/public/attachments/".$message->attachment_id_dir;
+		Email::MIME->new($mail_str)->walk_parts(sub {
+			my($part) = @_;
+	  		return unless defined $part->content_type and $part->content_type =~ /\bname="([^"]+)"/;  # " grr...
+	  		system( "mkdir -p $dir" ) unless (-e $dir); 
+			my $name = "$dir/$1";
+			#printt "$0: writing $name...\n";
+			open my $att_fh, ">", $name or warn "$0: open $name: $!";
+			print $att_fh $part->body;
+			close $att_fh or warn "$0: close $name: $!";
+		});
+	}
+
+    # Group
+	my $group_send = StoreMail::Group::send_group($message) unless $arg->{group_mail_import};
+    
+    return {message => $message, group_send => $group_send};
 }
 
 
@@ -116,15 +134,5 @@ sub add_tracking {
 	1;
 }
 
-
-sub extract_email {
-	my $str = shift;
-	$str = decode("MIME-Header", $str);
-	my ($name, $email) = $str =~ /(.*?)<(.*?)>/s;
-	$email = $str unless $email;
-	$name = trim($name);
-	$name = undef if defined $name and $name eq '';
-	return (trim($name), trim($email));
-}
 
 true;

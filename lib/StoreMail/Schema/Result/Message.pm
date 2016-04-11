@@ -25,6 +25,7 @@ my $appdir = realpath( "$FindBin::Bin/..");
 use Try::Tiny;
 use Digest::MD5 qw(md5 md5_hex md5_base64);
 use URI::Escape;
+use File::Copy qw(copy);
 
 
 =head1 TABLE: C<message>
@@ -124,10 +125,16 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 255 },
   "batch_id",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
+  "group_id",
+  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
+  "group_message_parent_id",
+  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
   "frm",
-  { data_type => "varchar", is_nullable => 0, size => 90 },
+  { data_type => "varchar", is_nullable => 0, size => 255 },
+  "reply_to",
+  { data_type => "varchar", is_nullable => 1, size => 255 },
   "name",
-  { data_type => "varchar", is_nullable => 1, size => 90 },
+  { data_type => "varchar", is_nullable => 1, size => 255 },
   "body",
   { data_type => "text", is_nullable => 1 },
   "plain_body",
@@ -163,19 +170,19 @@ __PACKAGE__->add_columns(
     data_type => "varchar",
     default_value => "email",
     is_nullable => 0,
-    size => 45,
+    size => 255,
   },
   "body_type",
   {
     data_type => "varchar",
     default_value => "plain",
     is_nullable => 0,
-    size => 10,
+    size => 255,
   },
   "message_id",
-  { data_type => "varchar", is_nullable => 1, size => 36 },
+  { data_type => "varchar", is_nullable => 1, size => 255 },
   "source",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "varchar", is_nullable => 1, size => 255 },
   "sent",
   { data_type => "integer", is_nullable   => 1, },
   "opened",
@@ -219,17 +226,11 @@ Related object: L<StoreMail::Schema::Result::Conversation>
 =cut
 
 __PACKAGE__->belongs_to(
-  "conversation",
-  "StoreMail::Schema::Result::Conversation",
-  { id => "conversation_id" },
-  {
-    is_deferrable => 1,
-    join_type     => "LEFT",
-    on_delete     => "SET NULL",
-    on_update     => "CASCADE",
-  },
+  "group_message_parent",
+  "StoreMail::Schema::Result::Message",
+  { id => "group_message_parent_id" },
+  { is_deferrable => 1, on_delete => "SET NULL", on_update => "SET NULL" },
 );
-
 
 __PACKAGE__->belongs_to(
   "batch",
@@ -241,6 +242,13 @@ __PACKAGE__->belongs_to(
     on_delete     => "SET NULL",
     on_update     => "CASCADE",
   },
+);
+
+
+__PACKAGE__->has_many(
+  "group_message_children",
+  "StoreMail::Schema::Result::Message",
+  { "foreign.group_message_parent_id" => "self.id" },
 );
 
 
@@ -267,6 +275,12 @@ __PACKAGE__->has_many(
   { cascade_copy => 1, cascade_delete => 1 },
 );
 
+__PACKAGE__->belongs_to(
+  "group",
+  "StoreMail::Schema::Result::Group",
+  { id => "group_id" },
+  { is_deferrable => 1, on_delete => "SET NULL", on_update => "SET NULL" },
+);
 
 
 sub to {
@@ -288,7 +302,7 @@ sub bcc {
 
 sub toccbcc {
 	my ($self) = @_;
-	return $self->to, $self->cc, $self->bcc;
+	return $self->emails;
 }
 
 sub toccbcc_hash {
@@ -374,10 +388,32 @@ sub add_attachments {
 }
  
  
+sub copy_attachments {
+	my ($self, $message) = @_;
+	my @files = $message->attachments;
+	return 0 unless @files;
+	my $from_dir = $message->attachments_dir;
+	my $to_dir = $self->attachments_dir;
+	system( "mkdir -p $to_dir" ) unless (-e $to_dir);  
+	my $count = 0;
+	for my $file (@files){
+		copy "$from_dir/$file", "$to_dir/$file";		
+    }
+    return $count;
+}
+ 
+ 
 sub attachments_paths {
 	my ($self) = @_;
 	my $id = $self->attachment_id_dir;
 	return map {"$appdir/public/attachments/$id/$_"} $self->attachments;
+}
+ 
+ 
+sub attachments_dir {
+	my ($self) = @_;
+	my $id = $self->attachment_id_dir;
+	return "$appdir/public/attachments/$id";
 }
 
 
@@ -411,6 +447,7 @@ sub send {
 		subject => '=?UTF-8?B?'.encode_base64(encode("UTF-8",$self->subject)).'?=',
 		body => encode("UTF-8",$self->body) || " ",
 		type => $self->body_type,
+		'reply-to' => $self->reply_to,
 	};
 	
 	# Redirect if set
@@ -504,5 +541,15 @@ sub id_hash {
 	return md5_hex($self->id . config->{salt});
 }
  
+ 
+sub make_copy {
+	my ($self) = @_;
+	my $schema = $self->result_source->schema; 
+	$self->id(undef);	
+	$self->message_id(undef);	
+	my $msg = $schema->resultset('Message')->create( $self->{_column_data} );
+	$msg->message_id($msg->id_hash);	
+	return $msg;
+}
  
 1;
