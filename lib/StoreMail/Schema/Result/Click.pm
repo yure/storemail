@@ -17,7 +17,7 @@ __PACKAGE__->add_columns(
 	"url" => { data_type => "text", is_nullable => 0 },  
 	"host" => { data_type => "varchar", is_nullable => 1 },  
 	"path" => { data_type => "varchar", is_nullable => 1 },  
-	"params" => { data_type => "varchar", is_nullable => 1 },  
+	"params" => { data_type => "text", is_nullable => 1 },  
 );
 
 
