@@ -1,6 +1,6 @@
 -- 
 -- Created by SQL::Translator::Producer::MySQL
--- Created on Wed Feb  3 13:22:35 2016
+-- Created on Wed Mar 16 13:20:44 2016
 -- 
 ;
 SET foreign_key_checks=0;
@@ -29,16 +29,6 @@ CREATE TABLE `click` (
   CONSTRAINT `click_fk_message_id` FOREIGN KEY (`message_id`) REFERENCES `message` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 --
--- Table: `conversation`
---
-CREATE TABLE `conversation` (
-  `id` varchar(45) NOT NULL,
-  `domain` varchar(45) NULL,
-  `subject` varchar(45) NULL,
-  `date` timestamp NOT NULL DEFAULT current_timestamp,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB;
---
 -- Table: `email`
 --
 CREATE TABLE `email` (
@@ -51,13 +41,25 @@ CREATE TABLE `email` (
   CONSTRAINT `email_fk_message_id` FOREIGN KEY (`message_id`) REFERENCES `message` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 --
+-- Table: `group_email`
+--
+CREATE TABLE `group_email` (
+  `group_id` integer NOT NULL,
+  `email` varchar(90) NOT NULL,
+  `name` varchar(90) NULL,
+  `side` varchar(15) NOT NULL DEFAULT 'A',
+  INDEX `group_email_idx_group_id` (`group_id`),
+  PRIMARY KEY (`group_id`, `email`),
+  CONSTRAINT `group_email_fk_group_id` FOREIGN KEY (`group_id`) REFERENCES `message_group` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;
+--
 -- Table: `message`
 --
 CREATE TABLE `message` (
   `id` integer NOT NULL auto_increment,
   `domain` varchar(90) NULL,
-  `conversation_id` varchar(45) NULL,
   `batch_id` integer NULL,
+  `group_id` integer NULL,
   `frm` varchar(90) NOT NULL,
   `name` varchar(90) NULL,
   `body` text NULL,
@@ -77,11 +79,20 @@ CREATE TABLE `message` (
   `sent` integer NULL,
   `opened` integer NULL,
   INDEX `message_idx_batch_id` (`batch_id`),
-  INDEX `message_idx_conversation_id` (`conversation_id`),
+  INDEX `message_idx_group_id` (`group_id`),
   PRIMARY KEY (`id`),
   UNIQUE `message_id_UNIQUE` (`message_id`),
   CONSTRAINT `message_fk_batch_id` FOREIGN KEY (`batch_id`) REFERENCES `batch` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT `message_fk_conversation_id` FOREIGN KEY (`conversation_id`) REFERENCES `conversation` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+  CONSTRAINT `message_fk_group_id` FOREIGN KEY (`group_id`) REFERENCES `message_group` (`id`) ON DELETE SET NULL ON UPDATE SET NULL
+) ENGINE=InnoDB;
+--
+-- Table: `message_group`
+--
+CREATE TABLE `message_group` (
+  `id` integer NOT NULL auto_increment,
+  `value` varchar(90) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE `value_UNIQUE` (`value`)
 ) ENGINE=InnoDB;
 --
 -- Table: `tag`
@@ -92,16 +103,5 @@ CREATE TABLE `tag` (
   INDEX `tag_idx_message_id` (`message_id`),
   PRIMARY KEY (`message_id`, `value`),
   CONSTRAINT `tag_fk_message_id` FOREIGN KEY (`message_id`) REFERENCES `message` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB;
---
--- Table: `user`
---
-CREATE TABLE `user` (
-  `conversation_id` varchar(45) NOT NULL,
-  `email` varchar(90) NOT NULL,
-  `name` varchar(45) NULL,
-  INDEX `user_idx_conversation_id` (`conversation_id`),
-  PRIMARY KEY (`conversation_id`, `email`),
-  CONSTRAINT `user_fk_conversation_id` FOREIGN KEY (`conversation_id`) REFERENCES `conversation` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB;
 SET foreign_key_checks=1;
