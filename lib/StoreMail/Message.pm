@@ -17,7 +17,7 @@ sub new_message{
 
 	# Save new message to DB
     my $message = schema->resultset('Message')->create({
-    	conversation_id => $conversation_id,
+#    	conversation_id => $conversation_id,
     	domain => $arg{domain},
     	frm => $email,
     	name => $name,

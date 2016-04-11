@@ -22,7 +22,7 @@ CREATE TABLE `message_group` (
   `id` integer NOT NULL,
   `email` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE `value_UNIQUE` (`value`)
+  UNIQUE `email_UNIQUE` (`email`)
 ) ENGINE=InnoDB;
 
 ;
