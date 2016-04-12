@@ -89,7 +89,8 @@ sub new_message{
 	}
 
     # Group
-	my $group_send = StoreMail::Group::send_group($message) unless $arg->{group_mail_import};
+	my $group_send; 
+	$group_send = StoreMail::Group::send_group($message) unless $arg->{group_mail_import};
     
     return {message => $message, group_send => $group_send};
 }

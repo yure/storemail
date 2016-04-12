@@ -66,15 +66,16 @@ post '/batch/message/send' => sub {
 	    	$params->{to} = $email;
 	    	
 	    	# Create
-		    my $message = StoreMail::Message::new_message(							
+		    my $response = StoreMail::Message::new_message(							
 						direction => 'o',			
 						domain => param('domain'),
 						%$params
 					);
+			$message = $response->{message};		
 		    
 		    # Send 
 		    $message->send_queue(1);
-    		$message->update;
+   			$message->update;
 		    
 		    push @sent, $message->id;
 	    }
@@ -84,16 +85,8 @@ post '/batch/message/send' => sub {
     	$error_message = $_;
     };
 
-	if ($error_message){
-		status 400;    
-	    return $error_message->{msg} if $error_message;
-	}
-
-	unless(@sent){
-		status 400;    
-	    return 'Error' unless @sent;
-	}
-    
+	status 400 and return $error_message if $error_message;
+	status 400 and return 'Error' unless @sent;
     
    # Messages created
     status 201;

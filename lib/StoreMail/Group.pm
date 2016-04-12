@@ -109,7 +109,7 @@ sub send_group {
 		
 		unless( $sender_member){
 			warn $message->frm . " not authorized to send to group " . $group->email;
-			return -1;
+			return 0;
 		}
 		
 		for my $c ($group->emails->search({side => { '!=' => $sender_member->side }, can_recieve => 1})->all){
@@ -153,9 +153,10 @@ sub send_group {
 			
 			$fwd_message->update;
 		}
+		return 1;
 	}
 	
-	return 1;
+	return 0;
 }
 
 true;
