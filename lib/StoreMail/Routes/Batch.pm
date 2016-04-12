@@ -71,7 +71,7 @@ post '/batch/message/send' => sub {
 						domain => param('domain'),
 						%$params
 					);
-			$message = $response->{message};		
+			my $message = $response->{message};		
 		    
 		    # Send 
 		    $message->send_queue(1);
