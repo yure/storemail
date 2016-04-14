@@ -487,13 +487,16 @@ sub named_from {
 
 sub hash {
 	my ($self) = @_;
+	
+	my $clean_body = body_cleanup($self->body);
+	
 	return {
 		id => $self->id,
 		from => $self->frm,
 		from_name => $self->name,
     	$self->toccbcc_hash,
     	subject => $self->subject,
-    	body => $self->body,
+    	body => $clean_body,
     	date => $self->date ,
     	attachments => $self->attachments ? $self->attachment_links : [],
     	direction => $self->direction,
@@ -550,6 +553,15 @@ sub make_copy {
 	my $msg = $schema->resultset('Message')->create( $self->{_column_data} );
 	$msg->message_id($msg->id_hash);	
 	return $msg;
+}
+ 
+
+sub body_cleanup {
+	my ($body) = @_;	
+	return undef unless $body;
+	$body =~ s/<style(.+?)<\/style>//smg; # Remove style tag
+	$body =~ s/<base(.+?)>//smg; # Remove <base>
+	return $body;
 }
  
 1;
