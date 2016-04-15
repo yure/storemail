@@ -561,7 +561,7 @@ sub body_cleanup {
 	return undef unless $body;
 	# Extract body content
 	$body =~ /<body[^>]*>(.*)<\/body>/smgi; # Remove style tag
-	$body = $1;
+	$body = $1 if $1;
 	
 	$body =~ s/<style(.+?)<\/style>//smgi; # Remove style tag
 	$body =~ s/<script(.+?)<\/script>//smgi; # Remove script tags
