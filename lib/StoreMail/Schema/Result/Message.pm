@@ -561,6 +561,7 @@ sub body_cleanup {
 	return undef unless $body;
 	$body =~ s/<style(.+?)<\/style>//smgi; # Remove style tag
 	$body =~ s/<script(.+?)<\/script>//smgi; # Remove script tags
+	$body =~ s/<head(.+?)<\/head>/<head><\/head>/smgi; # Remove head tags
 	$body =~ s/<script(.+?)>//smgi; # Remove scripts
 	$body =~ s/<base(.+?)>//smgi; # Remove <base>
 	$body =~ s/<img(.+?)>//smgi; # Remove images
