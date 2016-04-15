@@ -559,9 +559,14 @@ sub make_copy {
 sub body_cleanup {
 	my ($body) = @_;	
 	return undef unless $body;
+	# Extract body content
+	$body =~ /<body[^>]*>(.*)<\/body>/smgi; # Remove style tag
+	$body = $1;
+	
 	$body =~ s/<style(.+?)<\/style>//smgi; # Remove style tag
 	$body =~ s/<script(.+?)<\/script>//smgi; # Remove script tags
-	$body =~ s/<head(.+?)<\/head>/<head><\/head>/smgi; # Remove head tags
+	#$body =~ s/<head(.+?)<\/head>/<head><\/head>/smgi; # Remove head tags
+	$body =~ s/<script(.+?)>//smgi; # Empty opening body
 	$body =~ s/<script(.+?)>//smgi; # Remove scripts
 	$body =~ s/<base(.+?)>//smgi; # Remove <base>
 	$body =~ s/<img(.+?)>//smgi; # Remove images
