@@ -1,0 +1,969 @@
+---
+schema:
+  procedures: {}
+  tables:
+    batch:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - id
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+      fields:
+        domain:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: domain
+          order: 2
+          size:
+            - 90
+        id:
+          data_type: integer
+          default_value: ~
+          is_auto_increment: 1
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: id
+          order: 1
+          size:
+            - 0
+        name:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: name
+          order: 3
+          size:
+            - 255
+      indices: []
+      name: batch
+      options: []
+      order: 1
+    click:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - id
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+        - deferrable: 1
+          expression: ''
+          fields:
+            - message_id
+          match_type: ''
+          name: click_fk_message_id
+          on_delete: CASCADE
+          on_update: CASCADE
+          options: []
+          reference_fields:
+            - id
+          reference_table: message
+          type: FOREIGN KEY
+      fields:
+        date:
+          data_type: datetime
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: date
+          order: 3
+          size:
+            - 0
+        host:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: host
+          order: 5
+          size:
+            - 0
+        id:
+          data_type: integer
+          default_value: ~
+          is_auto_increment: 1
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: id
+          order: 1
+          size:
+            - 0
+        message_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: message_id
+          order: 2
+          size:
+            - 0
+        params:
+          data_type: text
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: params
+          order: 7
+          size:
+            - 0
+        path:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: path
+          order: 6
+          size:
+            - 0
+        url:
+          data_type: text
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: url
+          order: 4
+          size:
+            - 0
+      indices:
+        - fields:
+            - message_id
+          name: click_idx_message_id
+          options: []
+          type: NORMAL
+      name: click
+      options: []
+      order: 2
+    email:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - message_id
+            - email
+            - type
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+        - deferrable: 1
+          expression: ''
+          fields:
+            - message_id
+          match_type: ''
+          name: email_fk_message_id
+          on_delete: CASCADE
+          on_update: CASCADE
+          options: []
+          reference_fields:
+            - id
+          reference_table: message
+          type: FOREIGN KEY
+      fields:
+        email:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: email
+          order: 2
+          size:
+            - 90
+        message_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: message_id
+          order: 1
+          size:
+            - 0
+        name:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: name
+          order: 4
+          size:
+            - 90
+        type:
+          data_type: varchar
+          default_value: to
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: type
+          order: 3
+          size:
+            - 15
+      indices:
+        - fields:
+            - message_id
+          name: email_idx_message_id
+          options: []
+          type: NORMAL
+      name: email
+      options: []
+      order: 3
+    group_email:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - group_id
+            - email
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+        - deferrable: 1
+          expression: ''
+          fields:
+            - group_id
+          match_type: ''
+          name: group_email_fk_group_id
+          on_delete: CASCADE
+          on_update: CASCADE
+          options: []
+          reference_fields:
+            - id
+          reference_table: message_group
+          type: FOREIGN KEY
+      fields:
+        can_recieve:
+          data_type: tinyint
+          default_value: 1
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: can_recieve
+          order: 6
+          size:
+            - 0
+        can_send:
+          data_type: tinyint
+          default_value: 1
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: can_send
+          order: 5
+          size:
+            - 0
+        email:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: email
+          order: 2
+          size:
+            - 255
+        group_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: group_id
+          order: 1
+          size:
+            - 0
+        name:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: name
+          order: 3
+          size:
+            - 90
+        side:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: side
+          order: 4
+          size:
+            - 15
+      indices:
+        - fields:
+            - group_id
+          name: group_email_idx_group_id
+          options: []
+          type: NORMAL
+      name: group_email
+      options: []
+      order: 4
+    message:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - id
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+        - deferrable: 1
+          expression: ''
+          fields:
+            - message_id
+          match_type: ''
+          name: message_id_UNIQUE
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: UNIQUE
+        - deferrable: 1
+          expression: ''
+          fields:
+            - batch_id
+          match_type: ''
+          name: message_fk_batch_id
+          on_delete: SET NULL
+          on_update: CASCADE
+          options: []
+          reference_fields:
+            - id
+          reference_table: batch
+          type: FOREIGN KEY
+        - deferrable: 1
+          expression: ''
+          fields:
+            - group_id
+          match_type: ''
+          name: message_fk_group_id
+          on_delete: SET NULL
+          on_update: SET NULL
+          options: []
+          reference_fields:
+            - id
+          reference_table: message_group
+          type: FOREIGN KEY
+        - deferrable: 1
+          expression: ''
+          fields:
+            - group_message_parent_id
+          match_type: ''
+          name: message_fk_group_message_parent_id
+          on_delete: SET NULL
+          on_update: SET NULL
+          options: []
+          reference_fields:
+            - id
+          reference_table: message
+          type: FOREIGN KEY
+      fields:
+        batch_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: batch_id
+          order: 3
+          size:
+            - 0
+        body:
+          data_type: text
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: body
+          order: 9
+          size:
+            - 0
+        body_type:
+          data_type: varchar
+          default_value: plain
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: body_type
+          order: 20
+          size:
+            - 255
+        date:
+          data_type: timestamp
+          default_value: !!perl/ref
+            =: current_timestamp
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: date
+          order: 12
+          size:
+            - 0
+        direction:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: direction
+          order: 14
+          size:
+            - 1
+        domain:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: domain
+          order: 2
+          size:
+            - 255
+        frm:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: frm
+          order: 6
+          size:
+            - 255
+        group_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: group_id
+          order: 4
+          size:
+            - 0
+        group_message_parent_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: group_message_parent_id
+          order: 5
+          size:
+            - 0
+        id:
+          data_type: integer
+          default_value: ~
+          is_auto_increment: 1
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: id
+          order: 1
+          size:
+            - 0
+        message_id:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 1
+          name: message_id
+          order: 21
+          size:
+            - 255
+        name:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: name
+          order: 8
+          size:
+            - 255
+        new:
+          data_type: tinyint
+          default_value: 1
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: new
+          order: 15
+          size:
+            - 0
+        opened:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: opened
+          order: 24
+          size:
+            - 0
+        plain_body:
+          data_type: text
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: plain_body
+          order: 10
+          size:
+            - 0
+        raw_body:
+          data_type: text
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: raw_body
+          order: 11
+          size:
+            - 0
+        reply_to:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: reply_to
+          order: 7
+          size:
+            - 255
+        send_queue:
+          data_type: tinyint
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: send_queue
+          order: 16
+          size:
+            - 0
+        send_queue_fail_count:
+          data_type: tinyint
+          default_value: 0
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: send_queue_fail_count
+          order: 17
+          size:
+            - 0
+        send_queue_sleep:
+          data_type: integer
+          default_value: 0
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: send_queue_sleep
+          order: 18
+          size:
+            - 0
+        sent:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: sent
+          order: 23
+          size:
+            - 0
+        source:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: source
+          order: 22
+          size:
+            - 255
+        subject:
+          data_type: text
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: subject
+          order: 13
+          size:
+            - 0
+        type:
+          data_type: varchar
+          default_value: email
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: type
+          order: 19
+          size:
+            - 255
+      indices:
+        - fields:
+            - batch_id
+          name: message_idx_batch_id
+          options: []
+          type: NORMAL
+        - fields:
+            - group_id
+          name: message_idx_group_id
+          options: []
+          type: NORMAL
+        - fields:
+            - group_message_parent_id
+          name: message_idx_group_message_parent_id
+          options: []
+          type: NORMAL
+      name: message
+      options: []
+      order: 5
+    message_group:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - id
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+        - deferrable: 1
+          expression: ''
+          fields:
+            - email
+          match_type: ''
+          name: email_UNIQUE
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: UNIQUE
+      fields:
+        email:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 1
+          name: email
+          order: 2
+          size:
+            - 90
+        id:
+          data_type: integer
+          default_value: ~
+          is_auto_increment: 1
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: id
+          order: 1
+          size:
+            - 0
+        name:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: name
+          order: 3
+          size:
+            - 255
+      indices: []
+      name: message_group
+      options: []
+      order: 6
+    sms:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - id
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+      fields:
+        body:
+          data_type: text
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: body
+          order: 5
+          size:
+            - 0
+        created:
+          data_type: timestamp
+          default_value: !!perl/ref
+            =: current_timestamp
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: created
+          order: 6
+          size:
+            - 0
+        direction:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: direction
+          order: 13
+          size:
+            - 1
+        domain:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: domain
+          order: 2
+          size:
+            - 255
+        failover_send_status:
+          data_type: smallint
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: failover_send_status
+          order: 10
+          size:
+            - 0
+        frm:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: frm
+          order: 3
+          size:
+            - 255
+        gateway_id:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: gateway_id
+          order: 14
+          size:
+            - 255
+        id:
+          data_type: integer
+          default_value: ~
+          is_auto_increment: 1
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: id
+          order: 1
+          size:
+            - 0
+        port:
+          data_type: tinyint
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: port
+          order: 7
+          size:
+            - 0
+        send_failed:
+          data_type: integer
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: send_failed
+          order: 11
+          size:
+            - 0
+        send_queue:
+          data_type: tinyint
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: send_queue
+          order: 8
+          size:
+            - 0
+        send_status:
+          data_type: tinyint
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: send_status
+          order: 9
+          size:
+            - 0
+        send_timestamp:
+          data_type: datetime
+          default_value: ~
+          is_nullable: 1
+          is_primary_key: 0
+          is_unique: 0
+          name: send_timestamp
+          order: 12
+          size:
+            - 0
+        to:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: to
+          order: 4
+          size:
+            - 255
+      indices: []
+      name: sms
+      options: []
+      order: 7
+    tag:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - message_id
+            - value
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+        - deferrable: 1
+          expression: ''
+          fields:
+            - message_id
+          match_type: ''
+          name: tag_fk_message_id
+          on_delete: CASCADE
+          on_update: CASCADE
+          options: []
+          reference_fields:
+            - id
+          reference_table: message
+          type: FOREIGN KEY
+      fields:
+        message_id:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: message_id
+          order: 1
+          size:
+            - 0
+        value:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: value
+          order: 2
+          size:
+            - 90
+      indices:
+        - fields:
+            - message_id
+          name: tag_idx_message_id
+          options: []
+          type: NORMAL
+      name: tag
+      options: []
+      order: 8
+  triggers: {}
+  views: {}
+translator:
+  add_drop_table: 0
+  filename: ~
+  no_comments: 0
+  parser_args:
+    sources:
+      - Batch
+      - Click
+      - Email
+      - Group
+      - GroupEmail
+      - Message
+      - SMS
+      - Tag
+  parser_type: SQL::Translator::Parser::DBIx::Class
+  producer_args: {}
+  producer_type: SQL::Translator::Producer::YAML
+  show_warnings: 0
+  trace: 0
+  version: 0.11021
