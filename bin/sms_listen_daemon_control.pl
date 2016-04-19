@@ -33,8 +33,8 @@ sub run {
 }
 
 
-sub restart
-{  
-    &stop;
-    &run;
+sub restart {
+	for my $gateway_id (keys config->{gateways}){
+		system("bin/sms_listen_daemon.pl", $gateway_id, '--restart');
+	}
 }

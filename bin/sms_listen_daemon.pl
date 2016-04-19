@@ -30,7 +30,6 @@ my $pid = $daemon->Status($pf);
 
 GetOptions(    
     "help"    => \&usage,
-    "reload"  => \&reload,
     "restart" => \&restart,
     "start"   => \&run,
     "run"   => \&run_once,
@@ -57,6 +56,7 @@ sub stop {
          } else {
                 print "Not running, nothing to stop.\n";
          }
+    $pid = $daemon->Status($pf);
 }
 
 
@@ -127,16 +127,8 @@ sub usage
 }
 
 
-sub reload
-{
-    my ($opt_name, $opt_value) = @_;
-    print "reload process not implemented.\n";
-}
-
-
 sub restart
 {
-    my ($opt_name, $opt_value) = @_;
-    &stop;
-    &run;
+    stop;    
+    run;
 }

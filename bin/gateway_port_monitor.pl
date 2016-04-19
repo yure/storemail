@@ -7,11 +7,12 @@ use DateTime::Format::MySQL;
 
 use Time::HiRes qw(sleep nanosleep);
 
-my $slot = pop @ARGV || 2; 
+my $gateway_id = shift @ARGV; 
+my $slot = shift @ARGV; 
 
 printt "Slot $slot";
-
-my $gateway = StoreMail::SMS->new('dev.primerjam.si', 'Neogate TG API', ) or die "Can't connect to gateway";
+my $gateway_settings = config->{gateways}->{$gateway_id};
+my $gateway = StoreMail::SMS->new( $gateway_settings ) or die "Can't connect to gateway";
 
 my $last_event = '';
 while(1){

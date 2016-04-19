@@ -2,7 +2,6 @@ package StoreMail::SMS;
 use Dancer ':syntax';
 
 use StoreMail::Helper;
-use Net::Telnet ();
 use Asterisk::AMI;
 use Try::Tiny;
 use StoreMail::Helper;
@@ -45,12 +44,17 @@ sub new {
 
 sub astman_init {
 	my $self = shift;
-	$self->{astman} = Asterisk::AMI->new(PeerAddr => $self->{host},
-                                PeerPort => $self->{port},
-                                Username => $self->{username},
-                                Secret => $self->{pass},
-                        );
- 
+	try{
+		$self->{astman} = Asterisk::AMI->new(PeerAddr => $self->{host},
+	                                PeerPort => $self->{port},
+	                                Username => $self->{username},
+	                                Secret => $self->{pass},
+	                        );
+	}
+	catch {
+		debug "Unable to connect to asterisk: $_";
+		return undef;
+	} ;
 	debug "Unable to connect to asterisk" and return undef unless $self->{astman};
 	return 1;
 }
