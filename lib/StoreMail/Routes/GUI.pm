@@ -34,6 +34,11 @@ get '/gui/send' => sub {
     return template 'send.html', {title=> 'Simple send', domain => param('domain')};
 };
 
+get '/gui/send-sms' => sub {
+	content_type('text/html');		
+    return template 'sms_send.html', {title=> 'SMS send', domain => param('domain'), phone_numbers => [keys config->{phone_numbers}]};
+};
+
 get '/gui/send-batch' => sub {
 	content_type('text/html');
 	my $emails = domain_setting(param('domain'), 'from_emails');
@@ -89,7 +94,7 @@ get '/gui/campaign' => sub {
 	my @campaigns;
 	my $campaign = {};
 	for my $b ($batchs->all){
-		next if $campaign->{$b->name};
+		next if $b->name and $campaign->{$b->name};
 		push @campaigns, $b;
 		$campaign->{$b->name} = 1;
 	}

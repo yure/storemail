@@ -12,11 +12,13 @@ extract_emails
 email_str
 logfile
 printt
+extract_phone
 ); # symbols to export on request
 use Encode;
 
 sub printt { 
 	my($txt) = @_;
+	$|++;
 	print "\n".localtime().' | '.$txt;
 }
 
@@ -78,6 +80,11 @@ sub logfile {
 	fh("logs/$name.log");
 }
 
-
+sub extract_phone {
+	my $str = shift;
+	$str =~ s/\+/00/g;	
+	$str =~ s/[^0-9]//g;
+	return $str;
+}
 
 true;
