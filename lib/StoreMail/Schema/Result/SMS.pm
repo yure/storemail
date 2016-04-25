@@ -22,7 +22,7 @@ __PACKAGE__->add_columns(
   send_failed => { data_type => "integer", is_nullable   => 1, },
   send_timestamp => { data_type => "datetime", is_nullable   => 1, },
   direction => { data_type => "varchar", is_nullable => 0, size => 1 },
-  gateway_id => { data_type => "varchar", is_nullable => 0, size => 255 },
+  gateway_id => { data_type => "varchar", is_nullable => 1, size => 255 },
 );
 
 __PACKAGE__->set_primary_key("id");
