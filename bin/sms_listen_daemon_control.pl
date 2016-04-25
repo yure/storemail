@@ -8,6 +8,8 @@ use StoreMail::SMS;
 use Try::Tiny; 
 use Getopt::Long;
 
+logfile('sms_event_listner_control');
+
 GetOptions(    
     "restart" => \&restart,
     "start"   => \&run,
@@ -34,6 +36,7 @@ sub run {
 
 
 sub restart {
+	
 	for my $gateway_id (keys config->{gateways}){
 		system("bin/sms_listen_daemon.pl", $gateway_id, '--restart');
 	}
