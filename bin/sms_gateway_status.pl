@@ -32,6 +32,7 @@ for my $gateway_id (keys config->{gateways}){
 		my $status = $gateway->check_status;
 		my $ok_count = 0;
 		for my $sim_status (@{$status->{CMD}}){
+			$ok_count++ if index($sim_status, 'Power off' ) > -1; 
 			$ok_count++ if index($sim_status, 'Power on, Provisioned, Up, Active,Standard' ) > -1; 
 		}
 		email_alert($gateway_id, $status) unless $ok_count == $settings->{active_ports};
