@@ -76,6 +76,7 @@ if($email){
 			prefetch => [@join],    		 
 		   	#group_by => [ map {"me.$_"} @columns ]	,	
 		   	rows => $limit,		 
+		   	order_by => {'-desc' => 'date'},
     	}
     );    
     
