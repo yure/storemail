@@ -82,22 +82,29 @@ sub run {
 		print "Service starting...";
 		logfile('sms_send_queue');
 		my $sleep = config->{sms_send_queue} || 2;
+		my $error_sleep = 10;
 		
 		while (1) {
+			print ((localtime)[2] . ':' . (localtime)[1]);
 			
+			# Skip rebooting time
+			unless( (localtime)[2] == 0 and (localtime)[1] < 3 ){
 			
-			try{
-        		StoreMail::SMS::send_queue();     
+				try{
+	        		StoreMail::SMS::send_queue();     
+				}
+				catch {
+					email {
+				        from    => 'storemail@informa.si',
+				        to      => config->{admin_email},
+				        subject => 'SMS queue error',
+				        body    => $_,
+				    };
+				    sleep $error_sleep;
+				    $error_sleep = $error_sleep * 2;
+				};			
+	                        # this example writes to a filehandle every 5 seconds.            
 			}
-			catch {
-				email {
-			        from    => 'storemail@informa.si',
-			        to      => config->{admin_email},
-			        subject => 'SMS queue error',
-			        body    => $_,
-			    };
-			};			
-                        # this example writes to a filehandle every 5 seconds.            
 			sleep $sleep;
 		}
 	} else {
