@@ -85,8 +85,6 @@ sub run {
 		my $error_sleep = 10;
 		
 		while (1) {
-			print ((localtime)[2] . ':' . (localtime)[1]);
-			
 			# Skip rebooting time
 			unless( (localtime)[2] == 0 and (localtime)[1] < 3 ){
 			
