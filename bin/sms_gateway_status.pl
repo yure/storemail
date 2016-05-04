@@ -29,6 +29,9 @@ sub email_alert {
 }
 
 my @errors;
+
+exit(0) if ( (localtime)[2] == 0 and (localtime)[1] < 3 );
+
 for my $gateway_id (keys config->{gateways}){	
 	my $settings = config->{gateways}->{$gateway_id};
 	try{
