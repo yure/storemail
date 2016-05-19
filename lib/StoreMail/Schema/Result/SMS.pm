@@ -47,6 +47,17 @@ sub hash {
 }
 
 
+sub hash_lite {
+	my ($self) = @_;
+	return {
+		from => $self->frm,
+    	to => $self->to,
+    	date => $self->created ,
+    	id => $self->id ,
+	}
+}
+
+
 sub plain_body {
 	my ($self) = @_;
 	my $body = $self->body;

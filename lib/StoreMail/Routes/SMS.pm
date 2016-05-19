@@ -114,4 +114,23 @@ get '/messages/:comma_separated_phone_numbers' => sub {
 };
 
 
+get '/incoming' => sub {
+    content_type('application/json');
+	my $last_id = param('last_id') || return 'No id specified. Example ?last_id=94500';
+    my $messages = schema->resultset('SMS')->search(
+    	{
+    		id => {'>' => $last_id},
+    		direction => 'i',  
+    		domain => param('domain'),	
+    	},
+    	{ 
+    		order_by => 'id',
+    	}
+    );
+    
+    return to_json {
+    	messages =>  [map { $_->hash_lite } $messages->all],
+    };    	
+};
+
 1;
