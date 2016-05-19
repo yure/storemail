@@ -80,9 +80,9 @@ get '/messages/:comma_separated_phone_numbers' => sub {
 	my @numbers = map { $_ } split ',', param('comma_separated_phone_numbers');
 	
 	# Remove duplicates / yes, this happens
-	my %hash   = map { extract_phone $_, 1 } @numbers;
+	my %hash   = map { extract_phone($_) => 1 } @numbers;
    	@numbers = keys %hash;
-	
+
 	my $where = {
 		domain => param('domain'),
 		'-or' => [
