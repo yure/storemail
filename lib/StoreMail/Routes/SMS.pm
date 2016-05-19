@@ -83,6 +83,11 @@ get '/messages/:comma_separated_phone_numbers' => sub {
 	my %hash   = map { extract_phone($_) => 1 } @numbers;
    	@numbers = keys %hash;
 
+	my $options = {order_by => {'-desc' => 'send_timestamp'}};
+	
+	# Limit
+	$options->{rows} = param('limit') if param('limit');
+	
 	my $where = {
 		domain => param('domain'),
 		'-or' => [
@@ -90,6 +95,10 @@ get '/messages/:comma_separated_phone_numbers' => sub {
 			to => {'-in' => \@numbers},
 		]
 	};
+	
+	# Direction
+	$where->{direction} = param('direction') if param('direction');
+	
     	
 	# Date span
 	my $from =  param('from');
@@ -100,9 +109,7 @@ get '/messages/:comma_separated_phone_numbers' => sub {
 
     my $messages = schema->resultset('SMS')->search(
     	$where,
-    	{ 
-		   	order_by => {'-desc' => 'send_timestamp'},			 
-    	}
+    	$options,
     );
     
     my $message_hashes = [map { $_->hash } $messages->all];
@@ -124,7 +131,7 @@ get '/incoming' => sub {
     		domain => param('domain'),	
     	},
     	{ 
-    		order_by => 'id',
+    		order_by => {'-desc' => 'send_timestamp'}
     	}
     );
     
