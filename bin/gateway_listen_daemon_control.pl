@@ -30,7 +30,8 @@ sub stop {
 
 sub run {
 	for my $gateway_id (keys config->{gateways}){
-		system("bin/sms_listen_daemon.pl", $gateway_id, '--start');
+		next unless config->{gateways}->{$gateway_id}->{type} eq 'neogate_tg';
+		system("bin/gateway_listen_daemon.pl", $gateway_id, '--start');
 	}
 }
 
@@ -38,6 +39,6 @@ sub run {
 sub restart {
 	
 	for my $gateway_id (keys config->{gateways}){
-		system("bin/sms_listen_daemon.pl", $gateway_id, '--restart');
+		system("bin/gateway_listen_daemon.pl", $gateway_id, '--restart');
 	}
 }

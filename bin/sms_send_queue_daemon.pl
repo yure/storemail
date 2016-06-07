@@ -55,6 +55,7 @@ sub stop {
          } else {
                 print "Not running, nothing to stop.\n";
          }
+    $pid = $daemon->Status($pf);
 }
 
 
@@ -81,8 +82,7 @@ sub run {
 		
 		print "Service starting...";
 		logfile('sms_send_queue');
-		my $sleep = config->{sms_send_queue} || 2;
-		my $error_sleep = 10;
+		my $sleep = config->{sms_send_queue} || 2;		
 		
 		while (1) {
 			# Skip rebooting time
@@ -92,14 +92,7 @@ sub run {
 	        		StoreMail::SMS::send_queue();     
 				}
 				catch {
-					email {
-				        from    => 'storemail@informa.si',
-				        to      => config->{admin_email},
-				        subject => 'SMS queue error',
-				        body    => $_,
-				    };
-				    sleep $error_sleep;
-				    $error_sleep = $error_sleep * 2;
+					print '-';
 				};			
 	                        # this example writes to a filehandle every 5 seconds.            
 			}
@@ -138,7 +131,6 @@ sub reload
 
 sub restart
 {
-    my ($opt_name, $opt_value) = @_;
-    &stop;
-    &run;
+    stop;    
+    run;
 }

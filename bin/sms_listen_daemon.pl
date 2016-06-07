@@ -90,7 +90,7 @@ sub run {
 			
 			
 			try{
-				StoreMail::SMS::listner($gateway_id);
+				StoreMail::SMS::asterisk_listner($gateway_id);
 			}
 			catch {
 				email {

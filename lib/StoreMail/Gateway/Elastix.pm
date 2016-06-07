@@ -1,0 +1,77 @@
+package StoreMail::Gateway::Elastix;
+
+use StoreMail::Helper;
+use Asterisk::AMI;
+use Try::Tiny;
+use LWP::Simple;
+use JSON::XS 'decode_json';
+
+
+sub new {
+    my ($class, $settings) = @_;
+    my $self = {
+        domain => shift,
+        %$settings
+    };
+    init($self) or return undef;
+    bless $self, $class;
+    return $self;
+}
+
+
+sub init {
+	my $self = shift;
+	try{
+		#try to connect to gateway
+	}
+	catch {
+		warn "Unable to connect to gateway: $_";
+		return undef;
+	} ;	
+	return 1;
+}
+
+ 
+sub send {
+	my $self = shift;
+	my ($port, $to, $msg, $id) = @_;
+	my $host = $self->{host};
+	my $username = $self->{username};
+	my $pass = $self->{pass};
+	my $url = "http://$host/sendsms?username=$username&password=$pass&phonenumber=$to&message=$msg&port=$port";
+	my $content = get $url or return undef;
+	# {"message":"gsm-2.1","report":[{"0":[{"port":"gsm-2.1","phonenumber":"0038640255245","time":"2016-05-24 12:00:13","result":"success"}]}]}
+	$data = decode_json $content;
+	$return = undef;
+	try{
+		$return = 1 if $data->{report}[0]->{0}[0]->{result} eq 'success';	
+	};	
+	return $return;
+}
+
+ 
+sub check_status {
+	my $self = shift;		
+	return undef;
+}
+
+ 
+sub check_sms {
+	my $self = shift;		
+	return undef;
+}
+
+ 
+sub check_slot_status {
+	my $self = shift;		
+	my $slot = shift;
+	return undef;
+}
+
+
+sub port_state{	
+	my $self = shift;		
+	return undef;
+}
+
+1;
