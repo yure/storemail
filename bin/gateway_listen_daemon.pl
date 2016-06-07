@@ -92,14 +92,7 @@ sub run {
 			try{
 				StoreMail::SMS::asterisk_listner($gateway_id);
 			}
-			catch {
-				email {
-			        from    => 'storemail@informa.si',
-			        to      => config->{admin_email},
-			        subject => 'SMS queue error',
-			        body    => $_,
-			    };
-			};			
+			catch { };
                         # this example writes to a filehandle every 5 seconds.            
 			sleep $sleep;
 		}
