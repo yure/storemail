@@ -47,8 +47,8 @@ sub send_queue {
 sub send_sms {
 	my ($sms) = @_;	
 	
-	if(not defined $sms->send_status){
-		send_sms_gateway($sms);
+	if(not $sms->send_failed and not defined $sms->send_status){
+		send_sms_gateway($sms) or send_sms_api($sms);
 	}
 	elsif(not defined $sms->failover_send_status){
 		send_sms_api($sms);
@@ -70,12 +70,15 @@ sub send_sms_gateway {
 	my $gateway_settings = config->{gateways}->{$gateway_id};
 	my $gateway_type = $gateway_settings->{type};
 	my $gateway;
+
+	$sms->port($port);
+	$sms->gateway_id($gateway_id);			
 	
 	if($gateway_type eq 'neogate_tg'){
-		$gateway = StoreMail::Gateway::NeogateTG->new( $gateway_settings ) or debug "Can't connect to gateway" and return 0;
+		$gateway = StoreMail::Gateway::NeogateTG->new( $gateway_settings );
 	
 	} elsif ($gateway_type eq 'elastix') {
-		$gateway = StoreMail::Gateway::Elastix->new( $gateway_settings ) or debug "Can't connect to gateway" and return 0;
+		$gateway = StoreMail::Gateway::Elastix->new( $gateway_settings );
 	
 	} else {
 		debug "Invalid gateway type" and return 0;
@@ -83,21 +86,14 @@ sub send_sms_gateway {
 
 	printt "Sending to port $port: ".$sms->to." | ". $sms->plain_body;	
 	
-	my $response = $gateway->send($port, $sms->to, $sms->plain_body, $sms->id); 
- 	
- 	if($response->{COMPLETED} and $response->{GOOD}){
-	 	$sms->send_queue(undef);
-		$sms->port($port);		
-		$sms->gateway_id($gateway_id);		
-		$sms->update;
-	 	return 1; 	
- 	}
- 	else{
- 		$sms->send_queue(undef);				
- 		$sms->send_failed(1);				
-		$sms->update;
-	 	return 0; 
- 	}
+	if($gateway){
+		$gateway->send($port, $sms);
+	}
+	else {
+		$sms->send_failed(1);
+	}
+	$sms->update;
+ 	return 1;
 }
 
 
@@ -105,36 +101,35 @@ sub send_sms_api {
 	my $sms = shift;
 	
 	my $api_settings = config->{sms_api};
+	my $gateway_settings = config->{gateways}->{$sms->gateway_id};
 
 	my $ua = LWP::UserAgent->new;
 	my $post_data = {
 		username => $api_settings->{username},
 		password => md5_hex ($api_settings->{pass}),
-		from => 'Primerjam',
-		to => $sms->frm,
+		from => $gateway_settings->{sms_api_number} || $api_settings->{default_number},
+		to => $sms->to,
 		message => $sms->plain_body,
 	};
 	
 	my $resp = $ua->post($api_settings->{url}, $post_data);
-	if ($resp->is_success) {
+	if ($resp->is_success and (index($resp->content, 'OK') > -1)) {
 		
-		$sms->send_queue(undef);							
 		$sms->failover_send_status(1);
 		$sms->send_failed(undef);	
-		$sms->update;
 		
 	    my $message = $resp->decoded_content;
 	    print "Received reply: $message\n";
 	}
 	else {
-		$sms->send_queue(undef);				
  		$sms->send_failed(1);				
 		$sms->failover_send_status($resp->code);
-		$sms->update;
 			    
 	    printt "Error sending [$sms] ". $resp->code .': '. $resp->message;
 	}
 	
+	$sms->send_queue(undef);				
+	$sms->update;
 }
 
 

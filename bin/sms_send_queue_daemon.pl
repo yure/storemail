@@ -92,7 +92,8 @@ sub run {
 	        		StoreMail::SMS::send_queue();     
 				}
 				catch {
-					print '-';
+					print $_;
+					stop();
 				};			
 	                        # this example writes to a filehandle every 5 seconds.            
 			}

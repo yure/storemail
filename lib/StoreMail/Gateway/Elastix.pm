@@ -5,6 +5,7 @@ use Asterisk::AMI;
 use Try::Tiny;
 use LWP::Simple;
 use JSON::XS 'decode_json';
+use DateTime::Format::MySQL;
 
 
 sub new {
@@ -34,17 +35,34 @@ sub init {
  
 sub send {
 	my $self = shift;
-	my ($port, $to, $msg, $id) = @_;
+	my ($port, $sms) = @_;
+	my $to = $sms->to;	
+	my $msg = $sms->plain_body;	
+	my $id = $sms->id;	
 	my $host = $self->{host};
 	my $username = $self->{username};
 	my $pass = $self->{pass};
 	my $url = "http://$host/sendsms?username=$username&password=$pass&phonenumber=$to&message=$msg&port=$port";
-	my $content = get $url or return undef;
+
+	# Set failed
+	$sms->send_failed(1);
+
+	my $content = get $url or return 0;
 	# {"message":"gsm-2.1","report":[{"0":[{"port":"gsm-2.1","phonenumber":"0038640255245","time":"2016-05-24 12:00:13","result":"success"}]}]}
-	$data = decode_json $content;
-	$return = undef;
+	
+	$return = 0;
 	try{
-		$return = 1 if $data->{report}[0]->{0}[0]->{result} eq 'success';	
+		my $data = decode_json $content;
+		my $report = $data->{report}[0];
+		my $k = keys %$report;
+		my $result = $report->{$k}[0]->{result};
+		if($result eq 'success'){
+			$sms->send_status(1);
+			$sms->send_timestamp(DateTime::Format::MySQL->format_datetime(DateTime->now));
+		 	$sms->send_queue(undef);
+		 	$sms->send_failed(undef);
+		 	$return = 1; 	
+	 	}		 
 	};	
 	return $return;
 }

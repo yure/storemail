@@ -89,9 +89,21 @@ Slot status
  
 sub send {
 	my $self = shift;
-	my ($port, $to, $msg, $id) = @_;
-	return 
-	return $self->command("gsm send sms $port $to \"$msg\" $id");
+	my ($port, $sms) = @_;
+	my $to = $sms->to;	
+	my $msg = $sms->plain_body;	
+	my $id = $sms->id;	
+	my $response = $self->command("gsm send sms $port $to \"$msg\" $id");
+	my $sent = $response->{COMPLETED} and $response->{GOOD} ? 1 : 0;
+	
+	if($sent){
+	 	$sms->send_queue(undef);
+	 	return 1; 	
+ 	}
+ 	else{
+ 		$sms->send_failed(1);				
+	 	return 0; 
+ 	}
 }
 
  
