@@ -116,6 +116,7 @@ sub send_sms_api {
 	if ($resp->is_success and (index($resp->content, 'OK') > -1)) {
 		
 		$sms->failover_send_status(1);
+		$sms->send_timestamp(DateTime::Format::MySQL->format_datetime(DateTime->now));
 		$sms->send_failed(undef);	
 		
 	    my $message = $resp->decoded_content;
