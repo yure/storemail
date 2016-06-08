@@ -58,8 +58,13 @@ sub send {
 		 	$sms->send_queue(undef);
 		 	$sms->send_failed(undef);
 		 	$return = 1; 	
-	 	}		 
-	};	
+	 	} else {
+	 		print "ERRO $content";
+	 	}
+	}
+	catch {
+		print $_;
+	};
 	return $return;
 }
 

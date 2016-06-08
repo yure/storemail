@@ -71,6 +71,7 @@ sub plain_body {
 		['î', 'i'],
 		['â', 'a'],
 		['ş', 's'],
+		['ș', 's'],
 		['ţ', 't'],			
 	];
 	for my $replace (@$substiute){
@@ -78,8 +79,8 @@ sub plain_body {
 		my ($f, $t) = @$replace;
 		$body =~ s/$f/$t/smg;
 		# Uppercase
-		$f = uc $f;
-		$t = uc $t;
+		$f = ucfirst $f;
+		$t = ucfirst $t;
 		$body =~ s/$f/$t/smg;
 	}
 	# Leave only 7-bit	
