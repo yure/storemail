@@ -30,3 +30,5 @@ engines:
 logger_format: %T %L | %m | %f %l 
 
 session: "YAML"
+
+sms_length_limit: 160

@@ -36,7 +36,8 @@ post '/send' => sub {
 	
 	
 	# Body length
-	status 406 and return "BODY too long. Max 160 chars" if length $params->{'body'} > 160;
+	my $sms_length_limit = config->{sms_length_limit} || 160;
+	status 406 and return "BODY too long (".length($params->{'body'})."). Max $sms_length_limit chars. Body: ".$params->{'body'} if length($params->{'body'}) > $sms_length_limit;
 	
     my $sms;
     my $error_message;
