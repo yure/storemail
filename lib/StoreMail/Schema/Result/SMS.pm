@@ -15,7 +15,7 @@ __PACKAGE__->add_columns(
   to => { data_type => "varchar", is_nullable => 0, size => 255 },
   body => { data_type => "text", is_nullable => 1 },
   created => { data_type => "timestamp", datetime_undef_if_invalid => 1, default_value => \"current_timestamp", is_nullable => 0, },
-  port => { data_type => "varchar", is_nullable => 0, size => 25 },
+  port => { data_type => "varchar", is_nullable => 1, size => 25 },
   send_queue => { data_type => "tinyint", is_nullable   => 1, },
   send_status => { data_type => "tinyint", is_nullable   => 1, },
   failover_send_status => { data_type => "smallint", is_nullable   => 1, },
