@@ -15,9 +15,8 @@ set serializer => 'JSON';
 post '/send' => sub {
     content_type('application/json');
     
-	my $rawparams = param('data');
-	my $params = from_json encode('utf8', $rawparams);
-	#my $sms_settings = domain_setting(param('domain'), 'sms');
+	my $params = params('body');
+	my $request = request;
 	
 	# Required fields
 	status 406 and return "FROM can't be empty" unless $params->{'from'};

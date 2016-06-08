@@ -69,8 +69,9 @@
 			$.ajax({
 				type : "POST",
 				url : '/' + domain + '/sms/send',
-				data : {data: JSON.stringify(message)},
+				data : JSON.stringify(message),
 				dataType : 'json',
+				contentType : 'application/json',
 				success: function(data) {
 					attachments = [];
 					$('#response').html(JSON.stringify(data));
