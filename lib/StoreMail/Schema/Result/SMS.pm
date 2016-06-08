@@ -59,7 +59,7 @@ sub hash_lite {
 
 
 sub plain_body {
-	my ($self) = @_;
+	my ($self, %args) = @_;
 	my $body = $self->body;
 	my $substiute = [
 		['č', 'c'], 
@@ -86,9 +86,17 @@ sub plain_body {
 	$body =~ s/[^a-zA-Z\d\s\$¥èéùìòÇØøÅåΔ_ΦΓΛΩΠΨΣΘΞ€ÆæßÉ!"#¤%&'ÄÖÑÜ§¿äöñüà\@£\\{}[\]|\(\)~\^\*\+,-<=>:;?]//smg;
 	
 	# New line encode
-	$body =~ s/[\n]/%0A/smg;
+	$body =~ s/[\n]/%0A/smg unless $args{plain_newline};
 	
 	return $body; 	
+}
+
+
+sub plain_body_one_line {
+	my ($self) = @_;
+	my $body = $self->plain_body;
+	$body =~ s/\n//smg;
+	return $body;
 }
 
 1;

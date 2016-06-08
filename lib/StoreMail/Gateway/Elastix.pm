@@ -52,11 +52,7 @@ sub send {
 	
 	$return = 0;
 	try{
-		my $data = decode_json $content;
-		my $report = $data->{report}[0];
-		my $k = keys %$report;
-		my $result = $report->{$k}[0]->{result};
-		if($result eq 'success'){
+		if(index($content, '"result":"success"') > -1){
 			$sms->send_status(1);
 			$sms->send_timestamp(DateTime::Format::MySQL->format_datetime(DateTime->now));
 		 	$sms->send_queue(undef);

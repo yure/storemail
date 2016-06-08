@@ -84,7 +84,7 @@ sub send_sms_gateway {
 		debug "Invalid gateway type" and return 0;
 	}
 
-	printt "Sending to port $port: ".$sms->to." | ". $sms->plain_body;	
+	printt "Sending to port $port: ".$sms->to." | ". $sms->plain_body(plain_newline => 1);
 	
 	if($gateway){
 		$gateway->send($port, $sms);
@@ -109,7 +109,7 @@ sub send_sms_api {
 		password => md5_hex ($api_settings->{pass}),
 		from => $gateway_settings->{sms_api_number} || $api_settings->{default_number},
 		to => $sms->to,
-		message => $sms->plain_body,
+		message => $sms->plain_body(plain_newline => 1),
 	};
 	
 	my $resp = $ua->post($api_settings->{url}, $post_data);
@@ -117,10 +117,10 @@ sub send_sms_api {
 		
 		$sms->failover_send_status(1);
 		$sms->send_timestamp(DateTime::Format::MySQL->format_datetime(DateTime->now));
-		$sms->send_failed(undef);	
+		$sms->send_failed(undef);
 		
 	    my $message = $resp->decoded_content;
-	    print "Received reply: $message\n";
+	    print " FAILOVER reply: $message\n";
 	}
 	else {
  		$sms->send_failed(1);				
