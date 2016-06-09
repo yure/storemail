@@ -1,7 +1,7 @@
 package StoreMail::SMS;
 use Dancer ':syntax';
 
-use StoreMail::Helper;
+use StoreMail::Helper; 
 use Asterisk::AMI;
 use Try::Tiny;
 use StoreMail::Helper;
@@ -68,6 +68,7 @@ sub send_sms_gateway {
 	# Gateway
 	my $gateway_id = $number_config->{gateway_id};
 	my $gateway_settings = config->{gateways}->{$gateway_id};
+	$gateway_settings->{instance_name} = config->{instance_name};
 	my $gateway_type = $gateway_settings->{type};
 	my $gateway;
 
@@ -159,7 +160,13 @@ sub save_sms {
 
 
 sub sms_send_status {
-	my ($id, $status) = @_;
+	my ($instance_id, $status) = @_;
+	
+	# Check if from same instance
+	my ($id, $instance) = split '_', $instance_id, 2;
+	return undef unless config->{instance_name} and $instance;
+	return undef if $instance ne config->{instance_name};
+	
 	my $sms = schema->resultset('SMS')->find($id) or return undef;
 	$sms->send_status($status);
 	$sms->send_timestamp(DateTime::Format::MySQL->format_datetime(DateTime->now));

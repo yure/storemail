@@ -7,8 +7,7 @@ use Try::Tiny;
 
 sub new {
     my ($class, $settings) = @_;
-    my $self = {
-        domain => shift,
+    my $self = {        
         %$settings
     };
     astman_init($self) or return undef;
@@ -92,7 +91,8 @@ sub send {
 	my ($port, $sms) = @_;
 	my $to = $sms->to;	
 	my $msg = $sms->plain_body;	
-	my $id = $sms->id;	
+	my $id = $sms->id;
+	$id .= '_' . $self->{instance_name} if $self->{instance_name};	
 	my $response = $self->command("gsm send sms $port $to \"$msg\" $id");
 	my $sent = $response->{COMPLETED} and $response->{GOOD} ? 1 : 0;
 	
