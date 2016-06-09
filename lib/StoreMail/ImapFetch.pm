@@ -76,17 +76,19 @@ sub log_in {
 sub process_emails {
 	my ($messages, $direction, $account, $args) = @_;
 	my @messages_save_queue;
-	my $found = 0;
+	my $found_count = 0;
 
 	# Reverse list and keep adding until you find message in db
 	for my $mail_id ($args->{initial} ? @$messages : reverse @$messages) {
 		try {
-			my $message = process_email($mail_id, $direction, $account, $found, $args);
+			my ($message, $found) = process_email($mail_id, $direction, $account, $found, $args);
 			unshift @messages_save_queue, $message if $message;
+			$found_count += $found if $found;
 		}
 		catch {
 			printt "Fetching email with id $mail_id was not successfull!!! $_ \n";
 		};
+		last if $found_count > 3;
 	}
 
 	# Save queue
@@ -120,8 +122,7 @@ sub process_email {
 			print '-';
 			return undef if $account_emails->{$message_params->{from}};
 			$found++;
-			last if $found >= 3;	# If for some reason they get mixed	 	
-			return undef;	
+			return undef, 1;	
 		} else {
 			print '.';
 			return undef;
