@@ -6,6 +6,7 @@ use Dancer::Plugin::DBIC qw(schema resultset rset);
 use StoreMail::Email;
 use StoreMail::Message;
 use StoreMail::Helper;
+use StoreMail::SMS;
 use MIME::QuotedPrint::Perl;
 use MIME::Base64;
 use Email::MIME;
@@ -93,7 +94,7 @@ sub process_emails {
 
 	# Save queue
 	for my $message_params (@messages_save_queue){
-		try {save_message($message_params)}
+		try {save_message($account, $message_params)}
 		catch {printt "Saving email with id ".$message_params->{message_id}." was not successfull!!! $_";};
 	}
 }
@@ -120,7 +121,7 @@ sub process_email {
 	if($existing){				
 		unless($args->{initial}){
 			print '-';
-			return undef if $account_emails->{$message_params->{from}};
+			return (undef, 1) if $account_emails->{$message_params->{from}};
 			return undef, 1;	
 		} else {
 			print '.';
@@ -176,7 +177,7 @@ sub process_email {
 	#$message_params->{tags} => '';
 
 	if($args->{initial}){
-		save_message($message_params);
+		save_message($account, $message_params);
 		return undef;
 	} 
 	else {
@@ -195,8 +196,46 @@ sub remove_utf8_4b {
 }
 
 sub save_message {
-	my ($message_params, $retry) = @_;
+	my ($account, $message_params, $retry) = @_;
 	
+	# Incoming sms
+	if($account->{sms_gateway}){
+		# IN SMS | +38641235094 | gsm-2.4(38631463715) | 2016/06/09 12:15:13
+		my ($type, $from, $port_number, $datetime) = split ' \| ', $message_params->{subject};
+		
+		if($type and $from and $port_number and $datetime){
+			my ($port, undef) = split '\(', $port_number;	
+			
+			# Temporaray init port name fix
+			my $old_port_name = {
+				'1' 			=> 'gsm-1.1',
+				'2' 			=> 'gsm-1.2',
+				'3' 			=> 'gsm-1.3',
+				'4' 			=> 'gsm-1.4',
+		      	'Board-2-gsm-1' => 'gsm-2.1', 
+		      	'Board-2-gsm-2' => 'gsm-2.2', 
+		      	'Board-2-gsm-3' => 'gsm-2.3', 
+		      	'Board-2-gsm-4' => 'gsm-2.4', 
+			};
+		   	$port = $old_port_name->{$port} if $old_port_name->{$port}; 
+			
+			$datetime =~ s/\//-/g;
+			$from =~ s/\+/00/g;
+			unless( $from){
+				1;
+			}
+			my $body = trim $message_params->{body};
+			my $error;
+			try{
+				StoreMail::SMS::save_sms( $account->{sms_gateway}, $port, $from, $body, $datetime );
+			} catch {
+				$error = $_;
+			};
+			return if $error;
+		}
+	}
+	
+		
 	# New message	
 	try{
 		my $response = StoreMail::Message::new_message(	%$message_params );
@@ -212,12 +251,12 @@ sub save_message {
 			$message_params->{$key} = remove_utf8_4b $message_params->{$key} if $message_params->{$key}; 
 		}
 		# Try again with cleaned body
-		save_message($message_params, 1) unless $retry;
+		save_message($account, $message_params, 1) unless $retry;
 		return undef;
 	};
-	
 			
 }
+
 
 sub clean_html {
 	my $body = shift;
@@ -226,6 +265,7 @@ sub clean_html {
 	return $body;	
 }
 
+
 sub clean_parenthesis {
 	my $str = shift;
 	return undef unless defined $str;
@@ -233,86 +273,6 @@ sub clean_parenthesis {
 	$str =~ s/"//g; # Remove style tag
 	$str =~ s/'//g;
 	return $str;	
-}
-
-sub clean_body {
-	my $body = shift;
-	
-#	return $body; #Untill we cover all cases, do noting
-	
-	my ($clean_body, $wanted, $mailId);
-	$body = decode("UTF-8",decode_qp($body));
-	
-	
-	#my $from = "";
-	#my $to = "\r\n";
-	#($mailId) = $body =~ /$from(.*?)$to/s;
-
-	#$from = "\r\n\r\n";
-	#$to = $mailId;
-	
-	# Remove all from breake text on 
-	#my $from = '';
-	#my $to = substr(StoreMail::Email::email_break_text, 0, -1); # Decoding can loose last char...
-	#($wanted) = $body =~ /$from(.*?)$to/s;
-	
-	
-	
-	$wanted = $body;
-	if($wanted){
-		$wanted = remove_gmail_code($wanted);
-		$wanted = remove_outlook_code($wanted);
-		$wanted = trim($wanted);
-		$clean_body = $wanted if $wanted;
-	}
-	
-	
-	
-	# If no text, try bottom post
-	unless($clean_body){
-		
-	}
-	
-	# Remove 
-	
-	return $clean_body;
-}
-
-
-sub remove_gmail_code {
-	my $body = shift;
-	my $clean_body;
-	my $gmail_id;
-	
-	# Check if gmail format
-	my $first_row;
-	($first_row) = $body =~ /(--.{28}?)\n/s;
-	return $body unless $first_row;
-	
-	# Remove On Thu, May 29, 2014 at 9:01 AM, John <name@email.com> wrote:
-	# Remove --001a1134d7c0f749fe04fa848617 Content-Type: text/plain; charset=UTF-8
-	
-	#my $from = "--(.+?)\nContent-Type: (.+?); charset=(.+?)\n";
-	my $from = "\n\n";
-	my $to = "\nOn(.+?)at(.+?),(.+?)<(.+?)@(.+?)> wrote:";
-	($clean_body)= $body =~ /$from(.*?)$to/s;	
-	
-	return $clean_body ? $clean_body : $body;
-}
-
-
-sub remove_outlook_code {
-	my $body = shift;
-	my $clean_body;
-	my $gmail_id;
-	# Remove On Thu, May 29, 2014 at 9:01 AM, John <name@email.com> wrote:
-	# Remove --001a1134d7c0f749fe04fa848617 Content-Type: text/plain; charset=UTF-8
-	
-	my $from = "";
-	my $to = "\nOn(.+?),(.+?) wrote:";
-	($clean_body)= $body =~ /$from(.*?)$to/s;	
-	
-	return $clean_body ? $clean_body : $body;
 }
 
 

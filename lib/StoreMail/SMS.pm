@@ -1,7 +1,6 @@
 package StoreMail::SMS;
 use Dancer ':syntax';
 
-use StoreMail::Helper; 
 use Asterisk::AMI;
 use Try::Tiny;
 use StoreMail::Helper;
@@ -136,7 +135,14 @@ sub send_sms_api {
 
 
 sub save_sms {
-	my ($gateway_id, $port, $from, $to, $body, $datetime) = @_;	
+	my ($gateway_id, $port, $from, $body, $datetime) = @_;	
+	
+	print " no gateway" and return undef unless $gateway_id;
+	print " no port" and return undef unless $port;
+	my $gateway_settings = config->{gateways}->{$gateway_id} or print " gateway $gateway_id not found " and return undef;
+	my $to = $gateway_settings->{ports}->{$port} or print " port $port not found" and return undef;
+	
+	printt "$from - $to [$body]" ;
 	
 	try{
 		schema->resultset('SMS')->create({
@@ -149,6 +155,7 @@ sub save_sms {
 			direction => 'i',
 			domain => config->{gateways}->{$gateway_id}->{domain},
 		});
+		
 	}
 	catch {
 		warn "Unable to save SMS $gateway_id, $port, $from, $to, $body, $datetime ".$_;
@@ -220,18 +227,14 @@ sub asterisk_listner {
 	
 	sub sms_recieved_event { 
 		my ($asterisk, $event) = @_; 				
-		my $gateway_settings = config->{gateways}->{$gateway_id};
-
-		my $to = $gateway_settings->{ports}->{$event->{GsmSpan}};
 		my $from = extract_phone $event->{Sender};		
 		
 		# Decode body
 		my $body = $event->{Content};
 		$body =~ s/\+/ /smg;
 		$body = uri_unescape $body;
-		printt "$from - $to [$body]" ;
 		
-		my $respnose = save_sms($gateway_id, $event->{GsmSpan}, $from, $to, $body, $event->{Recvtime});
+		my $respnose = save_sms($gateway_id, $event->{GsmSpan}, $from, $body, $event->{Recvtime});
 		print $respnose ? " saved":" not saved";
 	} 
 	
