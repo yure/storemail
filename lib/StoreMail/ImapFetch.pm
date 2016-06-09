@@ -118,7 +118,7 @@ sub process_email {
 	if($existing){				
 		unless($args->{initial}){
 			print '-';
-			next if $account_emails->{$message_params->{from}};
+			return undef if $account_emails->{$message_params->{from}};
 			$found++;
 			last if $found >= 3;	# If for some reason they get mixed	 	
 			return undef;	
@@ -196,7 +196,7 @@ sub remove_utf8_4b {
 }
 
 sub save_message {
-	my ($message_params, $retry) = shift;
+	my ($message_params, $retry) = @_;
 	
 	# New message	
 	try{
