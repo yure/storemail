@@ -40,8 +40,8 @@ sub fetch_account {
 	my ($args, $account) = @_;
 	$imap = log_in($account);
 	unless($imap){
-		printt 'Unable to log in';
-		next;
+		print ' Unable to log in';
+		return undef;
 	}
 	$imap->Peek(1);
 	$imap->Uid(1);
