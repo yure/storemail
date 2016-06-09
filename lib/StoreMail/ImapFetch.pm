@@ -12,7 +12,7 @@ use Email::MIME;
 use Time::ParseDate;
 use DateTime;
 use Try::Tiny; 
-use Encode qw(decode);
+use Encode qw(decode encode);
 use Dancer::Plugin::Email;
 use Digest::MD5 qw(md5_hex);
 my ($imap, $initial, $logfile, $account_emails);
@@ -24,28 +24,40 @@ sub fetch_all {
 	my $gmail = config->{gmail};
 	$account_emails  = {map {config->{gmail}->{accounts}->{$_}->{username} => 1} keys config->{gmail}->{accounts}};	
 	for my $account_name (keys config->{gmail}->{accounts}){
+		
+		
 		print "\n$account_name:";
 		my $account = config->{gmail}->{accounts}->{$account_name};
-		$imap = log_in($account);
-		unless($imap){
-			printt 'Unable to log in';
-			next;
-		}
-		$imap->Peek(1);
-		$imap->Uid(1);
-			
-		$imap->select('INBOX') or printt "Select INBOX error: ", $imap->LastError, "\n";
-		my @inbox = $imap->messages;
-		print " In: ";
-		process_emails(\@inbox, 'i', $account);
 
-		$imap->select('[Gmail]/Sent Mail') or printt "Select INBOX error: ", $imap->LastError, "\n";;
-		my @outbox = $imap->messages;
-		print " Out: ";
-		process_emails(\@outbox, 'o', $account, initial => $args->{initial});
+		fetch_account($args, $account);
 			
 	}
 	printt 'Inital import completed' if $args->{initial};
+}
+
+
+sub fetch_account {
+	my ($args, $account) = @_;
+	$imap = log_in($account);
+	unless($imap){
+		printt 'Unable to log in';
+		next;
+	}
+	$imap->Peek(1);
+	$imap->Uid(1);
+		
+	fetch_inbox($args, $imap, $account, 'INBOX', 'i');
+	fetch_inbox($args, $imap, $account, '[Gmail]/Sent Mail', 'o');
+}
+
+
+sub fetch_inbox {
+	my ($args, $imap, $account, $inbox, $direction) = @_;
+	
+	$imap->select($inbox) or printt "Select $inbox error: ", $imap->LastError, "\n";
+	my @inbox = $imap->messages;
+	print " $inbox: ";
+	process_emails(\@inbox, $direction, $account, $args);
 }
 
 
@@ -62,128 +74,149 @@ sub log_in {
 }
 
 sub process_emails {
-	my ($messages, $direction, $account, %args) = @_;
+	my ($messages, $direction, $account, $args) = @_;
 	my @messages_save_queue;
 	my $found = 0;
+
 	# Reverse list and keep adding until you find message in db
-	for my $mail_id ($args{initial} ? @$messages : reverse @$messages) {
+	for my $mail_id ($args->{initial} ? @$messages : reverse @$messages) {
 		try {
-			no warnings 'exiting';
-			my $headers = $imap->parse_headers( $mail_id, "Date", "Subject", "To", "From" );
-			my $all = $imap->parse_headers( $mail_id, "ALL");
-			my $message_params = {};
-			
-			
-			# ID
-			my $message_id;
-			$message_id = trim $all->{'Message-ID'}[0] if $all->{'Message-ID'};
-			$message_id = trim $all->{'Message-Id'}[0] if $all->{'Message-Id'};
-			$message_id = to_dumper $all unless $message_id;
-			$message_id = md5_hex $message_id;
-			$message_params->{message_id} = $message_id;
-			# From
-			$message_params->{from} = clean_parenthesis($headers->{From}[0]);
-
-			# End if already exists
-			my $existing = schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id});
-			if($existing){				
-				unless($args{initial}){
-					print '-';
-					next if $account_emails->{$message_params->{from}};
-					$found++;
-					last if $found >= 3;	# If for some reason they get mixed	 	
-					next;	
-				} else {
-					print '.';
-					next;
-				}
-			}
-			$found = 0;
-			my $mime = Email::MIME->new($imap->message_string($mail_id));
-	
-	
-			# To
-			$message_params->{to} = [map {clean_parenthesis($_)} split ',', $headers->{To}[0]] if defined $headers->{To}[0];
-			$message_params->{cc} = [map {clean_parenthesis($_)} split ',', $headers->{Cc}[0]] if defined $headers->{Cc}[0];
-			$message_params->{bcc} = [map {clean_parenthesis($_)} split ',', $headers->{Bcc}[0]] if defined $headers->{Bcc}[0];
-	
-			# Subject
-			$message_params->{subject} = decode("UTF-8", $headers->{Subject}[0]);
-	
-			# Datetime
-			my $epoch = parsedate($headers->{Date}[0]);
-			my $datetime = DateTime->from_epoch( epoch => $epoch )->set_time_zone( config->{timezone} ) if $epoch;
-			$message_params->{date} = $datetime ? $datetime->ymd." ".$datetime->hms : undef;
-	
-			# Message body
-			my $struct;
-			try{
-				$struct = $imap->get_bodystructure($mail_id);				
-			}
-			catch {
-				$imap = log_in($account);
-				$struct = $imap->get_bodystructure($mail_id);				
-			};
-			
-			# Body
-			my $raw_html_body = extract_body($struct, $imap, $mail_id, 'HTML', $mime);
-			my $html_body = clean_html($raw_html_body);			
-			
-			my $plain_body = extract_body($struct, $imap, $mail_id, 'PLAIN');
-			
-			#$raw_body = undef if $raw_body eq '' or $body eq $raw_body;
-			
-			$message_params->{body} = $html_body || $plain_body;
-			# Remove emoticons (utf8 mysql issue)
-			
-
-			$message_params->{domain} = $account->{domain} || config->{domain};			
-			$message_params->{body_type} = $html_body ? 'html' : 'plain';
-			$message_params->{raw_body} = $raw_html_body if defined $raw_html_body and $raw_html_body ne $html_body;
-			$message_params->{plain_body} = $plain_body unless $message_params->{body_type} eq 'plain';
-			$message_params->{direction} = $direction;
-			$message_params->{source} = $account->{username};
-			
-			$message_params->{mail_str} = $imap->message_string($mail_id);
-			#$message_params->{tags} => '';
-	
-			if($args{initial}){
-				save_message($message_params);
-			} 
-			else {
-				unshift @messages_save_queue, $message_params;
-				print '|';
-			}
+			my $message = process_email($mail_id, $direction, $account, $found, $args);
+			unshift @messages_save_queue, $message if $message;
 		}
 		catch {
-				printt "Fetching email with id $mail_id was not successfull!!! $_ \n";
-		}
+			printt "Fetching email with id $mail_id was not successfull!!! $_ \n";
+		};
 	}
+
 	# Save queue
-		
 	for my $message_params (@messages_save_queue){
 		try {save_message($message_params)}
 		catch {printt "Saving email with id ".$message_params->{message_id}." was not successfull!!! $_";};
 	}
 }
 
-sub remove_emoji {
+sub process_email {
+	my ($mail_id, $direction, $account, $found, $args) = @_;
+	my $headers = $imap->parse_headers( $mail_id, "Date", "Subject", "To", "From" );
+	my $all = $imap->parse_headers( $mail_id, "ALL");
+	my $message_params = {};
+	
+	
+	# ID
+	my $message_id;
+	$message_id = trim $all->{'Message-ID'}[0] if $all->{'Message-ID'};
+	$message_id = trim $all->{'Message-Id'}[0] if $all->{'Message-Id'};
+	$message_id = to_dumper $all unless $message_id;
+	$message_id = md5_hex $message_id;
+	$message_params->{message_id} = $message_id;
+	# From
+	$message_params->{from} = clean_parenthesis($headers->{From}[0]);
+
+	# End if already exists
+	my $existing = schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id});
+	if($existing){				
+		unless($args->{initial}){
+			print '-';
+			next if $account_emails->{$message_params->{from}};
+			$found++;
+			last if $found >= 3;	# If for some reason they get mixed	 	
+			return undef;	
+		} else {
+			print '.';
+			return undef;
+		}
+	}
+	$found = 0;
+	my $mime = Email::MIME->new($imap->message_string($mail_id));
+
+
+	# To
+	$message_params->{to} = [map {clean_parenthesis($_)} split ',', $headers->{To}[0]] if defined $headers->{To}[0];
+	$message_params->{cc} = [map {clean_parenthesis($_)} split ',', $headers->{Cc}[0]] if defined $headers->{Cc}[0];
+	$message_params->{bcc} = [map {clean_parenthesis($_)} split ',', $headers->{Bcc}[0]] if defined $headers->{Bcc}[0];
+
+	# Subject
+	$message_params->{subject} = decode("UTF-8", $headers->{Subject}[0]);
+
+	# Datetime
+	my $epoch = parsedate($headers->{Date}[0]);
+	my $datetime = DateTime->from_epoch( epoch => $epoch )->set_time_zone( config->{timezone} ) if $epoch;
+	$message_params->{date} = $datetime ? $datetime->ymd." ".$datetime->hms : undef;
+
+	# Message body
+	my $struct;
+	try{
+		$struct = $imap->get_bodystructure($mail_id);				
+	}
+	catch {
+		$imap = log_in($account);
+		$struct = $imap->get_bodystructure($mail_id);				
+	};
+	
+	# Body
+	my $raw_html_body = extract_body($struct, $imap, $mail_id, 'HTML', $mime);
+	my $html_body = clean_html($raw_html_body);			
+	
+	my $plain_body = extract_body($struct, $imap, $mail_id, 'PLAIN');
+	
+	#$raw_body = undef if $raw_body eq '' or $body eq $raw_body;
+	
+	$message_params->{body} = $html_body || $plain_body;
+	# Remove emoticons (utf8 mysql issue)
+	
+
+	$message_params->{domain} = $account->{domain} || config->{domain};			
+	$message_params->{body_type} = $html_body ? 'html' : 'plain';
+	$message_params->{raw_body} = $raw_html_body if defined $raw_html_body and $raw_html_body ne $html_body;
+	$message_params->{plain_body} = $plain_body unless $message_params->{body_type} eq 'plain';
+	$message_params->{direction} = $direction;
+	$message_params->{source} = $account->{username};
+	
+	$message_params->{mail_str} = $imap->message_string($mail_id);
+	#$message_params->{tags} => '';
+
+	if($args->{initial}){
+		save_message($message_params);
+		return undef;
+	} 
+	else {
+		# unshift @messages_save_queue, $message_params;
+		print '|' and return $message_params;
+	}
+}
+
+sub remove_utf8_4b {
 	my $str = shift;
 	return $str unless defined $str;
-	$str =~ s/[^[:ascii:]\x{1F600}-\x{1F64F}]+//g;
+	$str = encode('UTF-8', $str);
+	$str =~ s/([\xF0-\xF7]...)|([\xE0-\xEF]..)/_/g;
+	$str = decode('UTF-8', $str);
 	return $str;
 }
 
 sub save_message {
-	my $message_params = shift;
+	my ($message_params, $retry) = shift;
 	
 	# New message	
-	my $response = StoreMail::Message::new_message(	%$message_params );
-	my $message = $response->{message};
+	try{
+		my $response = StoreMail::Message::new_message(	%$message_params );
+		my $message = $response->{message};
+		
+		if($message){
+			print '['.$message->id.": ".$message->frm.", ".$message->date.'] ';
+			return 1;
+		}
+		return undef;
+	} catch {
+		for my $key (keys %$message_params){
+			$message_params->{$key} = remove_utf8_4b $message_params->{$key} if $message_params->{$key}; 
+		}
+		# Try again with cleaned body
+		save_message($message_params, 1) unless $retry;
+		return undef;
+	};
 	
-	if($message){
-		print '['.$message->id.": ".$message->frm.", ".$message->date.'] ';
-	}
 			
 }
 
