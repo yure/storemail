@@ -81,7 +81,7 @@ sub process_emails {
 	# Reverse list and keep adding until you find message in db
 	for my $mail_id ($args->{initial} ? @$messages : reverse @$messages) {
 		try {
-			my ($message, $found) = process_email($mail_id, $direction, $account, $found, $args);
+			my ($message, $found) = process_email($mail_id, $direction, $account, $args);
 			unshift @messages_save_queue, $message if $message;
 			$found_count += $found if $found;
 		}
@@ -99,7 +99,7 @@ sub process_emails {
 }
 
 sub process_email {
-	my ($mail_id, $direction, $account, $found, $args) = @_;
+	my ($mail_id, $direction, $account, $args) = @_;
 	my $headers = $imap->parse_headers( $mail_id, "Date", "Subject", "To", "From" );
 	my $all = $imap->parse_headers( $mail_id, "ALL");
 	my $message_params = {};
@@ -121,14 +121,12 @@ sub process_email {
 		unless($args->{initial}){
 			print '-';
 			return undef if $account_emails->{$message_params->{from}};
-			$found++;
 			return undef, 1;	
 		} else {
 			print '.';
 			return undef;
 		}
 	}
-	$found = 0;
 	my $mime = Email::MIME->new($imap->message_string($mail_id));
 
 
