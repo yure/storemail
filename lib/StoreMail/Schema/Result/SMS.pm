@@ -52,7 +52,19 @@ sub hash_lite {
 	return {
 		from => $self->frm,
     	to => $self->to,
-    	date => $self->created ,
+    	date => $self->send_timestamp ,
+    	id => $self->id ,
+	}
+}
+
+
+sub hash_normal {
+	my ($self) = @_;
+	return {
+		from => $self->frm,
+    	to => $self->to,
+    	body => $self->body,
+    	date => $self->send_timestamp ,
     	id => $self->id ,
 	}
 }

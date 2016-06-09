@@ -140,4 +140,24 @@ get '/incoming' => sub {
     };    	
 };
 
+
+get '/incoming/last/:n' => sub {
+    content_type('application/json');
+	my $limit = param('n') || return 'No limit specified';
+    my $messages = schema->resultset('SMS')->search(
+    	{
+    		direction => 'i',  
+    		domain => param('domain'),	
+    	},
+    	{ 
+    		order_by => {'-desc' => 'send_timestamp'},
+    		rows => $limit,
+    	}
+    );
+    
+    return to_json {
+    	messages =>  [map { $_->hash_normal } $messages->all],
+    };    	
+};
+
 1;
