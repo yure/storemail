@@ -145,16 +145,26 @@ sub save_sms {
 	printt "$from - $to [$body]" ;
 	
 	try{
-		schema->resultset('SMS')->create({
-			gateway_id => $gateway_id,
-			port => $port,
+		my $exists = schema->resultset('SMS')->search({
 			frm => $from,
 			to => $to,
 			body => $body,
 			send_timestamp => $datetime,
-			direction => 'i',
 			domain => config->{gateways}->{$gateway_id}->{domain},
-		});
+		})->count;
+			
+		unless($exists){
+			schema->resultset('SMS')->create({
+				gateway_id => $gateway_id,
+				port => $port,
+				frm => $from,
+				to => $to,
+				body => $body,
+				send_timestamp => $datetime,
+				direction => 'i',
+				domain => config->{gateways}->{$gateway_id}->{domain},
+			});
+		} 
 		
 	}
 	catch {
