@@ -26,6 +26,10 @@ sub authenticate {
 	return 1 if session('admin');
 	my $domain = shift;
 	return 1 if config->{'debug'};
+
+	# Universal key 
+	return 1 if param('key') and param('key') eq config->{universal_token};
+
 	# Today's key
 	return 1 if param('key') and param('key') eq token_today($domain);
 	
