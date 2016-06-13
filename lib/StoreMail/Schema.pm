@@ -10,6 +10,6 @@ __PACKAGE__->load_components(qw/Helper::Schema::QuoteNames/);
 
 __PACKAGE__->load_namespaces;
 
-our $VERSION = 27;
+our $VERSION = 32;
 
 1;
