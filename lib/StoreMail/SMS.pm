@@ -35,8 +35,7 @@ sub send_queue {
 	my $port = shift;
 	my $where = {send_queue => 1};
 	$where->{port} = $port if $port;
-	my $unsent = schema->resultset('SMS')->search($where, {order_by => {'-desc' => 'id'}});
-	print '.';	
+	my $unsent = schema->resultset('SMS')->search($where, {order_by => {'-desc' => 'id'}});		
 	while (my $sms = $unsent->next){		
 	 	send_sms($sms);	 		 
 	}	
