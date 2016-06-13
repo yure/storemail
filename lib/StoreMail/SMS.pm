@@ -84,7 +84,7 @@ sub send_sms_gateway {
 		debug "Invalid gateway type" and return 0;
 	}
 
-	printt "$port: ".$sms->to." | ". substr $sms->plain_body(plain_newline => 1), 0, 70;
+	printt "$port: ".$sms->to." | ". substr $sms->plain_body(plain_newline => 1), 0, 30;
 	
 	if($gateway){
 		$gateway->send($port, $sms);
