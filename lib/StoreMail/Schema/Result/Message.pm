@@ -559,9 +559,10 @@ sub make_copy {
 sub body_cleanup {
 	my ($body) = @_;	
 	return undef unless $body;
-	# Extract body content
-	$body =~ /<body[^>]*>(.*)<\/body>/smgi; # Remove style tag
-	$body = $1 if $1;
+	
+	# Extract body content - removed: Some emails are mixed with some plain text before body
+	# $body =~ /<body[^>]*>(.*)<\/body>/smgi; # Remove style tag
+	# $body = $1 if $1;
 	
 	$body =~ s/<style(.+?)<\/style>//smgi; # Remove style tag
 	$body =~ s/<script(.+?)<\/script>//smgi; # Remove script tags

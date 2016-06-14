@@ -19,7 +19,13 @@ use Encode;
 sub printt { 
 	my($txt) = @_;
 	$|++;
-	print "\n".localtime().' | '.$txt;
+
+	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);   
+	$year -= 100;
+	$mon += 1;
+	print "\n$mday.$mon.$year $hour:$min:$sec\t| $txt";
+
+	#print "\n".localtime().' | '.$txt;
 }
 
 

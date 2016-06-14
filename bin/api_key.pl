@@ -6,6 +6,8 @@ require LWP::Simple;
 my $domain = shift @ARGV;
 my $arg = shift @ARGV;
 
+print "\nDomain: $domain\n";
+
 if($arg and $arg eq '-1'){
 	print StoreMail::Auth::token_yesterday($domain)
 }

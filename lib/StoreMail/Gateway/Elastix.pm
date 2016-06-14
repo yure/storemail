@@ -58,13 +58,16 @@ sub send {
 		 	$sms->send_queue(undef);
 		 	$sms->send_failed(undef);
 		 	$return = 1; 	
+			print " | OK";
 	 	} else {
-	 		print "ERRO $content";
+	 		print " | ERROR $content";
 	 	}
 	}
 	catch {
-		print $_;
+		print " | $_";
 	};
+
+	sleep(2); # Maybe SMS are sent too fast and some fail
 	return $return;
 }
 

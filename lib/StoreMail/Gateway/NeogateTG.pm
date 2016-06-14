@@ -98,10 +98,12 @@ sub send {
 	
 	if($sent){
 	 	$sms->send_queue(undef);
+		print " | SENT";
 	 	return 1; 	
  	}
  	else{
  		$sms->send_failed(1);				
+		print " | ERROR";
 	 	return 0; 
  	}
 }

@@ -17,12 +17,7 @@ post '/event' => sub {
 	my $ua = LWP::UserAgent->new; # You might want some options here
 	my $res = $ua->request($req);
 	
-	if( $res->code eq '200'){
-		debug "SendGrid event fwd OK";
-	}
-	else{
-		debug "SendGrid event fwd FAILED";
-	}
+	debug "SendGrid event fwd FAILED" unless ( $res->code eq '200');
 	
 	# Save
 	my $events = from_json request->body;

@@ -5,6 +5,7 @@ use Mail::IMAPClient;
 use Dancer::Plugin::DBIC qw(schema resultset rset);
 use StoreMail::Email;
 use StoreMail::Message;
+use StoreMail::Helper;
 use MIME::QuotedPrint::Perl;
 use Email::MIME;
 use Encode qw(decode);
@@ -12,7 +13,6 @@ use File::Path qw(make_path remove_tree);
 use FindBin;
 use Cwd qw/realpath/;
 use Getopt::Long;
-sub printt { $|++; print "\n".localtime().' | '.shift }
 
 my $appdir = realpath( "$FindBin::Bin/..");
 
@@ -28,12 +28,12 @@ sub send {
 	
 	if (my $count = $messages->search( {},{columns => [qw/id/]} )->count() ) {
 	
-		printt ("$count emails found. Processing..." . ($args->{redirect} ? 'with redirect to '.$args->{redirect}.' ...' : '') );
+		# printt ("$count emails found. Processing..." . ($args->{redirect} ? 'with redirect to '.$args->{redirect}.' ...' : '') );
 	
 		while (my $message = $messages->next) {
 			my $fc = $message->send_queue_fail_count;
 			
-			printt "[".$message->frm." to " . join(', ', $message->toccbcc) . "] " . ($fc ? "[TRY ".($fc+1)."] " : '') . $message->subject.' | ';
+			printt "[".$message->frm." to " . join(', ', $message->toccbcc) . "] " . ($fc ? "[TRY ".($fc+1)."] " : '') . "\n" .$message->subject.' | ';
 			
 			my ($status, $msg) = $message->send($args->{redirect});
 			if($status){
@@ -52,7 +52,7 @@ sub send {
 		print "\n"
 	}
 	else{
-		print ".";
+		# print ".";
 	}
 }
 

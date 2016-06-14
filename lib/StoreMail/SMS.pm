@@ -44,7 +44,7 @@ sub send_queue {
 
 sub send_sms {
 	my ($sms) = @_;	
-	
+
 	if(not $sms->send_failed and not defined $sms->send_status){
 		send_sms_gateway($sms) or send_sms_api($sms);
 	}
@@ -59,10 +59,11 @@ sub send_sms {
 sub send_sms_gateway {
 	my $sms = shift;
 	
-	my $number_config = config->{phone_numbers}->{$sms->frm};
-	
+	my $number_config = config->{phone_numbers}->{$sms->frm};	
 	my $port = $number_config->{port} or debug "No port set for ".$sms->frm and return 0;
 	
+	printt $sms->id. "[$port:".$sms->to."] ". substr $sms->plain_body(plain_newline => 1), 0, 30;
+
 	# Gateway
 	my $gateway_id = $number_config->{gateway_id};
 	my $gateway_settings = config->{gateways}->{$gateway_id};
@@ -80,10 +81,9 @@ sub send_sms_gateway {
 		$gateway = StoreMail::Gateway::Elastix->new( $gateway_settings );
 	
 	} else {
-		debug "Invalid gateway type" and return 0;
+		print "Invalid gateway type" and return 0;
 	}
 
-	printt "$port: ".$sms->to." | ". substr $sms->plain_body(plain_newline => 1), 0, 30;
 	
 	if($gateway){
 		$gateway->send($port, $sms);
@@ -102,6 +102,8 @@ sub send_sms_api {
 	my $api_settings = config->{sms_api};
 	my $gateway_settings = config->{gateways}->{$sms->gateway_id};
 
+	printt $sms->id. "[smsapi:".$sms->to."] ". substr $sms->plain_body(plain_newline => 1), 0, 30;
+
 	my $ua = LWP::UserAgent->new;
 	my $post_data = {
 		username => $api_settings->{username},
@@ -119,13 +121,13 @@ sub send_sms_api {
 		$sms->send_failed(undef);
 		
 	    my $message = $resp->decoded_content;
-	    print " FAILOVER reply: $message\n";
+	    print " | $message\n";
 	}
 	else {
  		$sms->send_failed(1);				
 		$sms->failover_send_status($resp->code);
 			    
-	    printt "Error sending [$sms] ". $resp->code .': '. $resp->message;
+	    print " | Error sending ". $resp->code .': '. $resp->message;
 	}
 	
 	$sms->send_queue(undef);				
