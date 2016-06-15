@@ -53,6 +53,7 @@ sub stop {
          } else {
                 print "Not running, nothing to stop.\n";
          }
+	$pid = $daemon->Status($pf);
 }
 
 
@@ -147,7 +148,6 @@ sub reload
 
 sub restart
 {
-    my ($opt_name, $opt_value) = @_;
-    &stop;
-    &run;
+    stop;
+    run;
 }
