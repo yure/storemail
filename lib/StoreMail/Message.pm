@@ -4,6 +4,7 @@ use Dancer ':syntax';
 our $VERSION = '0.1';
 
 use Dancer::Plugin::DBIC qw(schema resultset rset);
+use DateTime::Format::MySQL;
 use StoreMail::Email;
 use StoreMail::Helper;
 use StoreMail::Group;
@@ -17,6 +18,9 @@ sub new_message{
 
 	# Save new message to DB
 	my ($name, $email) = extract_email($arg->{from});
+
+	# UTF Time
+	$arg->{date} ||= DateTime::Format::MySQL->format_datetime(DateTime->now);
 
     my $message = schema->resultset('Message')->create({
     	domain => $arg->{domain},
@@ -44,7 +48,7 @@ sub new_message{
 
 	# Tracking
 	if(domain_setting($message->domain, 'track') or (defined $arg->{track} and $arg->{track} == '1') ){
-		add_tracking($message);
+		add_tracking($message) if $message->body_type eq 'html';
 	}
     
     # Add recipients

@@ -141,7 +141,7 @@ sub process_email {
 
 	# Datetime
 	my $epoch = parsedate($headers->{Date}[0]);
-	my $datetime = DateTime->from_epoch( epoch => $epoch )->set_time_zone( config->{timezone} ) if $epoch;
+	my $datetime = DateTime->from_epoch( epoch => $epoch ) if $epoch;
 	$message_params->{date} = $datetime ? $datetime->ymd." ".$datetime->hms : undef;
 
 	# Message body
