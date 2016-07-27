@@ -245,7 +245,13 @@ sub asterisk_listner {
 		$body =~ s/\+/ /smg;
 		$body = uri_unescape $body;
 		
-		my $respnose = save_sms($gateway_id, $event->{GsmSpan}, $from, $body, $event->{Recvtime});
+		# Recieve timezone fix
+		my $format = new DateTime::Format::Strptime(pattern => "%Y-%m-%d %H:%M:%S", time_zone => $listener_gateway_settings->{timezone});
+		my $time = $format->parse_datetime($event->{Recvtime});
+		$time->set_time_zone("UTC");
+		my $new_date = $time->ymd() . ' ' .$time->hms();
+		
+		my $respnose = save_sms($gateway_id, $event->{GsmSpan}, $from, $body, $new_date);
 		print $respnose ? " saved":" not saved";
 	} 
 	
