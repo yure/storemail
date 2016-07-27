@@ -24,7 +24,7 @@ sub fetch_all {
 	my $args = {@_};		
 	my $gmail = config->{gmail};
 	$account_emails  = {map {config->{gmail}->{accounts}->{$_}->{username} => 1} keys config->{gmail}->{accounts}};	
-	for my $account_name (keys config->{gmail}->{accounts}){
+	for my $account_name (sort keys config->{gmail}->{accounts}){
 		
 		
 		print "\n$account_name:";
