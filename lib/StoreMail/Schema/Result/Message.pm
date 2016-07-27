@@ -28,6 +28,8 @@ use URI::Escape;
 use File::Copy qw(copy);
 
 
+
+
 =head1 TABLE: C<message>
 
 =cut
@@ -343,7 +345,7 @@ sub attachments {
     while (my $file = readdir(DIR)) {
     	next if (-d "$dir/$file"); # Skip dirs
         next if ($file =~ m/^\./); # Use a regular expression to ignore files beginning with a period
-		push @files, $file;
+		push @files, ,$file;
     }
     closedir(DIR);
     return @files;	
@@ -356,7 +358,7 @@ sub attachment_links {
 	my @hash_chunks = ( $self->message_id =~ m/../g );
 	my $hash_path = join '/', @hash_chunks;
 	return [
-		map {{	filename => $_,	link => "/attachments/$hash_path/" . uri_escape $_ }} $self->attachments
+		map {{	filename => decode('UTF-8',$_),	link => "/attachments/$hash_path/" . uri_escape $_ }} $self->attachments
 	]
 }
 
