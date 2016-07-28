@@ -164,6 +164,7 @@ sub save_sms {
 				send_timestamp => $datetime,
 				direction => 'i',
 				domain => config->{gateways}->{$gateway_id}->{domain},
+				created => DateTime::Format::MySQL->format_datetime(DateTime->now),
 			});
 		} 
 		

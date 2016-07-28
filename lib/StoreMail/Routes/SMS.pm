@@ -7,6 +7,7 @@ use StoreMail::SMS;
 use Dancer::Plugin::DBIC qw(schema resultset rset);
 use Encode;
 use Try::Tiny;
+use DateTime::Format::MySQL;
 
 prefix '/:domain/sms';
 set serializer => 'JSON';
@@ -49,6 +50,7 @@ post '/send' => sub {
 			frm => $from, 
 			to => $to, 
 			body => $params->{body}, 
+			created => DateTime::Format::MySQL->format_datetime(DateTime->now),
 	    });
 		
 		# Add to queue if not test
