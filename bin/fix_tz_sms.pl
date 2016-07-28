@@ -35,7 +35,9 @@ while (my $message_id_only = $message->next){
 	my $time = $format->parse_datetime($message->send_timestamp);
 	$time->set_time_zone("UTC");
 	my $new_date = $time->ymd() . ' ' .$time->hms();
-	printt $message->send_timestamp . ' - '.$new_date. ' ('.$message->id.')';
+	my $old_date = $message->send_timestamp();
+	my $id = $message->id;
+	printt "$old_date - $new_date ($id)";
 	$message->send_timestamp($new_date);
 	#$message->update;
 }

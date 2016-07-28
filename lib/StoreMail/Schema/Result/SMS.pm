@@ -29,14 +29,6 @@ __PACKAGE__->set_primary_key("id");
 
 use Encode;
 
-use overload
-    '""' => 'stringify';
-     
-    sub stringify {
-    my ($self) = @_;
-    return $self->created ."|". $self->frm ." - ". $self->to .": ".$self->plain_body;
-}
-
 
 sub hash {
 	my ($self) = @_;
