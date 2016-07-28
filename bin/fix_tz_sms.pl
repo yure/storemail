@@ -7,7 +7,7 @@ use DateTime::Format::Strptime;
 my $domain = shift @ARGV;
 my $arg = shift @ARGV;
 
-my $message = schema->resultset('SMS')->search({id => {'<' => 11181}}, {columns => ['id']});
+my $message = schema->resultset('SMS')->search({direction => 'i', domain => 'www.primerjam.si', id => {'<' => 11181}}, {columns => ['id']});
 
 $|= 1;
 
