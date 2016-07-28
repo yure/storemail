@@ -207,11 +207,12 @@ sub wait_for {
 
 
 my $gateway_id;
+my $listener_gateway_settings;
 sub asterisk_listner {
 	
 	# Gateway
 	$gateway_id = shift;;
-	my $listener_gateway_settings = config->{gateways}->{$gateway_id};
+	$listener_gateway_settings = config->{gateways}->{$gateway_id};
 	
 	
 	#Here is a very simple example of how to use event handlers. Please note that the key for the event handler 
