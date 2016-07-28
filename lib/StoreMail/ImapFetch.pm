@@ -202,6 +202,7 @@ sub save_message {
 	if($account->{sms_gateway}){
 		# IN SMS | +38641235094 | gsm-2.4(38631463715) | 2016/06/09 12:15:13
 		my ($type, $from, $port_number, $datetime) = split ' \| ', $message_params->{subject};
+		my $listener_gateway_settings = config->{gateways}->{$account->{sms_gateway}};
 		
 		if($type and $from and $port_number and $datetime){
 			my ($port, undef) = split '\(', $port_number;	
@@ -224,10 +225,18 @@ sub save_message {
 			unless( $from){
 				1;
 			}
+			
+			# Recieve timezone fix
+			my $timezone = $listener_gateway_settings->{timezone} || config->{timezone};
+			my $format = new DateTime::Format::Strptime(pattern => "%Y-%m-%d %H:%M:%S", time_zone => $listener_gateway_settings->{timezone});
+			my $time = $format->parse_datetime($datetime);
+			$time->set_time_zone("UTC");
+			my $new_date = $time->ymd() . ' ' .$time->hms();
+			
 			my $body = trim $message_params->{body};
 			my $error;
 			try{
-				StoreMail::SMS::save_sms( $account->{sms_gateway}, $port, $from, $body, $datetime );
+				StoreMail::SMS::save_sms( $account->{sms_gateway}, $port, $from, $body, $new_date );
 			} catch {
 				$error = $_;
 			};
