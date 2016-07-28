@@ -73,6 +73,7 @@ sub hash_normal {
 sub plain_body {
 	my ($self, %args) = @_;
 	my $body = $self->body;
+	return '' unless $body;
 	my $substiute = [
 		['č', 'c'], 
 		['ž', 'z'], 
