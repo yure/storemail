@@ -7,7 +7,7 @@ use DateTime::Format::Strptime;
 my $domain = shift @ARGV;
 my $arg = shift @ARGV;
 
-my $message = schema->resultset('Message')->search({message_id => {'<' => 383673}}, {columns => ['id']});
+my $message = schema->resultset('Message')->search({message_id => {'<' => 383673}, domain => {'-not' => undef}}, {columns => ['id'], order_by => 'id'});
 
 $|= 1;
 
@@ -27,6 +27,7 @@ my $timezones = {
 };
 
 while (my $message_id_only = $message->next){
+	next unless $message_id_only->id > 51266;
 	my $message = schema->resultset('Message')->find($message_id_only->id);
 	my $format = new DateTime::Format::Strptime(pattern => "%Y-%m-%d %H:%M:%S", time_zone => $timezones->{$message->domain});
 	

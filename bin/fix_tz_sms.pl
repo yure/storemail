@@ -7,7 +7,7 @@ use DateTime::Format::Strptime;
 my $domain = shift @ARGV;
 my $arg = shift @ARGV;
 
-my $message = schema->resultset('SMS')->search({direction => 'i', domain => 'www.primerjam.si', id => {'<' => 11181}}, {columns => ['id']});
+my $message = schema->resultset('SMS')->search({id => {'<' => 11220}}, {columns => ['id']});
 
 $|= 1;
 
@@ -28,17 +28,17 @@ my $timezones = {
 
 while (my $message_id_only = $message->next){
 	my $message = schema->resultset('SMS')->find($message_id_only->id);
-	next unless $message->send_timestamp;
-	my $timezone = $timezones->{$message->domain} || config->{timezone};
+	next unless $message->created;
+	my $timezone = 'Europe/Ljubljana';
 	my $format = new DateTime::Format::Strptime(pattern => "%Y-%m-%d %H:%M:%S", time_zone => $timezone);
 	
-	my $time = $format->parse_datetime($message->send_timestamp);
+	my $time = $format->parse_datetime($message->created);
 	$time->set_time_zone("UTC");
 	my $new_date = $time->ymd() . ' ' .$time->hms();
-	my $old_date = $message->send_timestamp();
+	my $old_date = $message->created();
 	my $id = $message->id;
 	printt "$old_date - $new_date ($id)";
-	$message->send_timestamp($new_date);
+	$message->created($new_date);
 	#$message->update;
 }
 
