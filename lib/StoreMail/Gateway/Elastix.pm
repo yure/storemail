@@ -43,16 +43,16 @@ sub send {
 	my $username = $self->{username};
 	my $pass = $self->{pass};
 	my $url = "http://$host/sendsms?username=$username&password=$pass&phonenumber=$to&message=$msg&port=$port";
-
+	#print " $url ";
 	# Set failed
 	$sms->send_failed(1);
 
 	my $content = get $url or return 0;
 	# {"message":"gsm-2.1","report":[{"0":[{"port":"gsm-2.1","phonenumber":"0038640255245","time":"2016-05-24 12:00:13","result":"success"}]}]}
-	
+	#print $content;
 	$return = 0;
 	try{
-		if(index($content, '"result":"success"') > -1){
+		if((index($content, 'Failed') == -1) and (index($content, '"result":"success"') > -1)){
 			$sms->send_status(1);
 			$sms->send_timestamp(DateTime::Format::MySQL->format_datetime(DateTime->now));
 		 	$sms->send_queue(undef);

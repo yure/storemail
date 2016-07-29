@@ -32,7 +32,7 @@ sub send {
 		while (my $message = $messages->next) {
 			my $fc = $message->send_queue_fail_count;
 			
-			printt $message->subject. "\n" ."[".$message->frm." to " . join(', ', $message->toccbcc) . "] " . ($fc ? "[TRY ".($fc+1)."] " : '') .' | ';
+			printt substr($message->subject, 0, 50). "\n" ."[".$message->frm." to " . join(', ', $message->toccbcc) . "] " . ($fc ? "[TRY ".($fc+1)."] " : '') .' | ';
 			
 			my ($status, $msg) = $message->send($args->{redirect});
 			if($status){
@@ -48,7 +48,6 @@ sub send {
 			}
 			print "$msg\n";
 		}
-		print "\n"
 	}
 	else{
 		# print ".";
