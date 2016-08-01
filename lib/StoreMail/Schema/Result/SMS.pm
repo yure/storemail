@@ -105,4 +105,16 @@ sub plain_body_one_line {
 	return $body;
 }
 
+
+sub failed {
+	my ($self) = @_;
+	if($self->send_failed){
+		$self->send_failed( $self->send_failed + 1 );
+	} 
+	else {
+		$self->send_failed(1);
+	}
+	$self->update;
+}
+
 1;

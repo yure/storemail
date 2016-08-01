@@ -43,9 +43,6 @@ sub send {
 	my $username = $self->{username};
 	my $pass = $self->{pass};
 	my $url = "http://$host/sendsms?username=$username&password=$pass&phonenumber=$to&message=$msg&port=$port";
-	#print " $url ";
-	# Set failed
-	$sms->send_failed(1);
 
 	my $content = get $url or return 0;
 	# {"message":"gsm-2.1","report":[{"0":[{"port":"gsm-2.1","phonenumber":"0038640255245","time":"2016-05-24 12:00:13","result":"success"}]}]}

@@ -45,10 +45,8 @@ sub send_queue {
 sub send_sms {
 	my ($sms) = @_;	
 
-	if(not $sms->send_failed and not defined $sms->send_status){
-		send_sms_gateway($sms) or 
-		(print "retry in 30s" and sleep 30 and send_sms_gateway($sms)) or 
-		send_sms_api($sms);
+	if(not defined $sms->send_status and (not defined $sms->send_failed or $sms->send_failed < 3)){
+		send_sms_gateway($sms);
 	}
 	elsif(not defined $sms->failover_send_status){
 		send_sms_api($sms);
@@ -83,19 +81,15 @@ sub send_sms_gateway {
 		$gateway = StoreMail::Gateway::Elastix->new( $gateway_settings );
 	
 	} else {
-		$sms->send_failed(1);
-                $sms->update;
-		print "Invalid gateway type" and return 0;
+		$sms->failed and print "Invalid gateway type" and return 0;
 	}
 
 	
 	if($gateway){
-		$gateway->send($port, $sms);
+		$gateway->send($port, $sms) or $sms->failed and return 0;
 	}
 	else {
-		$sms->send_failed(1);
-		$sms->update;
-		return 0;
+		$sms->failed and return 0;
 	}
 	$sms->update;
  	return 1;
