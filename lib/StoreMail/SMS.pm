@@ -46,7 +46,9 @@ sub send_sms {
 	my ($sms) = @_;	
 
 	if(not $sms->send_failed and not defined $sms->send_status){
-		send_sms_gateway($sms) or send_sms_api($sms);
+		send_sms_gateway($sms) or 
+		(print "retry in 30s" and sleep 30 and send_sms_gateway($sms)) or 
+		send_sms_api($sms);
 	}
 	elsif(not defined $sms->failover_send_status){
 		send_sms_api($sms);
@@ -81,6 +83,8 @@ sub send_sms_gateway {
 		$gateway = StoreMail::Gateway::Elastix->new( $gateway_settings );
 	
 	} else {
+		$sms->send_failed(1);
+                $sms->update;
 		print "Invalid gateway type" and return 0;
 	}
 
@@ -90,6 +94,8 @@ sub send_sms_gateway {
 	}
 	else {
 		$sms->send_failed(1);
+		$sms->update;
+		return 0;
 	}
 	$sms->update;
  	return 1;
@@ -143,7 +149,7 @@ sub save_sms {
 	my $gateway_settings = config->{gateways}->{$gateway_id} or print " gateway $gateway_id not found " and return undef;
 	my $to = $gateway_settings->{ports}->{$port} or print " port $port not found" and return undef;
 	
-	printt "$from - $to [$body]" ;
+	printt "$datetime $from - $to [$body]" ;
 	
 	try{
 		my $exists = schema->resultset('SMS')->search({
