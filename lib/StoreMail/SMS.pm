@@ -189,6 +189,7 @@ sub sms_send_status {
 	my $sms = schema->resultset('SMS')->find($id) or return undef;
 	$sms->send_status($status);
 	$sms->send_timestamp(DateTime::Format::MySQL->format_datetime(DateTime->now));
+	$sms->send_failed(undef);
 	$sms->update;
 	return 1;	
 } 

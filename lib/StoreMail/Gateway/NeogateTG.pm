@@ -98,7 +98,7 @@ sub send {
 	
 	if($sent){
 	 	$sms->send_queue(undef);
-		print " | SENT";
+		print " | PUSHED";
 	 	return 1; 	
  	}
  	else{
