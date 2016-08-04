@@ -82,10 +82,9 @@ sub new_message{
 		my $dir = "$appdir/public/attachments/".$message->attachment_id_dir;
 		Email::MIME->new($mail_str)->walk_parts(sub {
 			my($part) = @_;
-	  		return unless defined $part->content_type and $part->content_type =~ /\bname="([^"]+)"/;  # " grr...
+	  		my $filename = $part->filename or return undef;
 	  		system( "mkdir -p $dir" ) unless (-e $dir); 
-			my $name = "$dir/$1";
-			#printt "$0: writing $name...\n";
+			my $name = "$dir/$filename";
 			open my $att_fh, ">", $name or warn "$0: open $name: $!";
 			print $att_fh $part->body;
 			close $att_fh or warn "$0: close $name: $!";
