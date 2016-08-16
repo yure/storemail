@@ -141,7 +141,7 @@ post '/message/send' => sub {
 		$message = $response->{message};
 		
 		# Send
-		unless($response->{group_send} == 1){
+		if(not param('test')){ # and not $response->{group_send} == 1
 			$message->send_queue(1);
 	    	$message->update;
 		}

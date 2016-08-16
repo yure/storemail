@@ -32,7 +32,7 @@ sub new_group_from_message {
 		$id .= "_$domain";
 	}
 	
-	my $group = new_group($domain, $params->{group});
+	my ($group, $new) = new_group($domain, $params->{group});
 
 	# TO mailing list email
 	my ($name, $email) = extract_email($params->{from});
@@ -52,28 +52,30 @@ sub new_group {
 
 	return undef unless $params;
 
+
 	# Create group
  	my $id = $params->{id};
  	warn "no group ID!" and return undef unless $id;
-	my $mail_domain = domain_setting($domain, 'catchall_domain');
-	unless($mail_domain){
-		$mail_domain = config->{'catchall_domain'};
-		$id .= "_$domain";
-	}
 	
-	my $group_email = "$id\@$mail_domain";
+	my $group_email = group_email($domain, $id) or return (undef, 'Group email could not be generated');
 	
+	# Already exists
+	my $group = schema->resultset('Group')->find({email => $group_email});
+    return ($group, 0) if $group;
+    
 	# Save new message to DB
-    my $group = schema->resultset('Group')->find_or_create({
+    $group = schema->resultset('Group')->create({
     	email => $group_email,    	
     	name => $params->{name} || $params->{id},
+    	domain => $domain,
+    	domains_id => $params->{id},
     });
 
 	assign_to_group($group, $params->{'a'}, 'a');
 	assign_to_group($group, $params->{'b'}, 'b');
 	assign_to_group($group, $params->{'send_only'}, 'a', 1, 0);
     	
-	return $group;
+	return ($group, 1);
 }
 
 
@@ -100,6 +102,7 @@ sub assign_to_group {
 sub send_group {
 	my ($message) = @_;
 	
+	return undef unless $message->source;
 		
 	for my $c ($message->toccbcc){
 		my $group = schema->resultset('Group')->find({ email => $c->email });
@@ -124,10 +127,8 @@ sub send_group {
 				    	plain_body => $message->plain_body,
 				    	subject => $message->subject,
 				    	domain => $message->domain,
-						#from => $message->frm,
-						
-						from => $group->email,
-						reply_to => $from_name .'<'.$group->email.'>',
+						from => $from_name .'<'.$message->frm.'>',
+						reply_to => $group->name .'<'.$group->email.'>',
 						source => undef,
 						group_message_parent_id => $message->id,
 						group_id => $group->id,									
@@ -157,6 +158,22 @@ sub send_group {
 	}
 	
 	return 0;
+}
+
+
+sub group_email {
+	my ($domain, $id) = @_;
+	my $short_name = domain_setting($domain, 'short_name') or return undef;
+	my $mail_domain = domain_setting($domain, 'catchall_domain') or return undef;
+	return $id .'-'. $short_name .'@'. $mail_domain;
+}
+
+
+sub find {
+	my ($domain, $id) = @_;
+	my $email = group_email($domain, $id);
+	return schema->resultset('Group')->find({email => $email});
+	
 }
 
 true;
