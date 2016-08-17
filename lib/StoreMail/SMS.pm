@@ -187,10 +187,16 @@ sub sms_send_status {
 	return undef if $instance ne config->{instance_name};
 	
 	my $sms = schema->resultset('SMS')->find($id) or return undef;
-	$sms->send_status($status);
-	$sms->send_timestamp(DateTime::Format::MySQL->format_datetime(DateTime->now));
-	$sms->send_failed(undef);
-	$sms->update;
+	if($status){
+		$sms->send_status($status);
+		$sms->send_timestamp(DateTime::Format::MySQL->format_datetime(DateTime->now));
+		$sms->send_failed(undef);
+	        $sms->update;
+	}
+	else {
+		$sms->failed;
+		return 0;
+	}
 	return 1;	
 } 
 

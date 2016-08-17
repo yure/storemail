@@ -94,7 +94,7 @@ sub process_emails {
 
 	# Save queue
 	for my $message_params (@messages_save_queue){
-		try {save_message($account, $message_params)}
+		try {save_message($account, $message_params) or print 'x'}
 		catch {printt "Saving email with id ".$message_params->{message_id}." was not successfull!!! $_";};
 	}
 }
@@ -189,15 +189,17 @@ sub process_email {
 sub remove_utf8_4b {
 	my $str = shift;
 	return $str unless defined $str;
+	$str = decode("MIME-Header", $str);
 	$str = encode('UTF-8', $str);
 	$str =~ s/([\xF0-\xF7]...)|([\xE0-\xEF]..)/_/g;
 	$str = decode('UTF-8', $str);
+	$str =~ s/[^[:ascii:]]//g;
 	return $str;
 }
 
 sub save_message {
 	my ($account, $message_params, $retry) = @_;
-	
+		
 	# Incoming sms
 	if($account->{sms_gateway}){
 		# IN SMS | +38641235094 | gsm-2.4(38631463715) | 2016/06/09 12:15:13
@@ -247,6 +249,7 @@ sub save_message {
 		
 	# New message	
 	try{
+		#print "\n".$message_params->{subject}."\n";
 		my $response = StoreMail::Message::new_message(	%$message_params );
 		my $message = $response->{message};
 		
@@ -254,13 +257,17 @@ sub save_message {
 			print '['.$message->id.": ".$message->frm.", ".$message->date.'] ';
 			return 1;
 		}
+		else {
+			print "X";
+		}
 		return undef;
 	} catch {
+		#print $_;
 		for my $key (keys %$message_params){
 			$message_params->{$key} = remove_utf8_4b $message_params->{$key} if $message_params->{$key}; 
 		}
 		# Try again with cleaned body
-		save_message($account, $message_params, 1) unless $retry;
+		return save_message($account, $message_params, 1) unless $retry;
 		return undef;
 	};
 			

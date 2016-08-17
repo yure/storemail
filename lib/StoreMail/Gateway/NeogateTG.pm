@@ -89,6 +89,14 @@ Slot status
 sub send {
 	my $self = shift;
 	my ($port, $sms) = @_;
+	
+	my $port_status;
+	try{
+		$port_status = $self->check_slot_status($port)->{CMD}->{Status};
+	};
+	return 0 unless $port_status;
+	return 0 unless $port_status eq 'Power on, Provisioned, Up, Active,Standard';	
+
 	my $to = $sms->to;	
 	my $msg = $sms->plain_body;	
 	my $id = $sms->id;
