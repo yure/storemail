@@ -60,10 +60,10 @@ post '/create' => sub {
 	
     my $error_message;
     my $group;
-    
+    my $new; 
     try{
 		# Create
-		my ($group, $new) = StoreMail::Group::new_group(param('domain'), $params);
+		($group, $new) = StoreMail::Group::new_group(param('domain'), $params);
     }
     catch {	
     	warn "FAILED TO CREATE GROUP: " . to_json $params;

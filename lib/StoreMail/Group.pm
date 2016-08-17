@@ -57,7 +57,7 @@ sub new_group {
  	my $id = $params->{id};
  	warn "no group ID!" and return undef unless $id;
 	
-	my $group_email = group_email($domain, $id) or return (undef, 'Group email could not be generated');
+	my $group_email = group_email($domain, $id) or printt 'Group email could not be generated' and return (undef, undef);
 	
 	# Already exists
 	my $group = schema->resultset('Group')->find({email => $group_email});
