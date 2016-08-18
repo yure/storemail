@@ -18,7 +18,7 @@ use File::Spec::Functions;
 my $appdir = config->{appdir};
 my $dir = config->{pid_dir} ? catfile(config->{pid_dir}, 'storemail') : "$appdir/run";
 system( "mkdir -p $dir" ) unless (-e $dir);
-my $pf = catfile($dir, "get_gmail.pid");
+my $pf = catfile($dir, "get_gmail_conversation.pid");
 
 my $daemon = Proc::Daemon->new(
 	pid_file => $pf,
@@ -80,7 +80,7 @@ sub run {
 		
 		print "Service starting...";
 		logfile('get_gmail_conversation');
-		my $sleep = config->{get_gmail_sleep} || 10;
+		my $sleep = 5 || config->{get_gmail_sleep} || 10;
 		die "Set some IMAP accounts in config!" unless config->{gmail} and config->{gmail}->{accounts};
 		while (1) {
 			
