@@ -27,205 +27,38 @@ use Digest::MD5 qw(md5 md5_hex md5_base64);
 use URI::Escape;
 use File::Copy qw(copy);
 
-
-
-
-=head1 TABLE: C<message>
-
-=cut
-
 __PACKAGE__->table("message");
 
-=head1 ACCESSORS
-
-=head2 id
-
-  data_type: 'integer'
-  is_auto_increment: 1
-  is_nullable: 0
-
-=head2 domain
-
-  data_type: 'varchar'
-  is_nullable: 1
-  size: 90
-
-=head2 conversation_id
-
-  data_type: 'varchar'
-  is_foreign_key: 1
-  is_nullable: 1
-  size: 45
-
-=head2 frm
-
-  data_type: 'varchar'
-  is_nullable: 0
-  size: 90
-
-=head2 name
-
-  data_type: 'varchar'
-  is_nullable: 1
-  size: 90
-
-=head2 body
-
-  data_type: 'text'
-  is_nullable: 1
-
-=head2 date
-
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
-  default_value: current_timestamp
-  is_nullable: 0
-
-=head2 subject
-
-  data_type: 'text'
-  is_nullable: 1
-
-=head2 direction
-
-  data_type: 'varchar'
-  is_nullable: 0
-  size: 1
-
-=head2 new
-
-  accessor: undef
-  data_type: 'tinyint'
-  default_value: 1
-  is_nullable: 0
-
-=head2 type
-
-  data_type: 'varchar'
-  default_value: 'email'
-  is_nullable: 0
-  size: 45
-
-=head2 message_id
-
-  data_type: 'varchar'
-  is_nullable: 1
-  size: 36
-
-=head2 source
-
-  data_type: 'varchar'
-  is_nullable: 1
-  size: 45
-
-=cut
-
 __PACKAGE__->add_columns(
-  "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
-  "domain",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
-  "batch_id",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
-  "group_id",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
-  "group_message_parent_id",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
-  "frm",
-  { data_type => "varchar", is_nullable => 0, size => 255 },
-  "reply_to",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
-  "name",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
-  "body",
-  { data_type => "text", is_nullable => 1 },
-  "plain_body",
-  { data_type => "text", is_nullable => 1 },
-  "raw_body",
-  { data_type => "text", is_nullable => 1 },
-  "date",
-  {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
-    default_value => \"current_timestamp",
-    is_nullable => 0,
-  },
-  "subject",
-  { data_type => "text", is_nullable => 1 },
-  "direction",
-  { data_type => "varchar", is_nullable => 0, size => 1 },
-  "new",
-  {
-    accessor      => undef,
-    data_type     => "tinyint",
-    default_value => 1,
-    is_nullable   => 0,
-  },
-  "send_queue",
-  { data_type     => "tinyint", is_nullable   => 1, },
-  "send_queue_fail_count",
-  { data_type     => "tinyint", is_nullable   => 0, default_value => 0 },
-  "send_queue_sleep",
-  { data_type     => "integer", is_nullable   => 0, default_value => 0 },
-  "type",
-  {
-    data_type => "varchar",
-    default_value => "email",
-    is_nullable => 0,
-    size => 255,
-  },
-  "body_type",
-  {
-    data_type => "varchar",
-    default_value => "plain",
-    is_nullable => 0,
-    size => 255,
-  },
-  "message_id",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
-  "source",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
-  "sent",
-  { data_type => "integer", is_nullable   => 1, },
-  "opened",
-  { data_type => "integer", is_nullable   => 1, },
+  id => { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  domain  => { data_type => "varchar", is_nullable => 1, size => 255 },
+  batch_id => { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
+  group_id => { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
+  group_message_parent_id => { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
+  frm => { data_type => "varchar", is_nullable => 0, size => 255 },
+  reply_to => { data_type => "varchar", is_nullable => 1, size => 255 },
+  name => { data_type => "varchar", is_nullable => 1, size => 255 },
+  body => { data_type => "text", is_nullable => 1 },
+  plain_body => { data_type => "text", is_nullable => 1 },
+  raw_body => { data_type => "text", is_nullable => 1 },
+  date => { data_type => "timestamp", datetime_undef_if_invalid => 1, default_value => \"current_timestamp", is_nullable => 0, },
+  subject => { data_type => "text", is_nullable => 1 },
+  direction => { data_type => "varchar", is_nullable => 0, size => 1 },
+  new => { accessor      => undef, data_type     => "tinyint", default_value => 1, is_nullable   => 0 },
+  send_queue => { data_type     => "tinyint", is_nullable   => 1, },
+  send_queue_fail_count => { data_type     => "tinyint", is_nullable   => 0, default_value => 0 },
+  send_queue_sleep => { data_type     => "integer", is_nullable   => 0, default_value => 0 },
+  type => { data_type => "varchar", default_value => "email", is_nullable => 0, size => 255 },
+  body_type => { data_type => "varchar", default_value => "plain", is_nullable => 0, size => 255 },
+  message_id => { data_type => "varchar", is_nullable => 1, size => 255 },
+  source => { data_type => "varchar", is_nullable => 1, size => 255 },
+  sent => { data_type => "integer", is_nullable   => 1, },
+  opened => { data_type => "integer", is_nullable   => 1, },
 );
-
-=head1 PRIMARY KEY
-
-=over 4
-
-=item * L</id>
-
-=back
-
-=cut
 
 __PACKAGE__->set_primary_key("id");
 
-=head1 UNIQUE CONSTRAINTS
-
-=head2 C<message_id_UNIQUE>
-
-=over 4
-
-=item * L</message_id>
-
-=back
-
-=cut
-
 __PACKAGE__->add_unique_constraint("message_id_UNIQUE", ["message_id"]);
-
-=head1 RELATIONS
-
-=head2 conversation
-
-Type: belongs_to
-
-Related object: L<StoreMail::Schema::Result::Conversation>
-
-=cut
 
 __PACKAGE__->belongs_to(
   "group_message_parent",
@@ -521,6 +354,7 @@ sub hash_lite {
     	to => [map {$_->email} $self->to],
     	date => $self->date ,
     	id => $self->id ,
+    	group_id => $self->group_id ,
     	tags => [map($_->value, $self->tags)],
 	}
 }
