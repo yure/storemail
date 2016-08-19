@@ -232,6 +232,7 @@ sub copy_attachments {
 	system( "mkdir -p $to_dir" ) unless (-e $to_dir);  
 	my $count = 0;
 	for my $file (@files){
+		next unless $file;
 		copy "$from_dir/$file", "$to_dir/$file";		
     }
     return $count;
@@ -328,6 +329,7 @@ sub hash {
 	return {
 		id => $self->id,
 		from => $self->frm,
+		reply_to => $self->reply_to,
 		from_name => $self->name,
     	$self->toccbcc_hash,
     	subject => $self->subject,

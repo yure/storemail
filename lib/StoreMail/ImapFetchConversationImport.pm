@@ -26,7 +26,7 @@ sub fetch_all {
 	my $args = {@_};		
 	my $gmail = config->{gmail};
 	$account_emails  = {map {config->{gmail}->{conversation_accounts}->{$_}->{username} => 1} keys config->{gmail}->{conversation_accounts}};	
-	for my $account_name ('Catchall', 'Primerjam'){ 
+	for my $account_name ('start','response'){ #'start',  
 		print "\n$account_name:";
 		my $account = config->{gmail}->{conversation_accounts}->{$account_name};
 		$imap = StoreMail::ImapFetch::log_in($account);
@@ -139,7 +139,7 @@ sub process_emails {
 			$message_params->{mail_str} = $imap->message_string($mail_id);
 	
 			if($args{initial}){
-				save_message($message_params);
+				save_message($message_params, $account);
 			} 
 			else {
 				unshift @messages_save_queue, $message_params;
@@ -153,17 +153,18 @@ sub process_emails {
 		
 	# Save queue
 	for my $message_params (@messages_save_queue){
-		try {save_message($message_params)}
+		try {save_message($message_params, $account)}
 		catch {printt "Saving email with id ".$message_params->{message_id}." was not successfull!!! $_";};
 	}
 }
 
 
 sub save_message {
-	my $message_params = shift;
+	my ($message_params, $account) = @_;
 	
 	# Process group logic
-	$message_params = StoreMail::Group::new_group_from_message($message_params->{domain}, $message_params);
+	$message_params = StoreMail::Group::new_group_from_message($message_params->{domain}, $message_params) if $account->{type} eq 'start';
+	$message_params = StoreMail::Group::group_reply_from_message($message_params->{domain}, $message_params) if $account->{type} eq 'reply';
 	
 	# New message	
 	my $response = StoreMail::Message::new_message(

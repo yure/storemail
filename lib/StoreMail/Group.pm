@@ -7,6 +7,7 @@ use Dancer::Plugin::DBIC qw(schema resultset rset);
 use StoreMail::Helper;;
 use Encode;
 use Try::Tiny;
+require LWP::Simple;
 
 sub group_email_list {
 	my $list = shift;
@@ -22,21 +23,69 @@ sub new_group_from_message {
 	return undef unless $params->{group};
 
 	# Create group
-	$params->{group}->{a} ||= $params->{from};
+	my ($from_name, $from_email) = extract_email($params->{from});
+	my $group_name = $params->{group}->{name};
+ 	my $group_id = $params->{group}->{id};
+	
+	$params->{group}->{send_only} ||= email_str($group_name, $from_email);
 	$params->{group}->{b} ||= $params->{to};
- 	my $id = $params->{group}->{id};
- 	warn "no group ID!" and return undef unless $id;
-	my $mail_domain = domain_setting($domain, 'catchall_domain');
+ 	warn "no group ID!" and return undef unless $group_id;
+	my $mail_domain = domain_setting($domain, 'group_domain');
 	unless($mail_domain){
-		$mail_domain = config->{'catchall_domain'};
-		$id .= "_$domain";
+		$mail_domain = config->{'group_domain'};
+		$group_id .= "_$domain";
 	}
 	
 	my ($group, $new) = new_group($domain, $params->{group});
 
 	# TO mailing list email
-	my ($name, $email) = extract_email($params->{from});
-	$params->{to} = email_str($group->name, $group->email);	
+	$params->{from} = email_str($from_name, domain_email($domain));
+	$params->{reply_to} = email_str($group->name, $group->email);
+
+	$params->{direction} = 'o'; 
+
+    # Don't send this message
+    delete $params->{send_queue};
+
+	# Assign message to group	
+	$params->{group_id} = $group->id;
+
+	return $params;
+}
+
+
+sub group_reply_from_message {
+	my ($domain, $params) = @_;
+
+	return undef unless $params->{group};
+
+	# Create group
+	my ($from_name, $from_email) = extract_email($params->{from});
+	$from_name ||= $from_email; # In case there is no name
+	my $group_name = $params->{group}->{name};
+ 	my $group_id = $params->{group}->{id};
+ 	
+ 	warn "no group ID!" and return undef unless $group_id;
+	
+	my ($group, $new) = new_group($domain, $params->{group});
+	
+	$params->{from} = email_str($from_name, domain_email($domain));
+	$params->{reply_to} = email_str($group->name, $group->email);
+	
+	# Conversation info;
+	my $servicator_backend_api = domain_setting($domain, 'servicator_backend_api');
+	my ($req_ident_hash, $uid) = split '-', $group_id;
+	my $req_ident = substr $req_ident_hash, 5;
+	my $req_info = from_json LWP::Simple::get("$servicator_backend_api/request/$uid/$req_ident") or warn 'Unalbe to connect to servicator backend' and return undef;
+	
+	
+	my $to = email_str($req_info->{name}, $req_info->{email});
+	assign_to_group($group, $to, 'a');
+
+	# TO mailing list email
+	$params->{to} = $to;	
+	
+	$params->{direction} = 'o';
 
     # Don't send this message
     delete $params->{send_queue};
@@ -99,6 +148,27 @@ sub assign_to_group {
 }
 
 
+sub reply_above_line {
+	my ($body, $mail_domain) = @_;
+	return undef unless $body;
+	
+	# Storemail reply
+	my $line = "===== WRITE YOUR REPLY ABOVE THIS LINE =====";
+	my $index = index $body, $line;
+	$body = substr $body, 0, $index if $index > -1;
+	
+	# Gmail reply
+	$body =~ /(On .*? at .*?$mail_domain.*?wrote:)/s;
+	my ($gmail_timestamp) = ($1);
+	if($gmail_timestamp){
+		$index = index $body, $gmail_timestamp;
+		$body = substr $body, 0, $index if $index > -1;
+	}
+	
+	return "$line\n\n\n$body";
+}
+
+
 sub send_group {
 	my ($message) = @_;
 	
@@ -118,20 +188,22 @@ sub send_group {
 		for my $c ($group->emails->search({side => { '!=' => $sender_member->side }, can_recieve => 1})->all){
 			
 			my $from_name = $group->name . " (".config->{domain}.")";
+			my $mail_domain = domain_setting($message->domain, 'group_domain');
+			
 			my $response = StoreMail::Message::new_message(							
-						direction => 'o',										
+						direction => 'o',
 						
-						body => $message->body,
+						body => reply_above_line($message->body, $mail_domain),
 				    	body_type => $message->body_type,
-				    	raw_body => $message->raw_body,
-				    	plain_body => $message->plain_body,
+				    	raw_body => reply_above_line($message->raw_body, $mail_domain),
+				    	plain_body => reply_above_line($message->plain_body, $mail_domain),
 				    	subject => $message->subject,
 				    	domain => $message->domain,
-						from => $from_name .'<'.$message->frm.'>',
+						from => $from_name . domain_email($message->domain),
 						reply_to => $group->name .'<'.$group->email.'>',
 						source => undef,
 						group_message_parent_id => $message->id,
-						group_id => $group->id,									
+						group_id => $group->id,
 					);
 			
 			my $fwd_message = $response->{message};
@@ -164,7 +236,7 @@ sub send_group {
 sub group_email {
 	my ($domain, $id) = @_;
 	my $short_name = domain_setting($domain, 'short_name') or return undef;
-	my $mail_domain = domain_setting($domain, 'catchall_domain') or return undef;
+	my $mail_domain = domain_setting($domain, 'group_domain') or return undef;
 	return $id .'-'. $short_name .'@'. $mail_domain;
 }
 
@@ -174,6 +246,13 @@ sub find {
 	my $email = group_email($domain, $id);
 	return schema->resultset('Group')->find({email => $email});
 	
+}
+
+
+sub domain_email {
+	my ($domain) = @_;
+	my $mail_domain = domain_setting($domain, 'group_domain');
+	return "conversation\@$mail_domain";
 }
 
 true;
