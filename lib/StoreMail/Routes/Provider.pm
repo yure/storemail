@@ -62,6 +62,8 @@ get '/:comma_separated_emails' => sub {
 				FROM email e
 				LEFT JOIN message m  ON e.message_id = m.id 
 				WHERE  
+				group_id IS NULL
+				AND
 				domain = ? 
 				AND 
 				( |. (join ' OR ', map {"e.email = ?"} @emails) .q|  )
@@ -70,7 +72,9 @@ get '/:comma_separated_emails' => sub {
 				
 				SELECT id, m.date
 				FROM message m
-				WHERE  
+				WHERE
+				group_id IS NULL  
+				AND
 				domain = ? 
 				
 				AND  
