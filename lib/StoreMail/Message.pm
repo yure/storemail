@@ -10,6 +10,8 @@ use StoreMail::Helper;
 use StoreMail::Group;
 use Encode;
 use Email::MIME;
+use URI::Encode qw(uri_encode uri_decode);
+
 my $appdir = config->{appdir};
 
 
@@ -126,7 +128,7 @@ sub add_tracking {
 	# Tracker
 	my $tracker_url = domain_setting($message->domain, 'tracker_url');
 	$tracker_url =~ s/\[MID\]/$mid/g;
-	$html =~ s/( href\=["']?)(.*?)(["'>])/$1$tracker_url$2$3/gi;
+	$html =~ s/( href\=["']?)(.*?)(["'>])/"$1$tracker_url".encode_reserved($2)."$3"/gie;
 	
 	# Tracking pixle
 	my $pixle_url = domain_setting($message->domain, 'tracker_pixle');
@@ -136,6 +138,14 @@ sub add_tracking {
 	
 	$message->body($html);
 	1;
+}
+
+sub encode_reserved {
+	my $url = shift;
+	debug "Url to encode: $url";
+	$url = uri_encode($url, {encode_reserved => 1});
+	debug "Encoded: $url";
+	return $url
 }
 
 
