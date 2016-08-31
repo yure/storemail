@@ -26,7 +26,9 @@ sub fetch_all {
 	my $args = {@_};		
 	my $gmail = config->{gmail};
 	$account_emails  = {map {config->{gmail}->{conversation_accounts}->{$_}->{username} => 1} keys config->{gmail}->{conversation_accounts}};	
-	for my $account_name ('start','response'){ #'start',  
+#	for my $account_name ('NecesitStart', 'NecesitResponse' , 'PrimerjamStart', 'PrimerjamResponse'){ 
+        for my $account_name ('TrebamStart'){
+
 		print "\n$account_name:";
 		my $account = config->{gmail}->{conversation_accounts}->{$account_name};
 		$imap = StoreMail::ImapFetch::log_in($account);
@@ -51,8 +53,9 @@ sub process_emails {
 	my $found = 0;	
 	# Reverse list and keep adding until you find message in db
 	for my $mail_id ($args{initial} ? @$messages : reverse @$messages) {
+		#next unless $mail_id > 212476;
 		try {
-			print ':';
+			print "[$mail_id ";
 			no warnings 'exiting';
 			my $headers = $imap->parse_headers( $mail_id, "Date", "Subject", "To", "From" );
 			my $all = $imap->parse_headers( $mail_id, "ALL");
@@ -85,13 +88,13 @@ sub process_emails {
 			my $existing = schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id});
 			if($existing){				
 				unless($args{initial}){
-					print '-';
+					print '-]';
 					next if $account_emails->{$message_params->{from}};
 					$found++;
 					last if $found >= 3;	# If for some reason they get mixed	 	
 					next;	
 				} else {
-					print '.';
+					print '.]';
 					next;
 				}
 			}

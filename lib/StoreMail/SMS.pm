@@ -17,14 +17,14 @@ use StoreMail::Gateway::Elastix;
 
 # Expand settings file for easy access
 config->{phone_numbers} = {};
-for my $gateway_id (keys config->{gateways}){
+for my $gateway_id (keys %{config->{gateways}}){
 
 	my $domain = config->{gateways}->{$gateway_id}->{domain};
 	config->{domains}->{$domain}->{gateways} ||= [];
 	push @{config->{domains}->{$domain}->{gateways}}, $gateway_id;
 
 	next unless config->{gateways}->{$gateway_id}->{ports};
-	for my $port (keys config->{gateways}->{$gateway_id}->{ports}){
+	for my $port (keys %{config->{gateways}->{$gateway_id}->{ports}}){
 		config->{phone_numbers}->{config->{gateways}->{$gateway_id}->{ports}->{$port}} = {port => $port, gateway_id => $gateway_id};
 	}
 }

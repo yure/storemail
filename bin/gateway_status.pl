@@ -33,7 +33,7 @@ my @errors;
 
 exit(0) if ( (localtime)[2] == 0 and (localtime)[1] < 3 );
 
-for my $gateway_id (keys config->{gateways}){
+for my $gateway_id (keys %{config->{gateways}}){
 	next unless config->{gateways}->{$gateway_id}->{type} eq 'neogate_tg';	
 	printt $gateway_id;
 	try{

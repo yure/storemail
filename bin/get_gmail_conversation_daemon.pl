@@ -53,6 +53,7 @@ sub stop {
          } else {
                 print "Not running, nothing to stop.\n";
          }
+	$pid = $daemon->Status($pf);
 }
 
 

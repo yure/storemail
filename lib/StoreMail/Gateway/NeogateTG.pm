@@ -3,6 +3,7 @@ package StoreMail::Gateway::NeogateTG;
 use StoreMail::Helper;
 use Asterisk::AMI;
 use Try::Tiny;
+use DateTime::Format::MySQL;
 
 
 sub new {
@@ -106,6 +107,7 @@ sub send {
 	
 	if($sent){
 	 	$sms->send_queue(undef);
+		$sms->send_timestamp(DateTime::Format::MySQL->format_datetime(DateTime->now));
 		print " | PUSHED";
 	 	return 1; 	
  	}

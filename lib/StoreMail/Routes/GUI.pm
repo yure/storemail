@@ -36,7 +36,7 @@ get '/gui/send' => sub {
 
 get '/gui/send-sms' => sub {
 	content_type('text/html');		
-    return template 'sms_send.html', {title=> 'SMS send', domain => param('domain'), phone_numbers => [keys config->{phone_numbers}]};
+    return template 'sms_send.html', {title=> 'SMS send', domain => param('domain'), phone_numbers => [keys %{config->{phone_numbers}}]};
 };
 
 get '/gui/send-batch' => sub {
