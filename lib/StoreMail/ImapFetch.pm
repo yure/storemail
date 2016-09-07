@@ -138,6 +138,7 @@ sub process_email {
 
 	# Subject
 	$message_params->{subject} = decode("UTF-8", $headers->{Subject}[0]);
+	$message_params->{subject} = $imap->subject($mail_id);
 
 	# Datetime
 	my $epoch = parsedate($headers->{Date}[0]);

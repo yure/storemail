@@ -151,9 +151,9 @@ sub assign_to_group {
 sub reply_above_line {
 	my ($body, $mail_domain) = @_;
 	return undef unless $body;
-	
+	my $line = config->{"write_replay_above"};
+
 	# Storemail reply
-	my $line = "===== WRITE YOUR REPLY ABOVE THIS LINE =====";
 	my $index = index $body, $line;
 	$body = substr $body, 0, $index if $index > -1;
 	
@@ -165,6 +165,31 @@ sub reply_above_line {
 		$body = substr $body, 0, $index if $index > -1;
 	}
 	
+	# Gmail reply ver 3 - 27. jun. 2016 17:46 je oseba "darija" <darija.marolts@gmail.com> napisala:
+	$body =~ /([0-9]*?\. [a-z]*?\. [0-9]*? .*? .*?$mail_domain.*?:)/s;
+	($gmail_timestamp) = ($1);
+	if($gmail_timestamp){
+		$index = index $body, $gmail_timestamp;
+		$body = substr $body, 0, $index if $index > -1;
+	}
+	
+	# Gmail reply ver2 - 2016-09-02 13:28 GMT+02:00 cerere [[62c4065147-61949]] conversation@dev.trebam.hr Grega Pompe
+	$body =~ /([0-9]*?-[0-9]*?-[0-9]*? [0-9]*?:[0-9]*? .*?$mail_domain.*?:)/s;
+	($gmail_timestamp) = ($1);
+	if($gmail_timestamp){
+		$index = index $body, $gmail_timestamp;
+		$body = substr $body, 0, $index if $index > -1;
+	}
+
+	# HTML cleanup
+	my $filename = rand(100000000000).'.html';
+	open(my $fh, '>', $filename);
+	print $fh $body;
+	close $fh;
+	$body = `tidy --input-encoding utf8  -f err.txt  $filename`; #--output-encoding utf8
+	
+	unlink $filename;
+
 	return "$line\n\n\n$body";
 }
 
@@ -187,7 +212,7 @@ sub send_group {
 		
 		for my $c ($group->emails->search({side => { '!=' => $sender_member->side }, can_recieve => 1})->all){
 			
-			my $from_name = $group->name . " (".config->{domain}.")";
+			my $from_name = $message->name || $message->frm;
 			my $mail_domain = domain_setting($message->domain, 'group_domain');
 			
 			my $response = StoreMail::Message::new_message(							
@@ -199,7 +224,7 @@ sub send_group {
 				    	plain_body => reply_above_line($message->plain_body, $mail_domain),
 				    	subject => $message->subject,
 				    	domain => $message->domain,
-						from => $from_name . domain_email($message->domain),
+						from => email_str($from_name, domain_email($group->domain)),
 						reply_to => $group->name .'<'.$group->email.'>',
 						source => undef,
 						group_message_parent_id => $message->id,

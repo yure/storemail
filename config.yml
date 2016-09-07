@@ -32,3 +32,6 @@ logger_format: %T %L | %m | %f %l
 session: "YAML"
 
 sms_length_limit: 480
+sms_timeout: 30
+timezone: Europe/Ljubljana
+write_replay_above: ===== WRITE YOUR REPLY ABOVE THIS LINE =====

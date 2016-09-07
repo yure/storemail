@@ -322,9 +322,9 @@ sub named_from {
 
 
 sub hash {
-	my ($self) = @_;
+	my ($self, $args) = @_;
 	
-	my $clean_body = body_cleanup($self->body);
+	my $clean_body = body_cleanup($args->{plain} ? $self->plain_body : $self->body);
 	
 	return {
 		id => $self->id,
