@@ -18,7 +18,6 @@ post '/send' => sub {
     
 	my $params = params('body');
 	my $request = request;
-	
 	# Required fields
 	status 406 and return "FROM can't be empty" unless $params->{'from'};
 	status 406 and return "TO can't be empty" unless $params->{'to'};
@@ -42,6 +41,7 @@ post '/send' => sub {
 	
     my $sms;
     my $error_message;
+    my $created = DateTime::Format::MySQL->format_datetime(DateTime->now);
     try{
 		# Create
 	    $sms = schema->resultset('SMS')->create({
@@ -50,7 +50,8 @@ post '/send' => sub {
 			frm => $from, 
 			to => $to, 
 			body => $params->{body}, 
-			created => DateTime::Format::MySQL->format_datetime(DateTime->now),
+			created => $created,
+			send_timestamp => $created,
 	    });
 		
 		# Add to queue if not test

@@ -93,7 +93,6 @@ sub run {
 				}
 				catch {
 					print $_;
-					stop();
 				};			
 	                        # this example writes to a filehandle every 5 seconds.            
 			}
