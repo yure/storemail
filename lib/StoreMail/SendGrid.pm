@@ -23,7 +23,7 @@ sub handle_event {
 		schema->resultset('EmailBlacklist')->update_or_create({
 			email => $event_data->{email},
 			timestamp => $event_data->{timestamp},
-			reason => $event_data->{reason},
+			reason => substr($event_data->{reason}, 0, 255),
 			type => $type,
 		});
 		
