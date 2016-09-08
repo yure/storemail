@@ -189,14 +189,12 @@ sub attachments {
 sub attachment_links {
 	my $self = shift;
 	my $id = $self->id;
-	my @hash_chunks = ( $self->message_id =~ m/../g );
-	my $hash_path = join '/', @hash_chunks;
 	
 	return [
 		map {{	
 			filename => decode('UTF-8',$_),	
-			full_link => domain_setting($self->domain, 'public_url')."/attachments/$hash_path/" . uri_escape($_) ,
-			link => "/attachments/$hash_path/" . uri_escape($_) ,
+			full_link => domain_setting($self->domain, 'public_url'). $self->attachment_hash_dir . uri_escape($_) ,
+			link => $self->attachment_hash_dir . uri_escape($_) ,
 		}} $self->attachments
 	]
 }
@@ -277,6 +275,16 @@ sub attachment_id_dir {
 	}
 	$str = reverse substr $str, 1;
 	return $str ;
+}
+
+
+sub attachment_hash_dir {
+	my ($self) = @_;
+	
+	my @hash_chunks = ( $self->message_id =~ m/../g );
+	my $hash_path = join '/', @hash_chunks;
+		
+	return "/attachments/$hash_path/" ;
 }
 
 
@@ -386,6 +394,11 @@ sub hash_campaign {
 sub id_hash {
 	my ($self) = @_;
 	return md5_hex($self->id . config->{salt});
+}
+ 
+sub id_hash_two_pass {
+	my ($self) = @_;
+	return md5_hex($self->id_hash. substr(config->{salt}, 0, 3) . $self->id_hash);
 }
  
  

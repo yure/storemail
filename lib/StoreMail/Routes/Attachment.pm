@@ -13,16 +13,50 @@ my $appdir = realpath( "$FindBin::Bin/..");
 prefix '/:domain';
 
 
-get '/attachments/:h1/:h2/:h3/:h4/:h5/:h6/:h7/:h8/:h9/:h10/:h11/:h12/:h13/:h14/:h15/:h16/:file' => sub {
-    
+sub file_exists {
+	my $dancer_path = shift;
+	my $local_path = realpath . "/../public/$dancer_path";
+	return 1 if -e $local_path;
+	return 0;
+}
+
+
+get '/file/:h1/:h2/:h3/:h4/:h5/:h6/:h7/:h8/:h9/:h10/:h11/:h12/:h13/:h14/:h15/:h16/:control_hash/:file' => sub {
     my $hash = join('', param('h1'),param('h2'),param('h3'),param('h4'),param('h5'),param('h6'),param('h7'),param('h8'),param('h9'),param('h10'),param('h11'),param('h12'),param('h13'),param('h14'),param('h15'),param('h16'));
+    return undef unless param('control_hash');
+    find_and_return_file(param('file'), $hash, param('control_hash'));    
+};
+
+
+get '/attachments/:h1/:h2/:h3/:h4/:h5/:h6/:h7/:h8/:h9/:h10/:h11/:h12/:h13/:h14/:h15/:h16/:file' => sub {
+    my $hash = join('', param('h1'),param('h2'),param('h3'),param('h4'),param('h5'),param('h6'),param('h7'),param('h8'),param('h9'),param('h10'),param('h11'),param('h12'),param('h13'),param('h14'),param('h15'),param('h16'));   
+    find_and_return_file(param('file'), $hash);
+};
+
+
+sub find_and_return_file {
+	my ($file, $hash, $control_hash) = @_;
+	
     my $message = schema->resultset('Message')->find({ message_id => $hash });
     return 'message not found!' unless $message;
+    
+    # Second layer of auth
+    if($control_hash){
+    	return undef unless $control_hash eq $message->id_hash_two_pass;
+    }
+    
+    # New path
+    my $hash_path = request->path;
+    $hash_path =~ s/\/public\///g;
+    send_file($hash_path) if file_exists $hash_path;
+
+    # Old path    
     my $path_id = $message->attachment_id_dir;
-    my $file_path = "attachments/$path_id/" . param('file');
-    debug "Exists" if -e $file_path; 
-    return send_file($file_path);
-};
+    my $file_path = "attachments/$path_id/$file";
+   	send_file($file_path) if file_exists $file_path;
+}
+
+
 
 
 1;
