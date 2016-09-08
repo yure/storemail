@@ -26,6 +26,7 @@ use Try::Tiny;
 use Digest::MD5 qw(md5 md5_hex md5_base64);
 use URI::Escape;
 use File::Copy qw(copy);
+use StoreMail::Helper;
 
 __PACKAGE__->table("message");
 
@@ -190,8 +191,13 @@ sub attachment_links {
 	my $id = $self->id;
 	my @hash_chunks = ( $self->message_id =~ m/../g );
 	my $hash_path = join '/', @hash_chunks;
+	
 	return [
-		map {{	filename => decode('UTF-8',$_),	link => "/attachments/$hash_path/" . uri_escape $_ }} $self->attachments
+		map {{	
+			filename => decode('UTF-8',$_),	
+			full_link => domain_setting($self->domain, 'public_url')."/attachments/$hash_path/" . uri_escape($_) ,
+			link => "/attachments/$hash_path/" . uri_escape($_) ,
+		}} $self->attachments
 	]
 }
 

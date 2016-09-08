@@ -38,6 +38,7 @@ sub domain_setting {
 
 sub extract_email {
 	my $str = shift;
+	return undef unless $str;
 	$str = decode("MIME-Header", $str);
 	my ($name, $email) = $str =~ /(.*?)<(.*?)>/s;
 	$email = $str unless $email;

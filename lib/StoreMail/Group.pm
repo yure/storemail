@@ -107,15 +107,28 @@ sub new_group {
  	warn "no group ID!" and return undef unless $id;
 	
 	my $group_email = group_email($domain, $id) or printt 'Group email could not be generated' and return (undef, undef);
+	my $group_name = $params->{name} || $params->{id};
 	
-	# Already exists
+	# Already exists with different data
 	my $group = schema->resultset('Group')->find({email => $group_email});
-    return ($group, 0) if $group;
+	if($group){
+		
+		# Has emails
+		return ($group, -2) if $group->messages->count;
+		
+		if(different_group($group, $domain, $params)){
+		    return ($group, -1); 
+		}
+		else {
+		    return ($group, 0); 
+		}
+	}
+	
     
 	# Save new message to DB
     $group = schema->resultset('Group')->create({
     	email => $group_email,    	
-    	name => $params->{name} || $params->{id},
+    	name => $group_name,
     	domain => $domain,
     	domains_id => $params->{id},
     });
@@ -125,6 +138,27 @@ sub new_group {
 	assign_to_group($group, $params->{'send_only'}, 'a', 1, 0);
     	
 	return ($group, 1);
+}
+
+
+sub different_group {
+	my ($group, $domain, $params) = @_;
+	
+	# Domain
+	return 1 unless $domain eq $group->domain;
+	
+	# Sides
+	for my $side ('a', 'b'){
+		for my $p (extract_emails($params->{$side})){
+			my $member = {
+				side => $side,
+				email => $p->{email},
+				name => $p->{name}, 
+			};
+			my $found = $group->find_related('emails', $member);
+			return 1 unless $found;
+		}
+	}
 }
 
 
@@ -149,12 +183,22 @@ sub assign_to_group {
 
 
 sub reply_above_line {
-	my ($body, $mail_domain) = @_;
+	my ($body, $mail_domain, $type) = @_;
 	return undef unless $body;
 	my $line = config->{"write_replay_above"};
 
-	# Storemail reply
+	# Storemail reply cut
 	my $index = index $body, $line;
+	if($index == -1){ # Search for brakelined
+		my $flat_line = $line;
+		$flat_line =~ s/[\s\r\n=]//g;
+		my @matches = $body =~ /(=[$line\n\r]{41}=)/sg;
+		for my $match (@matches){
+			my $match_check = $match;
+			$match_check =~ s/[\s\r\n=]//g;
+			$index = index $body, $match if $flat_line eq $match_check;
+		}
+	}
 	$body = substr $body, 0, $index if $index > -1;
 	
 	# Gmail reply
@@ -182,15 +226,25 @@ sub reply_above_line {
 	}
 
 	# HTML cleanup
-	my $filename = rand(100000000000).'.html';
-	open(my $fh, '>', $filename);
-	print $fh $body;
-	close $fh;
-	$body = `tidy --input-encoding utf8  -f err.txt  $filename`; #--output-encoding utf8
-	
-	unlink $filename;
+	if($type eq 'html'){
+		my $filename = rand(100000000000).'.html';
+		open(my $fh, '>', $filename);
+		print $fh "$line\n\n<br /><br />";
+		print $fh $body;
+		close $fh;
+		my $cleaned_body = `tidy --word-2000 true --input-encoding utf8 --force-output true -f err.txt  $filename`; #--output-encoding utf8
+		unlink $filename;
+		if( $cleaned_body){
+			$body = $cleaned_body ;
+		}
+		else{
+			$body = "$line\n\n<br /><br />$body";		
+		}
+	} else {
+		$body = "$line\n\n$body";
+	}
 
-	return "$line\n\n\n$body";
+	return $body;
 }
 
 
@@ -215,13 +269,13 @@ sub send_group {
 			my $from_name = $message->name || $message->frm;
 			my $mail_domain = domain_setting($message->domain, 'group_domain');
 			
-			my $response = StoreMail::Message::new_message(							
+			my $response = StoreMail::Message::new_message(
 						direction => 'o',
 						
-						body => reply_above_line($message->body, $mail_domain),
+						body => reply_above_line($message->body, $mail_domain, $message->body_type),
 				    	body_type => $message->body_type,
-				    	raw_body => reply_above_line($message->raw_body, $mail_domain),
-				    	plain_body => reply_above_line($message->plain_body, $mail_domain),
+				    	raw_body => $message->raw_body,
+				    	plain_body => reply_above_line($message->plain_body, $mail_domain, 'plain'),
 				    	subject => $message->subject,
 				    	domain => $message->domain,
 						from => email_str($from_name, domain_email($group->domain)),
@@ -268,8 +322,7 @@ sub group_email {
 
 sub find {
 	my ($domain, $id) = @_;
-	my $email = group_email($domain, $id);
-	return schema->resultset('Group')->find({email => $email});
+	return schema->resultset('Group')->find({domain => $domain, domains_id => $id});
 	
 }
 

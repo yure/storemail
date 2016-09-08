@@ -71,15 +71,26 @@ post '/create' => sub {
 		($group, $new) = StoreMail::Group::new_group(param('domain'), $params);
     }
     catch {	
-    	warn "FAILED TO CREATE GROUP: " . to_json $params;
-    	$error_message = $_;
+    	$error_message = "FAILED TO CREATE GROUP: " . to_json($params) . "\n ERROR: " . to_dumper($_);
+    	warn $error_message;
     };
 
-	status 400 and return $error_message if $error_message;        
+	status 400 and return $error_message if $error_message;
     status 400 and return 'Error. Group not greated' unless $group;
 
 	# Already exists    
-    status 409 and return to_json $group->hash unless $new;
+	if($new == -1){
+		my $msg = "Already exists, but different! \n";
+    	status 409;
+    	warn $msg;
+    	return $msg;
+	}
+	if($new == -2){
+		my $msg = "Already exists with sent emails! \n";
+    	status 409;
+    	warn $msg;
+    	return $msg;
+	}
 
     # Message created
     status 201 and return to_json $group->hash;
@@ -99,6 +110,14 @@ post '/message/send' => sub {
     
 	my $rawparams = param('data');
 	my $params = from_json encode('utf8', $rawparams);
+	
+	# Find group by id
+	if($params->{group_id}){
+		my $group = StoreMail::Group::find(param('domain'), $params->{group_id});
+		status 406 and return "Group with id ".$params->{group_id}." not found" unless $group;
+		$params->{to} = $group->email;
+		delete $params->{group_id};
+	}
 	
 	status 406 and return "FROM can't be empty" unless $params->{'from'};
 	status 406 and return "TO can't be empty" unless $params->{'to'};
@@ -123,12 +142,12 @@ post '/message/send' => sub {
     };
 
 	if ($error_message){
-		status 400;    
+		status 400;
 	    return $error_message->{msg};
 	}
 
 	if (!$message){
-		status 400;    
+		status 400;
 	    return 'Error';
 	}
     
