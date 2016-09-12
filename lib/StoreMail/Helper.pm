@@ -4,6 +4,7 @@ use Dancer ':syntax';
 our $VERSION = '0.1';
 
 use POSIX qw(strftime);
+use Cwd qw/realpath/;
 use Exporter; # gives you Exporter's import() method directly
 our @ISA = qw(Exporter);
 our @EXPORT = qw(
@@ -14,8 +15,12 @@ email_str
 logfile
 printt
 extract_phone
+file_exists
+local_root_path
+files_in_dir
 ); # symbols to export on request
 use Encode;
+my $appdir = realpath( "$FindBin::Bin/..");
 
 sub printt { 
 	my($txt) = @_;
@@ -87,6 +92,35 @@ sub extract_phone {
 	$str =~ s/\+/00/g;	
 	$str =~ s/[^0-9]//g;
 	return $str;
+}
+
+
+sub local_root_path {
+	my $file = shift;
+	return "$appdir/public/$file";	
+}
+
+
+sub file_exists {
+	my $dancer_path = shift;
+	return 1 if -e local_root_path $dancer_path;
+	return 0;
+}
+
+
+sub files_in_dir {
+	my $dir = shift;
+	my @files;
+	opendir(DIR, $dir) or return @files;
+
+    while (my $file = readdir(DIR)) {
+        next unless $file;
+    	next if (-d "$dir/$file"); # Skip dirs
+        next if ($file =~ m/^\./); # Use a regular expression to ignore files beginning with a period
+		push @files, $file;
+    }
+    closedir(DIR);
+    return @files;
 }
 
 true;

@@ -81,7 +81,7 @@ sub new_message{
 	# Save IMAP attachments
 	my $mail_str = $arg->{mail_str};
 	if($mail_str){
-		my $dir = "$appdir/public/attachments/".$message->attachment_id_dir;
+		my $dir = local_root_path($message->attachment_hash_path);
 		Email::MIME->new($mail_str)->walk_parts(sub {
 			my($part) = @_;
 	  		my $filename = $part->filename or return undef;
@@ -142,9 +142,7 @@ sub add_tracking {
 
 sub encode_reserved {
 	my $url = shift;
-	debug "Url to encode: $url";
 	$url = uri_encode($url, {encode_reserved => 1});
-	debug "Encoded: $url";
 	return $url
 }
 

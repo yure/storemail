@@ -21,7 +21,6 @@ use FindBin;
 use Cwd qw/realpath/;
 use Encode;
 use MIME::Base64 qw(encode_base64);
-my $appdir = realpath( "$FindBin::Bin/..");
 use Try::Tiny;
 use Digest::MD5 qw(md5 md5_hex md5_base64);
 use URI::Escape;
@@ -170,31 +169,28 @@ sub _csv_named_emails {
 
  
 sub attachments {
-	my ($self) = @_;
-	my $id = $self->attachment_id_dir;
-	my @files;
-	my $dir ="$appdir/public/attachments/$id/";
-    opendir(DIR, $dir) or return undef;
-
-    while (my $file = readdir(DIR)) {
-    	next if (-d "$dir/$file"); # Skip dirs
-        next if ($file =~ m/^\./); # Use a regular expression to ignore files beginning with a period
-		push @files, ,$file;
-    }
-    closedir(DIR);
-    return @files;	
+	my $self = shift; 
+	my $files = {};
+	for my $file ($self->id_attachments, $self->hash_attachments){
+		$files->{$file} = 1;		
+	}
+    return keys %$files;	
 }
+
+ 
+sub id_attachments { my $self = shift; return files_in_dir(local_root_path($self->attachment_id_path)); }
+sub hash_attachments { my $self = shift; return files_in_dir(local_root_path($self->attachment_hash_path)); }
 
 
 sub attachment_links {
 	my $self = shift;
-	my $id = $self->id;
-	
+	my $hash_path = $self->attachment_hash_path;
+	my $public_url = domain_setting($self->domain, 'public_url');
 	return [
 		map {{	
 			filename => decode('UTF-8',$_),	
-			full_link => domain_setting($self->domain, 'public_url'). $self->attachment_hash_dir . uri_escape($_) ,
-			link => $self->attachment_hash_dir . uri_escape($_) ,
+			full_link => "$public_url/$hash_path/" . uri_escape($_) ,
+			link => "/$hash_path/" . uri_escape($_) ,
 		}} $self->attachments
 	]
 }
@@ -202,14 +198,13 @@ sub attachment_links {
 
 sub add_attachments {
 	my ($self, @files) = @_;
-	my $id = $self->attachment_id_dir;
 	
 	for my $file (@files){
-		my $dir = "$appdir/public/attachments/$id/";
+		my $dir = local_root_path $self->attachment_hash_path;
 		system( "mkdir -p $dir" ) unless (-e $dir);  
 		
 		my $content = $file->{content};
-		#$content =~ s/data:;base64,//g;
+		my $filename = $file->{name};
 		
 		# Remove base64 encoding wrapper
 		my $start_tag = ';base64,';
@@ -219,7 +214,7 @@ sub add_attachments {
 		$content = substr($content, $offset) if $offset;
 		
 	    my $decoded= MIME::Base64::decode_base64($content);
-		open my $fh, '>', "$dir".$file->{name} or die $!;
+		open my $fh, '>', "$dir/$filename" or die $!;
 		binmode $fh;
 		print $fh $decoded;
 		close $fh
@@ -231,33 +226,48 @@ sub copy_attachments {
 	my ($self, $message) = @_;
 	my @files = $message->attachments;
 	return 0 unless @files;
-	my $from_dir = $message->attachments_dir;
-	my $to_dir = $self->attachments_dir;
+	my $to_dir = local_root_path $self->attachment_hash_path;
 	system( "mkdir -p $to_dir" ) unless (-e $to_dir);  
 	my $count = 0;
 	for my $file (@files){
 		next unless $file;
-		copy "$from_dir/$file", "$to_dir/$file";		
+		my $from = local_root_path $message->attachment_local_path($file);
+		my $to = "$to_dir/$file";
+		copy "$from", "$to";		
     }
     return $count;
 }
  
  
-sub attachments_paths {
+sub attachments_local_root_paths {
 	my ($self) = @_;
-	my $id = $self->attachment_id_dir;
-	return map {"$appdir/public/attachments/$id/$_"} $self->attachments;
+	my @paths;	
+	for my $att ($self->attachments){
+		push @paths, local_root_path $self->attachment_local_path($att);
+	}
+	return \@paths;
 }
+
  
  
-sub attachments_dir {
-	my ($self) = @_;
-	my $id = $self->attachment_id_dir;
-	return "$appdir/public/attachments/$id";
+sub attachment_local_path {
+	my ($self, $file) = @_;
+	
+	my $file_path;    
+    # New path
+    my $hash_path = $self->attachment_hash_path;
+    $file_path = "$hash_path/$file";
+    return $file_path if file_exists $file_path;
+
+    # Old path
+    my $path_id = $self->attachment_id_path;
+    $file_path = "$path_id/$file";
+   	return $file_path if file_exists $file_path;
+	return "";
 }
 
 
-sub attachment_id_dir {
+sub attachment_id_path {
 	my ($self) = @_;
 	my $id = "".$self->id;
 	my $str;
@@ -274,17 +284,18 @@ sub attachment_id_dir {
 		}
 	}
 	$str = reverse substr $str, 1;
-	return $str ;
+	return "attachments/$str" ;
 }
 
 
-sub attachment_hash_dir {
+sub attachment_hash_path {
 	my ($self) = @_;
 	
 	my @hash_chunks = ( $self->message_id =~ m/../g );
 	my $hash_path = join '/', @hash_chunks;
+	my $hash_check = $self->id_hash_two_pass;
 		
-	return "/attachments/$hash_path/" ;
+	return "file/$hash_path/$hash_check" ;
 }
 
 
@@ -310,7 +321,7 @@ sub send {
 		$email->{cc} = _csv_named_emails($self->cc) if $self->cc;
 		$email->{bcc} = _csv_named_emails($self->bcc) if $self->bcc;
 	}
-	$email->{attach} = [$self->attachments_paths] if $self->attachments;
+	$email->{attach} = $self->attachments_local_root_paths if $self->attachments;
 	
 	unless($email->{to}){		
 		return 0, 'No reciepients, cannot send.';

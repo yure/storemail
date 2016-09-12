@@ -7,18 +7,9 @@ use DBI;
 use Dancer::Plugin::DBIC qw(schema resultset rset);
 use Encode;
 use Try::Tiny;
-use Cwd qw/realpath/;
-my $appdir = realpath( "$FindBin::Bin/..");
 
 prefix '/:domain';
 
-
-sub file_exists {
-	my $dancer_path = shift;
-	my $local_path = realpath . "/../public/$dancer_path";
-	return 1 if -e $local_path;
-	return 0;
-}
 
 
 get '/file/:h1/:h2/:h3/:h4/:h5/:h6/:h7/:h8/:h9/:h10/:h11/:h12/:h13/:h14/:h15/:h16/:control_hash/:file' => sub {
@@ -45,15 +36,8 @@ sub find_and_return_file {
     	return undef unless $control_hash eq $message->id_hash_two_pass;
     }
     
-    # New path
-    my $hash_path = request->path;
-    $hash_path =~ s/\/public\///g;
-    send_file($hash_path) if file_exists $hash_path;
+    send_file($message->attachment_local_path($file));
 
-    # Old path    
-    my $path_id = $message->attachment_id_dir;
-    my $file_path = "attachments/$path_id/$file";
-   	send_file($file_path) if file_exists $file_path;
 }
 
 
