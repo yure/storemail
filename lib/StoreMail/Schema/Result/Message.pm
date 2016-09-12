@@ -291,6 +291,7 @@ sub attachment_id_path {
 sub attachment_hash_path {
 	my ($self) = @_;
 	
+	$self->message_id($self->id_hash) and $self->update unless $self->message_id;
 	my @hash_chunks = ( $self->message_id =~ m/../g );
 	my $hash_path = join '/', @hash_chunks;
 	my $hash_check = $self->id_hash_two_pass;
