@@ -5,6 +5,7 @@ our $VERSION = '0.1';
 
 use POSIX qw(strftime);
 use Cwd qw/realpath/;
+use File::NFSLock;
 use Exporter; # gives you Exporter's import() method directly
 our @ISA = qw(Exporter);
 our @EXPORT = qw(
@@ -19,6 +20,7 @@ file_exists
 local_root_path
 files_in_dir
 domain_email
+one_instance
 ); # symbols to export on request
 use Encode;
 my $appdir = realpath( "$FindBin::Bin/..");
@@ -42,6 +44,16 @@ sub domain_setting {
 	return config->{$var};
 }
 
+
+sub one_instance {
+	use Fcntl qw(LOCK_EX LOCK_NB);
+	use File::NFSLock;
+	
+	# Try to get an exclusive lock on myself.
+	return File::NFSLock->new($0, LOCK_EX|LOCK_NB);	
+}
+
+
 sub extract_email {
 	my $str = shift;
 	return undef unless $str;
@@ -52,6 +64,7 @@ sub extract_email {
 	$name = undef if defined $name and $name eq '';
 	return (trim($name), trim($email));
 }
+
 
 sub extract_emails {
 	my $arg = shift;

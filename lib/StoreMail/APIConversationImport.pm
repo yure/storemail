@@ -11,33 +11,13 @@ use Digest::MD5 qw(md5 md5_hex md5_base64);
 use Try::Tiny; 
 require LWP::Simple;
 
-
-my $appdir = config->{appdir};
-my $last_id_file = "$appdir/conversation_import_last_modified.txt";
 my $source_name = 'import_group';
-
-sub set_last_modified {
-	my $time = shift;
-	open(my $fh, '>', $last_id_file) or die "Could not open file '$last_id_file' $!";
-	print $fh $time;
-	close $fh;
-	print "done\n"
-}
-
-
-sub get_last_modified {
-	open(my $fh, '<:encoding(UTF-8)', $last_id_file) or die "Could not open file '$last_id_file' $!";
-	my $row = <$fh>;
-	close $fh;
-	return $row;
-}
 
 
 sub import_all {
-	my $args = {@_};		
+	my $last_modified = shift;		
 	my $gmail = config->{gmail};
-	my $start_time = time;
-	my $last_modified = $args->{last_modified} || get_last_modified;
+
     for my $domain ('www.necesit.ro'){ #keys %{config->{domains}} 'www.trebam.hr'
 
 		my $servicator_backend_api = domain_setting($domain, 'servicator_backend_api') or next;
@@ -55,17 +35,16 @@ sub import_all {
 			$conversation_data->{conversation_info}->{id} = $conversation_id;
 			
 			printt $conversation_id;
-			import($domain, $conversation_data);
+			import_messages($domain, $conversation_data);
 			
 		}
 		
 	}
-	set_last_modified($start_time);
-	printt 'Done';
+	
 }
 
 
-sub import {
+sub import_messages {
 	my ($domain, $conversation_data) = @_;
 	
 	my $group = find_or_create_group($domain, $conversation_data->{conversation_info}) or return undef;
