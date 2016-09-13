@@ -18,6 +18,7 @@ extract_phone
 file_exists
 local_root_path
 files_in_dir
+domain_email
 ); # symbols to export on request
 use Encode;
 my $appdir = realpath( "$FindBin::Bin/..");
@@ -66,6 +67,12 @@ sub extract_emails {
 	return @emails;
 }
 
+
+sub domain_email {
+	my ($domain) = @_;
+	my $mail_domain = domain_setting($domain, 'group_domain');
+	return "conversation\@$mail_domain";
+}
 
 sub email_str {
 	my ($name, $email) = @_;

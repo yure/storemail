@@ -327,10 +327,6 @@ sub find {
 }
 
 
-sub domain_email {
-	my ($domain) = @_;
-	my $mail_domain = domain_setting($domain, 'group_domain');
-	return "conversation\@$mail_domain";
-}
+
 
 true;
