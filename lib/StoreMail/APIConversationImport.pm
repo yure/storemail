@@ -8,6 +8,7 @@ use StoreMail::Message;
 use StoreMail::Helper;
 use StoreMail::Group;
 use Digest::MD5 qw(md5 md5_hex md5_base64);
+use HTML::TextToHTML;
 use Try::Tiny; 
 require LWP::Simple;
 
@@ -73,6 +74,22 @@ sub import_message {
     
     print "A" if $message_data->{attachments};
     
+    # Body cleanup
+    my $body = $message_data->{message};
+
+	# Remove REPLY AFTER...    
+	$body =~ s/--------\/\/--------.*--------\\\\--------//smg if $body;
+
+    my $raw_body;
+    if($body_type eq 'plain'){
+    	$raw_body = $body;
+    	$body_type = 'html';
+    	my $conv = new HTML::TextToHTML();
+    	$conv->args(bold_delimiter=>'*', short_line_length=>150);
+		$body = $conv->process_chunk($body);    
+    }
+    
+    
     try{
 		# Create
 	    my $response = StoreMail::Message::new_message(							
@@ -83,8 +100,9 @@ sub import_message {
 					group_id => $group->id,
 					subject => $group->name,
 					date => $message_data->{created},
-					body => $message_data->{message}, 
+					body => $body, 
 					body_type => $body_type,
+					raw_body => $raw_body,
 					from => email_str($frm_name, domain_email($group->domain)),
 					reply_to => email_str($group->name, $group->email),
 					to => $to,
