@@ -20,7 +20,7 @@ sub set_last_modified {
 
 
 sub get_last_modified {
-	open(my $fh, '<:encoding(UTF-8)', $last_id_file) or die "Could not open file '$last_id_file' $!";
+	open(my $fh, '<:encoding(UTF-8)', $last_id_file) or return 1;
 	my $row = <$fh>;
 	close $fh;
 	return $row;
@@ -28,7 +28,7 @@ sub get_last_modified {
 
 
 my $start_time = time;
-my $last_modified = get_last_modified() || 1;
+my $last_modified = get_last_modified();
 StoreMail::APIConversationImport::import_all($last_modified);     
 set_last_modified($start_time);
 printt 'Done';
