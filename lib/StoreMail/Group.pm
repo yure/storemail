@@ -192,7 +192,7 @@ sub reply_above_line {
 	if($index == -1){ # Search for brakelined
 		my $flat_line = $line;
 		$flat_line =~ s/[\s\r\n=]//g;
-		my @matches = $body =~ /(=[$line\n\r]{41}=)/sg;
+		my @matches = $body =~ /(=[$line\n\r]{41}=)/s;
 		for my $match (@matches){
 			my $match_check = $match;
 			$match_check =~ s/[\s\r\n=]//g;
@@ -207,6 +207,7 @@ sub reply_above_line {
 	if($gmail_timestamp){
 		$index = index $body, $gmail_timestamp;
 		$body = substr $body, 0, $index if $index > -1;
+		$gmail_timestamp = undef;
 	}
 	
 	# Gmail reply ver 3 - 27. jun. 2016 17:46 je oseba "darija" <darija.marolts@gmail.com> napisala:
@@ -215,6 +216,7 @@ sub reply_above_line {
 	if($gmail_timestamp){
 		$index = index $body, $gmail_timestamp;
 		$body = substr $body, 0, $index if $index > -1;
+		$gmail_timestamp = undef;
 	}
 	
 	# Gmail reply ver2 - 2016-09-02 13:28 GMT+02:00 cerere [[62c4065147-61949]] conversation@dev.trebam.hr Grega Pompe
@@ -223,6 +225,7 @@ sub reply_above_line {
 	if($gmail_timestamp){
 		$index = index $body, $gmail_timestamp;
 		$body = substr $body, 0, $index if $index > -1;
+		$gmail_timestamp = undef;
 	}
 
 	# HTML cleanup
