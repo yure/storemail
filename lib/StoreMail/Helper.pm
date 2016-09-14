@@ -21,6 +21,7 @@ local_root_path
 files_in_dir
 domain_email
 one_instance
+remove_utf8_4b
 ); # symbols to export on request
 use Encode;
 my $appdir = realpath( "$FindBin::Bin/..");
@@ -34,6 +35,18 @@ sub printt {
 
 sub trim {	
 	my $str = shift; $str =~ s/^\s+|\s+$//g if $str; return $str;
+}
+
+
+sub remove_utf8_4b {
+	my $str = shift;
+	return $str unless defined $str;
+	$str = decode("MIME-Header", $str);
+	$str = encode('UTF-8', $str);
+	$str =~ s/([\xF0-\xF7]...)|([\xE0-\xEF]..)/_/g;
+	$str = decode('UTF-8', $str);
+	$str =~ s/[^[:ascii:]]//g;
+	return $str;
 }
 
 

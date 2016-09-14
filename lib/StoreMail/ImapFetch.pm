@@ -198,16 +198,6 @@ sub process_email {
 	}
 }
 
-sub remove_utf8_4b {
-	my $str = shift;
-	return $str unless defined $str;
-	$str = decode("MIME-Header", $str);
-	$str = encode('UTF-8', $str);
-	$str =~ s/([\xF0-\xF7]...)|([\xE0-\xEF]..)/_/g;
-	$str = decode('UTF-8', $str);
-	$str =~ s/[^[:ascii:]]//g;
-	return $str;
-}
 
 sub save_message {
 	my ($account, $message_params, $retry) = @_;

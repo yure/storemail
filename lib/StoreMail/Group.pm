@@ -247,7 +247,7 @@ sub reply_above_line {
 		$body = "$line\n\n$body";
 	}
 
-	return $body;
+	return remove_utf8_4b $body;
 }
 
 
