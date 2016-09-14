@@ -20,20 +20,31 @@ my ($imap, $initial, $logfile, $account_emails);
 my $appdir = config->{appdir};
 
 
-sub fetch_all {
+sub fetch_all_gmail_accounts {
 	my $args = {@_};		
-	my $gmail = config->{gmail};
-	$account_emails  = {map {config->{gmail}->{accounts}->{$_}->{username} => 1} keys config->{gmail}->{accounts}};	
-	for my $account_name (sort keys config->{gmail}->{accounts}){
-		
-		
-		print "\n$account_name:";
-		my $account = config->{gmail}->{accounts}->{$account_name};
+	my $accounts = config->{gmail}->{accounts} or return undef;
+	$account_emails  = {map {$accounts->{$_}->{username} => 1} keys $accounts};	
+	fetch_accounts($args, $accounts);	
+	printt 'Inital gmail accounts import completed' if $args->{initial};
+}
 
-		fetch_account($args, $account);
-			
-	}
+
+sub fetch_all_group_accounts {
+	my $args = {@_};		
+	my $accounts = config->{gmail}->{group} or return undef;	
+	$account_emails  = {map {$accounts->{$_}->{username} => 1} keys $accounts};	
+	fetch_accounts($args, $accounts);
 	printt 'Inital import completed' if $args->{initial};
+}
+
+
+sub fetch_accounts {
+	my ($args, $accounts, ) = @_;
+	for my $account_name (sort keys %$accounts){
+		print "\n$account_name:";
+		my $account = $accounts->{$account_name};
+		fetch_account($args, $account);
+	}
 }
 
 
@@ -121,7 +132,7 @@ sub process_email {
 	if($existing){				
 		unless($args->{initial}){
 			print '-';
-			return (undef, 1) if $account_emails->{$message_params->{from}};
+			#return (undef, 1) if $account_emails->{$message_params->{from}};
 			return undef, 1;	
 		} else {
 			print '.';

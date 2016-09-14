@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# get_gmail.pl
+# gmail_accoutns_fetch.pl
 use Dancer ':script';
 
 use Dancer::Plugin::DBIC qw(schema resultset rset);
@@ -18,7 +18,7 @@ use File::Spec::Functions;
 my $appdir = config->{appdir};
 my $dir = config->{pid_dir} ? catfile(config->{pid_dir}, 'storemail') : "$appdir/run";
 system( "mkdir -p $dir" ) unless (-e $dir);
-my $pf = catfile($dir, "get_gmail.pid");
+my $pf = catfile($dir, "gmail_accoutns_fetch.pid");
 
 my $daemon = Proc::Daemon->new(
 	pid_file => $pf,
@@ -75,19 +75,19 @@ sub run {
 			# Proc::Daemon shuts down all open file handles when Init happens.
 			# Keep this in mind when laying out your program, particularly if
 			# you use filehandles.
-		logfile('get_gmail');
+		logfile('gmail_accoutns_fetch');
 			$daemon->Init;
 		}
 		
 		print "Service starting...";
-		logfile('get_gmail');
+		logfile('gmail_accoutns_fetch');
 		my $sleep = config->{get_gmail_sleep} || 10;
 		die "Set some IMAP accounts in config!" unless config->{gmail} and config->{gmail}->{accounts};
 		while (1) {
 			
 			
 			try{
-	            StoreMail::ImapFetch::fetch_all();     
+	            StoreMail::ImapFetch::fetch_all_gmail_accounts();     
 			}
 			catch {
 				email {
@@ -96,6 +96,7 @@ sub run {
 			        subject => 'Get Gmail error',
 			        body    => $_,
 			    };
+			    sleep 60*60*1; # 1h
 			};			
                         # this example writes to a filehandle every 5 seconds.
             printt "Sleeping $sleep seconds.";
@@ -109,7 +110,7 @@ sub run {
 
 sub init_import {
 		print "Starting initial import...\n";
-		logfile('get_gmail_init');
+		logfile('gmail_accoutns_fetch_init');
 		printt "Service starting...";
 			
 		printt "Starting initial import!";
@@ -122,7 +123,7 @@ sub init_import {
 
 sub run_once {
 		print "Running import once...\n";
-		logfile('get_gmail');
+		logfile('gmail_accoutns_fetch');
 			
 		printt "Running import once!";
 		die "Set some IMAP accounts in config!" unless config->{gmail} and config->{gmail}->{accounts};
