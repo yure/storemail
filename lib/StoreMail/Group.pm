@@ -255,6 +255,7 @@ sub send_group {
 	my ($message) = @_;
 	
 	return undef unless $message->source;
+	$message->discard_changes;
 		
 	for my $c ($message->toccbcc){
 		my $group = schema->resultset('Group')->find({ email => $c->email });
