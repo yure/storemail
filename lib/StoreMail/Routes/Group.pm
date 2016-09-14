@@ -76,7 +76,7 @@ post '/create' => sub {
     };
 
 	status 400 and return $error_message if $error_message;
-    status 400 and return 'Error. Group not greated' unless $group;
+    status 400 and return 'Error. Group not created' unless $group;
 
 	# Already exists    
 	if($new == -1){

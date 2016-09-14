@@ -267,7 +267,7 @@ sub send_group {
 		for my $c ($group->emails->search({side => { '!=' => $sender_member->side }, can_recieve => 1})->all){
 			
 			my $from_name = $message->name || $message->frm;
-			my $mail_domain = domain_setting($message->domain, 'group_domain');
+			my $mail_domain = domain_setting($group->domain, 'group_domain');
 			
 			my $response = StoreMail::Message::new_message(
 						direction => 'o',
@@ -277,7 +277,7 @@ sub send_group {
 				    	raw_body => $message->raw_body,
 				    	plain_body => reply_above_line($message->plain_body, $mail_domain, 'plain'),
 				    	subject => $message->subject,
-				    	domain => $message->domain,
+				    	domain => $group->domain,
 						from => email_str($from_name, domain_email($group->domain)),
 						reply_to => $group->name .'<'.$group->email.'>',
 						source => undef,
