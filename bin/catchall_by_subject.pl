@@ -1,9 +1,9 @@
 use Dancer ':script';
 
 use Mail::IMAPClient;
-use Dancer::Plugin::DBIC qw(schema resultset rset);
 use StoreMail::Email;
 use StoreMail::Message;
+use StoreMail::Helper;
 use MIME::QuotedPrint::Perl;
 use Email::MIME;
 use Encode qw(decode);

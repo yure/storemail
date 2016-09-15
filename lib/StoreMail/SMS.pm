@@ -5,7 +5,6 @@ use Asterisk::AMI;
 use Try::Tiny;
 use StoreMail::Helper;
 use DateTime::Format::MySQL;
-use Dancer::Plugin::DBIC qw(schema resultset rset);
 use Time::HiRes qw(sleep);
 use URI::Escape;
 use EV;

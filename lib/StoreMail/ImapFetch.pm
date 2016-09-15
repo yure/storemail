@@ -2,7 +2,6 @@ package StoreMail::ImapFetch;
 use Dancer ':syntax';
 
 use Mail::IMAPClient;
-use Dancer::Plugin::DBIC qw(schema resultset rset);
 use StoreMail::Email;
 use StoreMail::Message;
 use StoreMail::Helper;
@@ -264,7 +263,7 @@ sub save_message {
 		}
 		return undef;
 	} catch {
-		#print $_;
+		print "Unable to save message. \n\n$_";
 		for my $key (keys %$message_params){
 			$message_params->{$key} = remove_utf8_4b $message_params->{$key} if $message_params->{$key}; 
 		}

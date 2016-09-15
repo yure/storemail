@@ -4,7 +4,7 @@ use Dancer ':syntax';
 use Dancer::Plugin::Ajax;
 use DBI;
 use StoreMail::Message;
-use Dancer::Plugin::DBIC qw(schema resultset rset);
+use StoreMail::Helper;
 
 
 prefix '/:domain';

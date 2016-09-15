@@ -4,7 +4,6 @@ use Dancer ':syntax';
 our $VERSION = '0.1';
 
 use Dancer::Plugin::Email;
-use Dancer::Plugin::DBIC qw(schema resultset rset);
 
 prefix '/:domain';
 

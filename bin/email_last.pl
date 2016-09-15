@@ -8,7 +8,6 @@ use DateTime::Format::MySQL;
 use Dancer::Plugin::Email;
 use Getopt::Long;
 use DBI;
-use Dancer::Plugin::DBIC qw(schema resultset rset);
 
 my $limit = 10;
 my $email ;

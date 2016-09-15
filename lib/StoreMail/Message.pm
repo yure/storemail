@@ -3,7 +3,6 @@ use Dancer ':syntax';
 
 our $VERSION = '0.1';
 
-use Dancer::Plugin::DBIC qw(schema resultset rset);
 use DateTime::Format::MySQL;
 use StoreMail::Email;
 use StoreMail::Helper;

@@ -2,7 +2,6 @@ package StoreMail::Routes::GUI;
 use Dancer ':syntax';
 
 use Dancer::Plugin::Ajax;
-use Dancer::Plugin::DBIC qw(schema resultset rset);
 use StoreMail::Helper;;
 use HTML::Entities;
 use DBI;

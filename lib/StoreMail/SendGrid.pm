@@ -1,8 +1,7 @@
 package StoreMail::SendGrid;
 use Dancer ':syntax';
 
-use Dancer::Plugin::DBIC qw(schema resultset rset);
-
+use StoreMail::Helper;
 
 sub handle_event {
 	my $event_data = shift;

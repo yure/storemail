@@ -3,7 +3,6 @@ use Dancer ':script';
 use StoreMail::SMS;
 use Try::Tiny;
 use StoreMail::Helper;
-use Dancer::Plugin::DBIC qw(schema resultset rset);
 
 
 my $numbers = config->{phone_numbers};

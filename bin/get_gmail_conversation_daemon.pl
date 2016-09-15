@@ -2,7 +2,6 @@
 # get_gmail.pl
 use Dancer ':script';
 
-use Dancer::Plugin::DBIC qw(schema resultset rset);
 use StoreMail::Helper;
 use StoreMail::ImapFetchConversationImport;
 use Try::Tiny; 

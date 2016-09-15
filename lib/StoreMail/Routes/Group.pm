@@ -5,7 +5,7 @@ use Dancer::Plugin::Ajax;
 use DBI;
 use StoreMail::Message;
 use StoreMail::Group;
-use Dancer::Plugin::DBIC qw(schema resultset rset);
+use StoreMail::Helper;
 use Encode;
 use Try::Tiny;
 

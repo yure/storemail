@@ -2,7 +2,6 @@
 # group_gmail_accoutns_fetch.pl
 use Dancer ':script';
 
-use Dancer::Plugin::DBIC qw(schema resultset rset);
 use StoreMail::Helper;
 use StoreMail::ImapFetch;
 use Try::Tiny; 

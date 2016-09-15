@@ -3,7 +3,6 @@ use Dancer ':syntax';
 
 # Importing old conversations from CRM system. Only for transitional period.
 
-use Dancer::Plugin::DBIC qw(schema resultset rset);
 use StoreMail::Message;
 use StoreMail::Helper;
 use StoreMail::Group;

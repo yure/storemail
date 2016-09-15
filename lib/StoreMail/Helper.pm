@@ -6,6 +6,7 @@ our $VERSION = '0.1';
 use POSIX qw(strftime);
 use Cwd qw/realpath/;
 use File::NFSLock;
+require Dancer::Plugin::DBIC;
 use Exporter; # gives you Exporter's import() method directly
 our @ISA = qw(Exporter);
 our @EXPORT = qw(
@@ -22,6 +23,7 @@ files_in_dir
 domain_email
 one_instance
 remove_utf8_4b
+schema
 ); # symbols to export on request
 use Encode;
 my $appdir = realpath( "$FindBin::Bin/..");
@@ -35,6 +37,13 @@ sub printt {
 
 sub trim {	
 	my $str = shift; $str =~ s/^\s+|\s+$//g if $str; return $str;
+}
+
+
+sub schema {
+	my $s = Dancer::Plugin::DBIC::schema();
+	$s->storage->dbh->do('SET NAMES utf8mb4');
+	return $s;
 }
 
 

@@ -5,7 +5,6 @@ use Try::Tiny;
 use StoreMail::Helper;
 use DateTime::Format::MySQL;
 
-use Dancer::Plugin::DBIC qw(schema resultset rset);
 
 my $from = DateTime::Format::MySQL->format_datetime(DateTime->now->subtract(minutes => 60));
 my $to = DateTime::Format::MySQL->format_datetime(DateTime->now); 

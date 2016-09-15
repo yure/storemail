@@ -4,7 +4,6 @@ use Dancer ':syntax';
 # Importing old conversations from CRM system. Only for transitional period.
 
 use Mail::IMAPClient;
-use Dancer::Plugin::DBIC qw(schema resultset rset);
 use StoreMail::Email;
 use StoreMail::Message;
 use StoreMail::Helper;

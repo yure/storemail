@@ -3,7 +3,6 @@ use Dancer ':script';
 use StoreMail::SMS;
 use Try::Tiny;
 use StoreMail::Helper;
-use Dancer::Plugin::DBIC qw(schema resultset rset);
 
 unless(@ARGV){
 	print "sms_send.pl FROM TO MSG\nTO can be 0 (send to default)\n";

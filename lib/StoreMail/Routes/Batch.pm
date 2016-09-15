@@ -4,7 +4,6 @@ our $VERSION = '0.1';
 
 use Dancer::Plugin::Ajax;
 use DBI;
-use Dancer::Plugin::DBIC qw(schema resultset rset);
 use Encode;
 use Try::Tiny;
 use MIME::Base64;
