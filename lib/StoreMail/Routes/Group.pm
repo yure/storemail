@@ -27,6 +27,7 @@ get '/email_list/:id' => sub {
 	my $where;
 	
 	$where->{group_id} = $group->id;
+	$where->{direction} = 'i';
 	my $messages = schema->resultset('Message')->search(
     	$where,
     	{ 
@@ -40,7 +41,6 @@ get '/email_list/:id' => sub {
 	my $line = config->{"write_replay_above"};
 	for my $message (@messages){
 		my $hash = $message->hash();
-		$hash->{body} =~ s/$line//g;
 		push @group_messages, $hash
 	}
 	
@@ -97,6 +97,34 @@ post '/create' => sub {
 };
 
 
+post '/add-members' => sub {
+    content_type('application/json');
+    
+	my $rawparams = param('data');
+	my $params;
+	try{
+		$params = from_json encode('utf8', $rawparams);	
+	};
+	status 400 and return "Malformed JSON" unless $params;
+	status 406 and return "A or B can't be empty" unless $params->{'a'} or $params->{'b'};	
+	status 406 and return "I can't be empty" unless $params->{'id'};	
+	
+    my $error_message;
+    my $group = StoreMail::Group::find(param('domain'), $params->{id}) or status 404 and return "Group not found";
+	
+
+	my $errors;
+	$errors .= $group->assign_members($params->{'a'}, 'a') if $params->{'a'};
+	$errors .= $group->assign_members($params->{'b'}, 'b') if $params->{'b'};
+	$errors .= $group->assign_members($params->{'send_only'}, 'a', 1, 0) if $params->{'send_only'};
+
+    # Message created
+    my $return = $group->hash;
+    $return->{errors} = $errors;
+    status 201 and return to_json $return;
+};
+
+
 get '/:email' => sub {
     content_type('application/json');
     
@@ -125,9 +153,10 @@ post '/message/send' => sub {
 	
     my $message;
     my $error_message;
+    my $group_send;
     try{
 		# Create
-	    my $response = StoreMail::Message::new_message(							
+	    my $response = StoreMail::Message::new_message(
 					direction => 'i',
 					domain => param('domain'),
 					track => param('track'),
@@ -135,11 +164,19 @@ post '/message/send' => sub {
 					%$params
 				);
 		$message = $response->{message};
+		$group_send = $response->{group_send};
     }
     catch {	
     	warn "FAILED TO SEND: " . to_json $params;
     	$error_message = $_;
     };
+
+
+	if ($group_send and $group_send ne 'OK'){
+		status 400;
+	    return $group_send;
+	}
+
 
 	if ($error_message){
 		status 400;

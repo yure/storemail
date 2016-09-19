@@ -48,24 +48,23 @@ sub import_messages {
 	my ($domain, $conversation_data) = @_;
 	
 	my $group = find_or_create_group($domain, $conversation_data->{conversation_info}) or return undef;
-	my $request_message = import_message($domain, $conversation_data, $group, 'request', 'a', 'b', 'html');
-	my $replay_message = import_message($domain, $conversation_data, $group, 'reply', 'b', 'a', 'plain');
+	my $request_message = import_message($domain, $conversation_data, $group, 'request', 'a', 'html');
+	my $replay_message = import_message($domain, $conversation_data, $group, 'reply', 'b', 'plain');
 	
 }
 
 
 sub import_message {
-	my ($domain, $data, $group, $message_type, $from_side, $to_side, $body_type) = @_;
+	my ($domain, $data, $group, $message_type, $from_side, $body_type) = @_;
 	print " $message_type";
     my $message_data = $data->{$message_type} or return undef;
     
     my $from = $data->{conversation_info}->{$from_side} or return undef;
-    my $to = $data->{conversation_info}->{$to_side} or return undef;
     
 	my $message;
     my $error_message;
     # From
-    my ($frm_name, $frm_email) = extract_email($from);
+    my ($frm_name, $frm_email) = extract_email($from->[0]);
     
     # Hash id
     my $message_id = md5_hex($data->{conversation_info}->{id}."$message_type".$message_data->{created});
@@ -92,19 +91,17 @@ sub import_message {
     try{
 		# Create
 	    my $response = StoreMail::Message::new_message(							
-					direction => 'o',
+					direction => 'i',
 					message_id => $message_id, 
 					domain => $domain,
 					source => $source_name,
-					group_id => $group->id,
 					subject => $group->name,
 					date => $message_data->{created},
 					body => $body, 
 					body_type => $body_type,
 					raw_body => $raw_body,
-					from => email_str($frm_name, domain_email($group->domain)),
-					reply_to => email_str($group->name, $group->email),
-					to => $to,
+					from => $frm_email,
+					to => $group->email,
 					attachments => $message_data->{attachments},
 				);
 		$message = $response->{message};

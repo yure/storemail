@@ -24,6 +24,7 @@ domain_email
 one_instance
 remove_utf8_4b
 schema
+html_cleanup
 ); # symbols to export on request
 use Encode;
 my $appdir = realpath( "$FindBin::Bin/..");
@@ -160,6 +161,18 @@ sub files_in_dir {
     }
     closedir(DIR);
     return @files;
+}
+
+
+sub html_cleanup {
+	my $html = shift;
+	my $filename = rand(100000000000).'.html';
+	open(my $fh, '>', $filename);
+	print $fh $html;
+	close $fh;
+	my $cleaned_html = `tidy --tidy-mark false --word-2000 true --input-encoding utf8 --force-output true -f err.txt  $filename`; #--output-encoding utf8
+	unlink $filename;
+	return $cleaned_html;
 }
 
 true;

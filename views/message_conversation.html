@@ -1,0 +1,48 @@
+[% USE date %]
+<html>
+<head>
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+</head>
+
+
+<table width="100%" cellspacing="0" cellpadding="0" border="0">
+	<tbody>
+		<tr>
+			<td>
+				<table width="100%" cellspacing="0" cellpadding="0" border="0">
+					<tbody>
+						<tr>
+							<td style="padding: 0 0 10px 0">
+							
+							<!-- message -->
+							[% FOREACH message = messages %] 
+								<table width="100%" cellspacing="0" cellpadding="0" border="0" style="padding: 0; border-bottom: 1px solid #e6e6e6; margin: 0">
+									<tbody>
+										<tr>
+											<td width="50" valign="top" align="right" style="padding: 10px 10px 0 0px; font-family: 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; color: #9e9e9e; font-size: 11px; line-height: 16px; margin: 0">
+												[% date.format(message.date, format = '%b %d') %]<br />[% date.format(message.date, format = '%H:%M') %] 
+											</td>
+											<td style="padding: 10px 20px 0 0px">
+												<h3 style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #717171; font-size: 16px; line-height: 22px; margin: 0 0 30px 0; font-weight: normal">
+													<strong style="color: #000000">[% message.name_or_email %]</strong>
+												</h3>
+												<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #222222; font-size: 12px; line-height: 16px; padding: 0">
+													[% message.body %]
+												</div> <br>
+											</td>
+										</tr>
+									</tbody>
+								</table> 
+							[% END %]
+
+
+							</td>
+						</tr>
+
+					</tbody>
+				</table> <br>
+			</td>
+		</tr>
+	</tbody>
+</table>
+</html>

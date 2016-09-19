@@ -3,7 +3,7 @@ use Dancer ':syntax';
 
 our $VERSION = '0.1';
 
-use StoreMail::Helper;;
+use StoreMail::Helper;
 use Encode;
 use Try::Tiny;
 require LWP::Simple;
@@ -130,11 +130,11 @@ sub new_group {
     	name => $group_name,
     	domain => $domain,
     	domains_id => $params->{id},
-    });
+    }) or return undef;
 
-	assign_to_group($group, $params->{'a'}, 'a');
-	assign_to_group($group, $params->{'b'}, 'b');
-	assign_to_group($group, $params->{'send_only'}, 'a', 1, 0);
+	$group->assign_members($params->{'a'}, 'a');
+	$group->assign_members($params->{'b'}, 'b');
+	$group->assign_members($params->{'send_only'}, 'a', 1, 0);
     	
 	return ($group, 1);
 }
@@ -163,11 +163,12 @@ sub different_group {
 
 sub assign_to_group {
 	my ($group, $list, $side, $can_send, $can_recieve) = @_;
-	for my $p (extract_emails($list)){
+	for my $p (@$list){
+		my ($name, $email) = extract_email($p);
 		my $member = {
 			side => $side,
-			email => $p->{email},
-			name => $p->{name}, 
+			email => $email,
+			name => $name, 
 		};
 		$member->{can_recieve} = $can_recieve if defined $can_recieve;
 		$member->{can_send} = $can_send if defined $can_send;
@@ -182,9 +183,17 @@ sub assign_to_group {
 
 
 sub reply_above_line {
-	my ($body, $mail_domain, $type) = @_;
+	my ($body, $domain, $type) = @_;
+	my $line =  domain_setting($domain, 'write_replay_above');
+	return "$line\n\n<br /><br />$body" if $type eq 'html';
+	return "$line\n\n$body";	
+}
+
+sub remove_reply_above_line {
+	my ($body, $domain, $type) = @_;
 	return undef unless $body;
-	my $line = config->{"write_replay_above"};
+	my $line =  domain_setting($domain, 'write_replay_above');
+	my $mail_domain = domain_setting($domain, 'group_domain');
 
 	# Storemail reply cut
 	my $index = index $body, $line;
@@ -227,91 +236,158 @@ sub reply_above_line {
 		$gmail_timestamp = undef;
 	}
 
-	# HTML cleanup
-	if($type eq 'html'){
-		my $filename = rand(100000000000).'.html';
-		open(my $fh, '>', $filename);
-		print $fh "$line\n\n<br /><br />";
-		print $fh $body;
-		close $fh;
-		my $cleaned_body = `tidy --word-2000 true --input-encoding utf8 --force-output true -f err.txt  $filename`; #--output-encoding utf8
-		unlink $filename;
-		if( $cleaned_body){
-			$body = $cleaned_body ;
-		}
-		else{
-			$body = "$line\n\n<br /><br />$body";		
-		}
-	} else {
-		$body = "$line\n\n$body";
-	}
-
-	return remove_utf8_4b $body;
+	return $body;
 }
 
 
 sub send_group {
 	my ($message) = @_;
 	
-	return undef unless $message->source;
+	return "Not group msg" unless $message->source;
+	
 	$message->discard_changes;
 		
-	for my $c ($message->toccbcc){
-		my $group = schema->resultset('Group')->find({ email => $c->email });
+	for my $recipient ($message->toccbcc){
+		my $group = schema->resultset('Group')->find({ email => $recipient->email });
 		next unless $group;
 		
-		my $sender_member = schema->resultset('GroupEmail')->find({ email => $message->frm, group_id => $group->id });
+		my $sender_member = schema->resultset('GroupEmail')->find({ email => $message->frm, group_id => $group->id }) 
+			or warn $message->frm . " not authorized to send to group " . $group->email 
+			and return "Not authorized to send to group";
 		
-		unless( $sender_member){
-			warn $message->frm . " not authorized to send to group " . $group->email;
-			return 0;
-		}
+		my $incoming_message = make_incoming($group, $message, $recipient) 
+			or warn "Unable to make incoming from id ".$message->id."!" 
+			and return "Unable to make incoming from id";
+			
+		next if $message->source eq 'import_group';
 		
-		for my $c ($group->emails->search({side => { '!=' => $sender_member->side }, can_recieve => 1})->all){
-			
-			my $from_name = $message->name || $message->frm;
-			my $mail_domain = domain_setting($group->domain, 'group_domain');
-			
-			my $response = StoreMail::Message::new_message(
-						direction => 'o',
-						
-						body => reply_above_line($message->body, $mail_domain, $message->body_type),
-				    	body_type => $message->body_type,
-				    	raw_body => $message->raw_body,
-				    	plain_body => reply_above_line($message->plain_body, $mail_domain, 'plain'),
-				    	subject => $message->subject,
-				    	domain => $group->domain,
-						from => email_str($from_name, domain_email($group->domain)),
-						reply_to => $group->name .'<'.$group->email.'>',
-						source => undef,
-						group_message_parent_id => $message->id,
-						group_id => $group->id,
-					);
-			
-			my $fwd_message = $response->{message};
-			$fwd_message->name($message->name);
-	
-			 # Add recipients
-	    	$fwd_message->update_or_create_related('emails', {
-	    		email => $c->email, 
-	    		name => $c->name, 
-	    		type => 'to', 
-	    	});
-			
-			    
-		    # TODO Add attachments
-	    	$fwd_message->copy_attachments($message);    	
-			
-			
-			# Send it
-			$fwd_message->send_queue(1);
-			
-			$fwd_message->update;
+		my $outgoing_message_data = prepare_outgoing($group, $incoming_message);
+		for my $member ($group->emails->search({side => { '!=' => $sender_member->side }, can_recieve => 1})->all){			
+			make_outgoing($incoming_message, $outgoing_message_data, $member);
 		}
-		return 1;
+		return "OK";
 	}
 	
-	return 0;
+	return "Group not found";
+}
+
+
+sub make_incoming {
+	my ($group, $message, $recipient) = @_;
+	
+	my ($frm_name, $frm_email) = extract_email($message->frm);
+	my $sender = $group->emails->find({email => $frm_email});
+	
+	my $response = StoreMail::Message::new_message(
+		direction => 'i',
+		body => html_cleanup(remove_reply_above_line($message->body, $group->domain, 'html')),
+    	body_type => 'html',
+    	raw_body => $message->raw_body,
+    	plain_body => remove_reply_above_line($message->plain_body, $group->domain, 'plain'),
+    	subject => $message->subject,
+    	domain => $group->domain,
+		from => $sender->named_email,
+		name => $message->name,
+		reply_to => $group->name .'<'.$group->email.'>',
+		source => undef,
+		group_message_parent_id => $message->id,
+		group_id => $group->id,
+	);
+		
+	my $incoming_message = $response->{message};
+
+	 # Add recipients
+    $incoming_message->update_or_create_related('emails', {
+    	email => $recipient->email, 
+    	name => $group->name, 
+    	type => 'to', 
+    });
+		
+	# Add attachments
+    $incoming_message->copy_attachments($message);    	
+		
+	$incoming_message->update;
+	return $incoming_message;
+}
+
+
+sub make_outgoing {
+	my ($message, $message_data, $member) = @_;
+	
+	my $response = StoreMail::Message::new_message(%$message_data);
+		
+	my $outgoing_message = $response->{message};
+
+	 # Add recipients
+    $outgoing_message->update_or_create_related('emails', {
+    	email => $member->email, 
+    	name => $member->name, 
+    	type => 'to', 
+    });
+		
+	# Add attachments
+    $outgoing_message->copy_attachments($message);    	
+		
+	# Send it
+	$outgoing_message->send_queue(1);
+		
+	$outgoing_message->update;
+	return $outgoing_message;
+}
+
+
+
+sub prepare_outgoing {
+	my ($group, $message) = @_;
+	
+	my $from_name = $message->name || $message->frm;
+	my $mail_domain = domain_setting($group->domain, 'group_domain');
+	
+	my $body = $message->body;
+	my $plain_body = $message->plain_body;
+	$body = add_conversation_history($group, $message, 'html');
+	$plain_body = add_conversation_history($group, $message, 'plain');
+	
+	return {
+		direction => 'o',
+		body => reply_above_line($body, $mail_domain, 'html'),
+    	body_type => 'html',
+    	raw_body => $message->raw_body,
+    	plain_body => reply_above_line($plain_body, $mail_domain, 'plain'),
+    	subject => $message->subject,
+    	domain => $group->domain,
+		from => email_str($from_name, domain_email($group->domain)),
+		reply_to => $group->name .'<'.$group->email.'>',
+		source => undef,
+		group_message_parent_id => $message->id,
+		group_id => $group->id,
+	}
+
+}
+
+
+sub add_conversation_history {
+	my ($group, $message, $type) = @_;
+	
+	my $older_messages = $group->messages->search(
+    	{date => {'<=' => $message->date}, direction => 'i'},
+    	{order_by => {'-desc' => 'date'}	}
+    );
+    
+    my $body;
+    return template 'message_conversation.html', {messages => [$older_messages->all]}, {layout => undef};
+    for my $older_msg ($older_messages->all){
+    	$body .= attach_history_message($older_msg, $type);
+    }
+	return $body;
+}
+
+
+sub attach_history_message {
+	my ($message, $type) = @_;
+	return "\n----- ".$message->date." - ".$message->named_or_email." -----\n".$message->plain_body if $type eq 'plain';
+	
+	return "<br><br>----- ".$message->date." - ".$message->named_or_email." -----<br>".$message->body;
 }
 
 

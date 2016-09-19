@@ -347,6 +347,12 @@ sub named_from {
 }
 
 
+sub name_or_email {
+	my $self = shift;
+	return  $self->name ? $self->name : $self->frm; 
+}
+
+
 sub hash {
 	my ($self, $args) = @_;
 	

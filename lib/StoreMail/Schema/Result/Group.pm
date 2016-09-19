@@ -6,7 +6,8 @@ use warnings;
 
 use base 'DBIx::Class::Core';
 use StoreMail::Group;
-
+use StoreMail::Helper;
+use Try::Tiny;
 
 __PACKAGE__->table("message_group");
 
@@ -57,6 +58,30 @@ sub hash {
 	$hash->{members} = [map {{$_->get_columns}} $self->emails];
 	
 	return $hash
+}
+
+
+sub assign_members {
+	my ($self, $list, $side, $can_send, $can_recieve) = @_;
+	for my $p (@$list){
+		my ($name, $email) = extract_email($p);
+		my $member = {
+			side => $side,
+			email => $email,
+			name => $name, 
+		};
+		$member->{can_recieve} = $can_recieve if defined $can_recieve;
+		$member->{can_send} = $can_send if defined $can_send;
+		my $error = '';
+		try{				
+	    	$self->update_or_create_related('emails', $member);
+		}
+		catch{
+			$error = $email." not assigned to $side ";
+			warn $error;
+		};
+		return $error;
+    }
 }
 
 1;
