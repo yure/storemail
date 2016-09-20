@@ -17,6 +17,7 @@ __PACKAGE__->add_columns(
   domains_id => { data_type => "varchar", is_nullable => 0, size => 90 },  
   domain => { data_type => "varchar", is_nullable => 0, size => 90 },  
   email => { data_type => "varchar", is_nullable => 0, size => 90 },  
+  tag => { data_type => "varchar", is_nullable => 1, size => 90 },  
   name => { data_type => "varchar", is_nullable => 1, size => 255 },  
 );
 
@@ -53,6 +54,7 @@ sub hash {
 		email => $self->email,
 		domain => $self->domain,
 		name => $self->name,
+		tag => $self->tag,
 	};
 	
 	$hash->{members} = [map {{$_->get_columns}} $self->emails];

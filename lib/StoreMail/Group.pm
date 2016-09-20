@@ -129,6 +129,7 @@ sub new_group {
     	email => $group_email,    	
     	name => $group_name,
     	domain => $domain,
+    	tag => $params->{tag},
     	domains_id => $params->{id},
     }) or return undef;
 
