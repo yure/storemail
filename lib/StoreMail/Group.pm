@@ -288,6 +288,7 @@ sub make_incoming {
     	domain => $group->domain,
 		from => $sender->named_email,
 		name => $message->name,
+		date => $message->date,
 		reply_to => $group->name .'<'.$group->email.'>',
 		source => undef,
 		group_message_parent_id => $message->id,
