@@ -23,7 +23,7 @@ get '/info/:id' => sub {
 
 get '/email_list/:id' => sub {
 	content_type('application/json');
-	my $group = schema->resultset('Group')->find({domain => param('domain'), domains_id => param('id')});
+	my $group = schema->resultset('Group')->find({domain => param('domain'), domains_id => param('id')}) or status 404 and return "Group ".param('id')." not found.";
 	my $where;
 	
 	$where->{group_id} = $group->id;
