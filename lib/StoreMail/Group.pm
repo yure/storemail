@@ -342,7 +342,6 @@ sub prepare_outgoing {
 	my ($group, $message) = @_;
 	
 	my $from_name = $message->name || $message->frm;
-	my $mail_domain = domain_setting($group->domain, 'group_domain');
 	
 	my $body = $message->body;
 	my $plain_body = $message->plain_body;
@@ -351,10 +350,10 @@ sub prepare_outgoing {
 	
 	return {
 		direction => 'o',
-		body => reply_above_line($body, $mail_domain, 'html'),
+		body => reply_above_line($body, $group->domain, 'html'),
     	body_type => 'html',
     	raw_body => $message->raw_body,
-    	plain_body => reply_above_line($plain_body, $mail_domain, 'plain'),
+    	plain_body => reply_above_line($plain_body, $group->domain, 'plain'),
     	subject => $message->subject,
     	domain => $group->domain,
 		from => email_str($from_name, domain_email($group->domain)),
