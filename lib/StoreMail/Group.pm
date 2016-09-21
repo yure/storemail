@@ -358,7 +358,7 @@ sub prepare_outgoing {
     	subject => $message->subject,
     	domain => $group->domain,
 		from => email_str($from_name, domain_email($group->domain)),
-		reply_to => $group->name .'<'.$group->email.'>',
+		reply_to => email_str($group->name, $group->email), # '"'.$group->name.'"' .'<'.$group->email.'>'
 		source => undef,
 		group_message_parent_id => $message->id,
 		group_id => $group->id,

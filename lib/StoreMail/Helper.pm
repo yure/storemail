@@ -91,12 +91,12 @@ sub extract_emails {
 	return () unless $arg;
 	my @emails;
 	$arg = [$arg] unless ref $arg eq 'ARRAY';
-	    for my $raw_emails ( @{$arg} ){
-		    for my $raw_email ( split ',', $raw_emails ){
-		    	my ($name, $email) = extract_email($raw_email);
-		    	push @emails, {name => $name, email => $email};
-		    }
+    for my $raw_emails ( @{$arg} ){
+	    for my $raw_email ( split ',', $raw_emails ){
+	    	my ($name, $email) = extract_email($raw_email);
+	    	push @emails, {name => $name, email => $email};
 	    }
+    }
 	return @emails;
 }
 
@@ -109,7 +109,7 @@ sub domain_email {
 
 sub email_str {
 	my ($name, $email) = @_;
-	return  $name ? encode("MIME-Q",$name)." <".$email.">" : $email; 
+	return  $name ? '"'.encode("MIME-Q",$name).'"'." <".$email.">" : $email; 
 }
 
 sub fh {
