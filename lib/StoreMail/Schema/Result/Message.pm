@@ -51,6 +51,7 @@ __PACKAGE__->add_columns(
   type => { data_type => "varchar", default_value => "email", is_nullable => 0, size => 255 },
   body_type => { data_type => "varchar", default_value => "plain", is_nullable => 0, size => 255 },
   message_id => { data_type => "varchar", is_nullable => 1, size => 255 },
+  header_message_id => { data_type => "text", is_nullable => 1 },
   source => { data_type => "varchar", is_nullable => 1, size => 255 },
   sent => { data_type => "integer", is_nullable   => 1, },
   opened => { data_type => "integer", is_nullable   => 1, },

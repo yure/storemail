@@ -111,27 +111,34 @@ sub process_emails {
 
 sub process_email {
 	my ($mail_id, $direction, $account, $args) = @_;
-	my $headers = $imap->parse_headers( $mail_id, "Date", "Subject", "To", "From" );
-	my $all = $imap->parse_headers( $mail_id, "ALL");
+	my $all_headers = $imap->parse_headers( $mail_id, "ALL");
 	my $message_params = {};
 	
+	my $lc_headers = {map {lc $_ => $all_headers->{$_}} keys %$all_headers};
 	
 	# ID
 	my $message_id;
-	$message_id = trim $all->{'Message-ID'}[0] if $all->{'Message-ID'};
-	$message_id = trim $all->{'Message-Id'}[0] if $all->{'Message-Id'};
-	$message_id = to_dumper $all unless $message_id;
+	$message_id = trim $lc_headers->{'message-id'}[0] if $lc_headers->{'message-id'};
+	$message_params->{header_message_id} = $message_id || 'no-message-id';
+	$message_id = join(
+		'|||', map {
+			join( '||', @{$lc_headers->{$_}} )
+		} sort keys %$lc_headers
+	) unless $message_id;
 	$message_id = md5_hex $message_id;
 	$message_params->{message_id} = $message_id;
 	# From
-	$message_params->{from} = clean_parenthesis($headers->{From}[0]);
+	$message_params->{from} = clean_parenthesis($lc_headers->{from}[0]);
 
 	# End if already exists
-	my $existing = schema->resultset('Message')->find({source => $account->{username}, message_id => $message_id});
+	my $existing = schema->resultset('Message')->find({
+		source => $account->{username}, 
+		message_id => $message_id}
+	);
+
 	if($existing){				
 		unless($args->{initial}){
 			print '-';
-			#return (undef, 1) if $account_emails->{$message_params->{from}};
 			return undef, 1;	
 		} else {
 			print '.';
@@ -142,16 +149,16 @@ sub process_email {
 
 
 	# To
-	$message_params->{to} = [map {clean_parenthesis($_)} split ',', $headers->{To}[0]] if defined $headers->{To}[0];
-	$message_params->{cc} = [map {clean_parenthesis($_)} split ',', $headers->{Cc}[0]] if defined $headers->{Cc}[0];
-	$message_params->{bcc} = [map {clean_parenthesis($_)} split ',', $headers->{Bcc}[0]] if defined $headers->{Bcc}[0];
+	$message_params->{to} = [map {clean_parenthesis($_)} split ',', $lc_headers->{to}[0]] if defined $lc_headers->{to}[0];
+	$message_params->{cc} = [map {clean_parenthesis($_)} split ',', $lc_headers->{cc}[0]] if defined $lc_headers->{cc}[0];
+	$message_params->{bcc} = [map {clean_parenthesis($_)} split ',', $lc_headers->{bcc}[0]] if defined $lc_headers->{bcc}[0];
 
 	# Subject
-	$message_params->{subject} = decode("UTF-8", $headers->{Subject}[0]);
+	$message_params->{subject} = decode("UTF-8", $lc_headers->{subject}[0]);
 	$message_params->{subject} = $imap->subject($mail_id);
 
 	# Datetime
-	my $epoch = parsedate($headers->{Date}[0]);
+	my $epoch = parsedate($lc_headers->{date}[0]);
 	my $datetime = DateTime->from_epoch( epoch => $epoch ) if $epoch;
 	$message_params->{date} = $datetime ? $datetime->ymd." ".$datetime->hms : undef;
 
@@ -171,12 +178,7 @@ sub process_email {
 	
 	my $plain_body = extract_body($struct, $imap, $mail_id, 'PLAIN');
 	
-	#$raw_body = undef if $raw_body eq '' or $body eq $raw_body;
-	
 	$message_params->{body} = $html_body || $plain_body;
-	# Remove emoticons (utf8 mysql issue)
-	
-
 	$message_params->{domain} = $account->{domain} || config->{domain};			
 	$message_params->{body_type} = $html_body ? 'html' : 'plain';
 	$message_params->{raw_body} = $raw_html_body if defined $raw_html_body and $raw_html_body ne $html_body;
@@ -185,7 +187,7 @@ sub process_email {
 	$message_params->{source} = $account->{username};
 	
 	$message_params->{mail_str} = $imap->message_string($mail_id);
-	#$message_params->{tags} => '';
+
 
 	if($args->{initial}){
 		save_message($account, $message_params);
