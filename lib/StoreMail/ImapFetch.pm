@@ -136,7 +136,13 @@ sub process_email {
 		message_id => $message_id}
 	);
 
-	if($existing){				
+	if($existing){	
+		unless($existing->header_message_id){
+			$existing->header_message_id($message_params->{header_message_id});			
+			$existing->update;
+			print "[header_id upodated]";
+		}
+					
 		unless($args->{initial}){
 			print '-';
 			return undef, 1;	
