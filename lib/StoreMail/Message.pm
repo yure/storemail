@@ -35,6 +35,7 @@ sub new_message{
     	raw_body => $arg->{raw_body},
     	plain_body => $arg->{plain_body},
     	message_id => $arg->{message_id},
+    	header_message_id => $arg->{header_message_id},
     	source => $arg->{source},
     	batch_id => $arg->{batch_id},
     	subject => decode("MIME-Header", $arg->{subject}),
