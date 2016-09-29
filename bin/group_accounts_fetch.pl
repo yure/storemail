@@ -1,5 +1,6 @@
 #!/usr/bin/env perl
 # group_gmail_accoutns_fetch.pl
+use open ':std', ':encoding(UTF-8)';
 use Dancer ':script';
 
 use StoreMail::Helper;

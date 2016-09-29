@@ -1,5 +1,6 @@
 #!/usr/bin/env perl
 # gmail_accoutns_fetch.pl
+use open ':std', ':encoding(UTF-8)';
 use Dancer ':script';
 
 use StoreMail::Helper;
@@ -116,7 +117,7 @@ sub init_import {
 			
 		die "Set some IMAP accounts in config!" unless config->{gmail} and config->{gmail}->{accounts};
 		
-        StoreMail::ImapFetch::fetch_all(initial => 1);     
+        StoreMail::ImapFetch::fetch_all_gmail_accounts(initial => 1);     
 }
 
 

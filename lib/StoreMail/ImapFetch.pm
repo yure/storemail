@@ -188,6 +188,24 @@ sub process_email {
 	
 	$message_params->{mail_str} = $imap->message_string($mail_id);
 
+	# Check again if old hash id	
+	my ($name, $email) = extract_email($message_params->{from});
+	my $same_content_message = schema->resultset('Message')->find({
+		body => $message_params->{body}, 
+		subject => decode("MIME-Header", $message_params->{subject}), 
+		date => $message_params->{date}, 
+		domain => $message_params->{domain}, 
+		frm =>  $email, 
+		name =>  $name, 
+		direction => $message_params->{direction}, 
+	});
+	if($same_content_message){	
+		print "[ Message ".$same_content_message->id." hashed ".$same_content_message->message_id." changing hash to ".$message_params->{message_id}." ]";
+		$same_content_message->message_id($message_params->{message_id});			
+		$same_content_message->header_message_id($message_params->{header_message_id});			
+		$same_content_message->update;
+		return undef;
+	}
 
 	if($args->{initial}){
 		save_message($account, $message_params);
