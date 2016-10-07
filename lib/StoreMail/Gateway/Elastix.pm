@@ -6,6 +6,7 @@ use Try::Tiny;
 use LWP::Simple;
 use JSON::XS 'decode_json';
 use DateTime::Format::MySQL;
+use URI::Escape;
 
 
 sub new {
@@ -37,11 +38,12 @@ sub send {
 	my $self = shift;
 	my ($port, $sms) = @_;
 	my $to = $sms->to;	
-	my $msg = $sms->plain_body;	
+	my $msg = uri_escape $sms->plain_body;	
 	my $id = $sms->id;	
 	my $host = $self->{host};
 	my $username = $self->{username};
 	my $pass = $self->{pass};
+
 	my $url = "http://$host/sendsms?username=$username&password=$pass&phonenumber=$to&message=$msg&port=$port";
 
 	my $content = get $url or return 0;
