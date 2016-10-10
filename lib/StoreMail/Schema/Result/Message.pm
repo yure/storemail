@@ -146,7 +146,7 @@ sub toccbcc_hash {
 	my $hash = {};
 	for my $email ($self->emails){
 		$hash->{$email->type} ||= [];
-		push $hash->{$email->type}, {email => $email->email, name => $email->name};
+		push @{$hash->{$email->type}}, {email => $email->email, name => $email->name};
 	}
 	return %$hash;
 }
