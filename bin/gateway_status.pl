@@ -39,7 +39,7 @@ for my $gateway_id (keys %{config->{gateways}}){
 	try{
 	        my $settings = config->{gateways}->{$gateway_id};
 		my $gateway = StoreMail::Gateway::NeogateTG->new( $settings );		
-		#print to_json $gateway->check_status;
+		print to_json $gateway->check_status;
 		my $status = $gateway->check_status || {status => 'Empty response'};
 		my $ok_count = 0;
 		if(@{$status->{CMD}}){

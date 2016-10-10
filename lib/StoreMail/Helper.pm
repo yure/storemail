@@ -170,7 +170,7 @@ sub html_cleanup {
 	open(my $fh, '>', $filename);
 	print $fh $html;
 	close $fh;
-	my $cleaned_html = `tidy --tidy-mark false --word-2000 true --input-encoding utf8 --force-output true -f err.txt  $filename`; #--output-encoding utf8
+	my $cleaned_html = `tidy --tidy-mark false --input-encoding utf8 --force-output true -f err.txt  $filename`; #--output-encoding utf8
 	unlink $filename;
 	return $cleaned_html;
 }
