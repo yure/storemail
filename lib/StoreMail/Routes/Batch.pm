@@ -46,6 +46,10 @@ post '/batch/message/send' => sub {
 	my $rawparams = param('data');
 	my $params = from_json encode('utf8', $rawparams);
     my @emails = split(',', $params->{to});
+    
+    # Remove duplicates
+    my $email_distinct = {map {trim($_) => 1} @emails};    
+    
     my @sent;
     
     # Batch 
@@ -58,7 +62,7 @@ post '/batch/message/send' => sub {
     
     my $error_message;
     try{
-	    for my $email (@emails){
+	    for my $email (keys %$email_distinct){
 		    # Unsubscribe msg
 	    	add_unsub_link($params, $email);
 	    	
