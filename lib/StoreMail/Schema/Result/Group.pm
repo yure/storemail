@@ -21,6 +21,13 @@ __PACKAGE__->add_columns(
   name => { data_type => "varchar", is_nullable => 1, size => 255 },  
 );
 
+# Timestamps
+__PACKAGE__->load_components(qw( TimeStamp ));
+__PACKAGE__->add_columns(
+  record_created => { data_type => 'datetime', set_on_create => 1 },
+  record_updated => { data_type => 'datetime', set_on_create => 1, set_on_update => 1 },
+);
+
 
 __PACKAGE__->set_primary_key("id");
 __PACKAGE__->add_unique_constraint("id_UNIQUE", ["domains_id"]);

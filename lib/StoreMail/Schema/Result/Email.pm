@@ -51,6 +51,8 @@ __PACKAGE__->table("email");
 =cut
 
 __PACKAGE__->add_columns(
+  "id",
+  { data_type => "integer", is_nullable => 1, is_auto_increment => 1},
   "message_id",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "email",
