@@ -10,8 +10,8 @@ __PACKAGE__->table("group_email");
 
 __PACKAGE__->add_columns(
   "group_id" => { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
-  "email" => { data_type => "varchar", is_nullable => 0, size => 90 },
-  "name" =>{ data_type => "varchar", is_nullable => 1, size => 90 },
+  "email" => { data_type => "varchar", is_nullable => 0, size => 255 },
+  "name" =>{ data_type => "varchar", is_nullable => 1, size => 255 },
   "side" => { data_type => "varchar", is_nullable => 0, size => 15 },
   "can_send" => { data_type     => "tinyint", is_nullable   => 0, default_value => 1 },
   "can_recieve" => { data_type     => "tinyint", is_nullable   => 0, default_value => 1 },
