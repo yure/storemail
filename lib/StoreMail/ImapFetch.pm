@@ -29,7 +29,8 @@ sub fetch_all_gmail_accounts {
 
 
 sub fetch_all_group_accounts {
-	my $args = {@_};		
+	my $args = {@_};
+	$args->{group} = 1;		
 	my $accounts = config->{gmail}->{group} or return undef;	
 	$account_emails  = {map {$accounts->{$_}->{username} => 1} keys $accounts};	
 	fetch_accounts($args, $accounts);
@@ -192,6 +193,7 @@ sub process_email {
 	$message_params->{source} = $account->{username};
 	
 	$message_params->{mail_str} = $imap->message_string($mail_id);
+	$message_params->{internal} = 1 if $args->{group};
 
 	# Check again if old hash id	
 	my ($name, $email) = extract_email($message_params->{from});
