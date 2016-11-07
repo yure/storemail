@@ -93,7 +93,7 @@ sub import_message {
 	    my $response = StoreMail::Message::new_message(							
 					direction => 'i',
 					message_id => $message_id, 
-					domain => 'api.import.group',
+					domain => $domain,
 					source => $source_name,
 					subject => $group->name,
 					date => $message_data->{created},
@@ -103,6 +103,7 @@ sub import_message {
 					from => $frm_email,
 					to => $group->email,
 					attachments => $message_data->{attachments},
+					internal => 1,
 				);
 		$message = $response->{message};
 		print "+";

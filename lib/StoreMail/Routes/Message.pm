@@ -18,7 +18,8 @@ get '/message/unread' => sub {
     content_type('application/json');
     my $messages = schema->resultset('Message')->search(
     	{
-    		'new' => 1,  
+    		'new' => 1,
+    		internal => 0,  
     		domain => param('domain')  		
     	},
     	{ 
@@ -40,6 +41,7 @@ get '/message/incoming' => sub {
     		id => {'>' => $last_id},
     		source => {'-not' => undef},  
     		direction => 'i',  
+    		internal => 0,
     		domain => param('domain'),	
     	},
     	{ 

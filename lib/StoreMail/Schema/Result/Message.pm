@@ -55,6 +55,7 @@ __PACKAGE__->add_columns(
   source => { data_type => "varchar", is_nullable => 1, size => 255 },
   sent => { data_type => "integer", is_nullable   => 1, },
   opened => { data_type => "integer", is_nullable   => 1, },
+  internal => { data_type => "tinyint", is_nullable   => 0, default_value => 0 },
 );
 
 __PACKAGE__->set_primary_key("id");

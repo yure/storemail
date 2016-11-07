@@ -53,6 +53,8 @@ get '/:comma_separated_emails' => sub {
 	my %hash   = map { $_, 1 } @emails;
    	@emails = keys %hash;
 
+	my $limit = 100; # Timeout in case of large set
+
 	# SQL
 	
 	my $sql = q|
@@ -64,25 +66,32 @@ get '/:comma_separated_emails' => sub {
 				WHERE  
 				group_id IS NULL
 				AND
+				internal = 0
+				AND
 				domain = ? 
 				AND 
 				( |. (join ' OR ', map {"e.email = ?"} @emails) .q|  )
+				LIMIT |.2*$limit.q|
 				
 				UNION
 				
-				SELECT id, m.date
+				SELECT m.id, m.date
 				FROM message m
 				WHERE
 				group_id IS NULL  
+				AND
+				internal = 0
 				AND
 				domain = ? 
 				
 				AND  
 				( |. (join ' OR ', map {"frm = ?"} @emails) .q|  ) 
+				LIMIT |.2*$limit.q|
 			
 			) a
 			
 			ORDER BY date 
+			LIMIT |.2*$limit.q|
 			
 			;|;
 	
@@ -99,7 +108,7 @@ get '/:comma_separated_emails' => sub {
 	my @join = ('emails');
 	
 	$where->{-and} = [];
-	push $where->{-and}, {id => {'-in' => \@ids}};
+	push $where->{-and}, {'me.id' => {'-in' => \@ids}};
 
 	# Search
 	my $search =  param('search');
@@ -136,7 +145,8 @@ get '/:comma_separated_emails' => sub {
     	$where,
     	{ 
 			prefetch => [@join],    		 
-		   	#group_by => [ map {"me.$_"} @columns ]	,			 
+		   	#group_by => [ map {"me.$_"} @columns ]	,
+		   	rows => $limit,		 
     	}
     );
     

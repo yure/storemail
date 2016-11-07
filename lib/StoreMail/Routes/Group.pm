@@ -161,6 +161,7 @@ post '/message/send' => sub {
 					domain => param('domain'),
 					track => param('track'),
 					source => 'group_direct',
+					internal => 1,
 					%$params
 				);
 		$message = $response->{message};

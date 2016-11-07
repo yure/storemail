@@ -294,6 +294,7 @@ sub make_incoming {
 		source => undef,
 		group_message_parent_id => $message->id,
 		group_id => $group->id,
+		internal => 0,
 	);
 		
 	my $incoming_message = $response->{message};

@@ -43,6 +43,7 @@ sub new_message{
     	date => $arg->{date},
     	'new' => $arg->{'new'} || 1,    	
     	type => $arg->{type} || 'email',
+    	internal => $arg->{internal} || 0,
     });
 
 	# Generate msg id
