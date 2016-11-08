@@ -90,7 +90,6 @@ get '/:comma_separated_emails' => sub {
 			
 			) a
 			
-			ORDER BY date 
 			LIMIT |.2*$limit.q|
 			
 			;|;
@@ -146,7 +145,8 @@ get '/:comma_separated_emails' => sub {
     	{ 
 			prefetch => [@join],    		 
 		   	#group_by => [ map {"me.$_"} @columns ]	,
-		   	rows => $limit,		 
+		   	rows => $limit,
+		   	order_by => {'-desc' => 'date'},		 
     	}
     );
     
