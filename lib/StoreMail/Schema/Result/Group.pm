@@ -81,16 +81,15 @@ sub assign_members {
 		};
 		$member->{can_recieve} = $can_recieve if defined $can_recieve;
 		$member->{can_send} = $can_send if defined $can_send;
-		my $error = '';
-		try{				
+		try{
 	    	$self->update_or_create_related('emails', $member);
 		}
 		catch{
-			$error = $email." not assigned to $side ";
+			my $error .= $email." not assigned to $side ";
 			warn $error;
 		};
-		return $error;
     }
+	return 1;
 }
 
 1;
