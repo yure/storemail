@@ -3,6 +3,7 @@ package StoreMail::Schema::Result::SMS;
 
 use strict;
 use warnings;
+require StoreMail::Helper;
 
 use base 'DBIx::Class::Core';
 
@@ -28,6 +29,14 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 use Encode;
+
+
+sub outgoing_to {
+	my ($self) = @_;
+	my $fwd = StoreMail::Helper::domain_setting($self->domain, 'sms_fwd');
+	return $fwd if $fwd;
+	return $self->to;
+}
 
 
 sub hash {

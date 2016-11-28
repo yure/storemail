@@ -37,7 +37,7 @@ sub init {
 sub send {
 	my $self = shift;
 	my ($port, $sms) = @_;
-	my $to = $sms->to;	
+	my $to = $sms->outgoing_to;	
 	my $msg = uri_escape $sms->plain_body;	
 	my $id = $sms->id;	
 	my $host = $self->{host};

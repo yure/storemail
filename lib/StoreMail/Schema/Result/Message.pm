@@ -304,7 +304,13 @@ sub attachment_hash_path {
 
 sub send {
 	my ($self, $redirect) = @_;
-	my $to = $redirect || join(", ", map( $_->email, $self->emails));
+	
+	# Skip non send domains
+	unless(domain_setting($self->domain, 'name')){
+		$self->send_queue(undef);				
+		$self->update;
+		return 0, $self->domain. " missing config";
+	}	
 	
 	my $email = {
 		from    => $self->named_from,
@@ -314,7 +320,8 @@ sub send {
 		'reply-to' => $self->reply_to,
 	};
 	
-	# Redirect if set
+	# Domain redirect if set
+	$redirect ||= StoreMail::Helper::domain_setting($self->domain, 'email_fwd');
 	if($redirect){
 		$email->{to} = $redirect;
 	}

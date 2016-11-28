@@ -44,6 +44,16 @@ sub send_queue {
 sub send_sms {
 	my ($sms) = @_;	
 
+	# Skip non send domains
+	unless(domain_setting($sms->domain, 'name')){
+			printt $sms->domain. " missing config";
+			printt $sms->id. " Skipping [".$sms->outgoing_to."] ". substr $sms->plain_body(plain_newline => 1), 0, 30;
+			
+			$sms->send_queue(undef);				
+			$sms->update;
+			return 0
+	}
+
 	if(not defined $sms->send_status and (not defined $sms->send_failed or $sms->send_failed < 3)){
 		send_sms_gateway($sms);
 	}
@@ -61,7 +71,7 @@ sub send_sms_gateway {
 	my $number_config = config->{phone_numbers}->{$sms->frm};	
 	my $port = $number_config->{port} or debug "No port set for ".$sms->frm and return 0;
 	
-	printt $sms->id. "[$port:".$sms->to."] ". substr $sms->plain_body(plain_newline => 1), 0, 30;
+	printt $sms->id. "[$port:".$sms->outgoing_to."] ". substr $sms->plain_body(plain_newline => 1), 0, 30;
 
 	# Gateway
 	my $gateway_id = $number_config->{gateway_id};
@@ -101,14 +111,14 @@ sub send_sms_api {
 	my $api_settings = config->{sms_api};
 	my $gateway_settings = config->{gateways}->{$sms->gateway_id};
 
-	printt $sms->id. "[smsapi:".$sms->to."] ". substr $sms->plain_body(plain_newline => 1), 0, 30;
+	printt $sms->id. "[smsapi:".$sms->outgoing_to."] ". substr $sms->plain_body(plain_newline => 1), 0, 30;
 
 	my $ua = LWP::UserAgent->new;
 	my $post_data = {
 		username => $api_settings->{username},
 		password => md5_hex ($api_settings->{pass}),
 		from => $gateway_settings->{sms_api_number} || $api_settings->{default_number},
-		to => $sms->to,
+		to => $sms->outgoing_to,
 		message => $sms->plain_body(plain_newline => 1),
 	};
 	

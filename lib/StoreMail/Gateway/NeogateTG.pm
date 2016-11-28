@@ -98,7 +98,7 @@ sub send {
 	return 0 unless $port_status;
 	return 0 unless $port_status eq 'Power on, Provisioned, Up, Active,Standard';	
 
-	my $to = $sms->to;	
+	my $to = $sms->outgoing_to;	
 	my $msg = $sms->plain_body;	
 	my $id = $sms->id;
 	$id .= '_' . $self->{instance_name} if $self->{instance_name};	
