@@ -14,7 +14,7 @@ __PACKAGE__->add_columns(
   "message_id",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "value",
-  { data_type => "varchar", is_nullable => 0, size => 90 },  
+  { data_type => "varchar", is_nullable => 0, size => 255 },  
 );
 
 

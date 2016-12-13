@@ -14,10 +14,10 @@ __PACKAGE__->table("message_group");
 
 __PACKAGE__->add_columns(
   id => { data_type => "integer", is_foreign_key => 1, is_nullable => 0, is_auto_increment => 1 },
-  domains_id => { data_type => "varchar", is_nullable => 0, size => 90 },  
-  domain => { data_type => "varchar", is_nullable => 0, size => 90 },  
-  email => { data_type => "varchar", is_nullable => 0, size => 90 },  
-  tag => { data_type => "varchar", is_nullable => 1, size => 90 },  
+  domains_id => { data_type => "varchar", is_nullable => 0, size => 255 },  
+  domain => { data_type => "varchar", is_nullable => 0, size => 255 },  
+  email => { data_type => "varchar", is_nullable => 0, size => 255 },  
+  tag => { data_type => "varchar", is_nullable => 1, size => 255 },  
   name => { data_type => "varchar", is_nullable => 1, size => 255 },  
 );
 
@@ -81,15 +81,16 @@ sub assign_members {
 		};
 		$member->{can_recieve} = $can_recieve if defined $can_recieve;
 		$member->{can_send} = $can_send if defined $can_send;
-		try{
+		my $error = '';
+		try{				
 	    	$self->update_or_create_related('emails', $member);
 		}
 		catch{
-			my $error .= $email." not assigned to $side ";
+			$error = $email." not assigned to $side ";
 			warn $error;
 		};
+		return $error;
     }
-	return 1;
 }
 
 1;

@@ -56,11 +56,11 @@ __PACKAGE__->add_columns(
   "message_id",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "email",
-  { data_type => "varchar", is_nullable => 0, size => 90 },
+  { data_type => "varchar", is_nullable => 0, size => 255 },
   "type",
-  { data_type => "varchar", default_value => "to", is_nullable => 0, size => 15 },
+  { data_type => "varchar", default_value => "to", is_nullable => 0, size => 255 },
   "name",
-  { data_type => "varchar", is_nullable => 1, size => 90 },
+  { data_type => "varchar", is_nullable => 1, size => 255 },
 );
 
 =head1 PRIMARY KEY

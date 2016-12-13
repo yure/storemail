@@ -10,7 +10,7 @@ use base 'DBIx::Class::Core';
 __PACKAGE__->table("email_blacklist");
 
 __PACKAGE__->add_columns(
-  "email" =>  { data_type => "varchar", is_nullable => 0, size => 90 },
+  "email" =>  { data_type => "varchar", is_nullable => 0, size => 255 },
   "timestamp" => { data_type => "integer", is_nullable => 0},
   "type" => { data_type => "varchar", is_nullable => 1, size => 255 },
   "reason" => { data_type => "varchar", is_nullable => 1, size => 255 },
