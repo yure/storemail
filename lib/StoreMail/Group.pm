@@ -251,9 +251,10 @@ sub send_group {
 	for my $recipient ($message->toccbcc){
 		my $group = schema->resultset('Group')->find({ email => $recipient->email });
 		next unless $group;
-		
+
 		my $sender_member = schema->resultset('GroupEmail')->find({ email => $message->frm, group_id => $group->id }) 
 			or warn $message->frm . " not authorized to send to group " . $group->email 
+			and send_info($group, $message)
 			and return "Not authorized to send to group";
 		
 		my $incoming_message = make_incoming($group, $message, $recipient) 
@@ -335,6 +336,30 @@ sub make_outgoing {
 	$outgoing_message->send_queue(1);
 		
 	$outgoing_message->update;
+	return $outgoing_message;
+}
+
+
+sub send_info {
+	my ($group, $message) = @_;
+		
+	my $outgoing_message = $message->make_copy;
+	$outgoing_message->subject('REJECTED REPLAY (sent from unauthorized email) - '.$outgoing_message->subject); 
+	
+
+	 # Send to info	
+	my ($info_name, $info_email) = extract_email(domain_setting($group->domain, 'info_email'));
+    $outgoing_message->update_or_create_related('emails', {email => $info_email, name => $info_name, type => 'to',}) if $info_email;
+	my ($admin_name, $admin_email) = extract_email(config->{admin_email});
+    $outgoing_message->update_or_create_related('emails', {email => $admin_email, name => $admin_name, type => 'to',}) if $admin_email;
+		
+	# Send it
+	$outgoing_message->send_queue(1);
+		
+	$outgoing_message->update;
+
+	# Add attachments
+    $outgoing_message->copy_attachments($message);    	
 	return $outgoing_message;
 }
 

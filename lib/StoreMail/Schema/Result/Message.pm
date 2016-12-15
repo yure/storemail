@@ -293,7 +293,7 @@ sub attachment_id_path {
 sub attachment_hash_path {
 	my ($self) = @_;
 	
-	$self->message_id($self->id_hash) and $self->update unless $self->message_id;
+	($self->message_id($self->id_hash) and $self->update) unless $self->message_id;
 	my @hash_chunks = ( $self->message_id =~ m/../g );
 	my $hash_path = join '/', @hash_chunks;
 	my $hash_check = $self->id_hash_two_pass;
@@ -307,7 +307,7 @@ sub send {
 	
 	# Skip non send domains
 	unless(domain_setting($self->domain, 'name')){
-		$self->send_queue(undef);				
+		$self->send_queue(undef);
 		$self->update;
 		return 0, $self->domain. " missing config";
 	}	
@@ -432,9 +432,10 @@ sub id_hash_two_pass {
 sub make_copy {
 	my ($self) = @_;
 	my $schema = $self->result_source->schema; 
-	$self->id(undef);	
-	$self->message_id(undef);	
-	my $msg = $schema->resultset('Message')->create( $self->{_column_data} );
+	my $new_msg_data = {%{$self->{_column_data}}};
+	$new_msg_data->{id} = undef;	
+	$new_msg_data->{message_id} = undef;	
+	my $msg = $schema->resultset('Message')->create( $new_msg_data );
 	$msg->message_id($msg->id_hash);	
 	return $msg;
 }
