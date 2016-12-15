@@ -345,6 +345,7 @@ sub send_info {
 		
 	my $outgoing_message = $message->make_copy;
 	$outgoing_message->subject('REJECTED REPLAY (sent from unauthorized email) - '.$outgoing_message->subject); 
+	$outgoing_message->domain($group->domain); 
 	
 
 	 # Send to info	
