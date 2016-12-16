@@ -71,7 +71,6 @@ get '/:comma_separated_emails' => sub {
 				domain = ? 
 				AND 
 				( |. (join ' OR ', map {"e.email = ?"} @emails) .q|  )
-				LIMIT |.2*$limit.q|
 				
 				UNION
 				
@@ -85,8 +84,7 @@ get '/:comma_separated_emails' => sub {
 				domain = ? 
 				
 				AND  
-				( |. (join ' OR ', map {"frm = ?"} @emails) .q|  ) 
-				LIMIT |.2*$limit.q|
+				( |. (join ' OR ', map {"frm = ?"} @emails) .q|  )
 			
 			) a
 			
@@ -94,6 +92,7 @@ get '/:comma_separated_emails' => sub {
 			WHERE
 			t_pass.value IS NULL				
 			
+			ORDER BY id DESC 
 			LIMIT |.$limit.q|
 			
 			;|;
