@@ -66,7 +66,7 @@ get '/:comma_separated_emails' => sub {
 				WHERE  
 				group_id IS NULL
 				AND
-				internal = 0
+				internal = 0				
 				AND
 				domain = ? 
 				AND 
@@ -90,7 +90,11 @@ get '/:comma_separated_emails' => sub {
 			
 			) a
 			
-			LIMIT |.2*$limit.q|
+			LEFT JOIN tag t_pass  ON t_pass.message_id = a.id AND t_pass.value = 'new-password'
+			WHERE
+			t_pass.value IS NULL				
+			
+			LIMIT |.$limit.q|
 			
 			;|;
 	
@@ -103,39 +107,9 @@ get '/:comma_separated_emails' => sub {
             push @ids, $data[0];
           }
 	
-	my $where;
-	my @join = ('emails');
+	my $where = {'me.id' => {'-in' => \@ids}};
+	my @join = ('emails', 'tags');
 	
-	$where->{-and} = [];
-	push $where->{-and}, {'me.id' => {'-in' => \@ids}};
-
-	# Search
-	my $search =  param('search');
-    push $where->{-and},[ -or => [
-    	subject => { 'like', "%$search%" },
-    	body => { 'like', "%$search%" },
-    ]] if $search;
-
-	# Tag Search
-	my $tags =  param('tags');
-	push @join, 'tags';
-	if($tags){
-		my @tags_condition;
-		for my $tag (split ',', $tags){
-			#push $where->{-and}, {'tags.value' => $tag};
-		    push @tags_condition, 'tags.value' => $tag;
-		}
-	     push $where->{-and},[ -or => [
-	    	@tags_condition
-	    ]] if @tags_condition;
-	}
-    	
-	# Date span
-	my $from =  param('from');
-	my $to =  param('to');
-	#my $parser   = schema->storage->datetime_parser;
-    push $where->{-and}, {date => { '<=', $to }} if $to;
-    push $where->{-and}, {date => { '>=', $from }} if $from;
 
     my $rs = schema->resultset('Message')->result_source;
     my @columns = $rs->columns;	
@@ -144,7 +118,6 @@ get '/:comma_separated_emails' => sub {
     	$where,
     	{ 
 			prefetch => [@join],    		 
-		   	#group_by => [ map {"me.$_"} @columns ]	,
 		   	rows => $limit,
 		   	order_by => {'-desc' => 'date'},		 
     	}
