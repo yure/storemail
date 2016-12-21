@@ -72,6 +72,7 @@ sub hash {
 
 sub assign_members {
 	my ($self, $list, $side, $can_send, $can_recieve) = @_;
+	my $assign_error = '';
 	for my $p (@$list){
 		my ($name, $email) = extract_email($p);
 		my $member = {
@@ -81,16 +82,16 @@ sub assign_members {
 		};
 		$member->{can_recieve} = $can_recieve if defined $can_recieve;
 		$member->{can_send} = $can_send if defined $can_send;
-		my $error = '';
 		try{				
 	    	$self->update_or_create_related('emails', $member);
 		}
 		catch{
-			$error = $email." not assigned to $side ";
+			my $error = $email." not assigned to $side \n";
 			warn $error;
+			$assign_error .= $error;
 		};
-		return $error;
     }
+	return $assign_error;
 }
 
 1;
