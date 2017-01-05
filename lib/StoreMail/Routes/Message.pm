@@ -46,6 +46,7 @@ get '/message/incoming' => sub {
     	},
     	{ 
     		order_by => 'id',
+		rows => 5000,
     	}
     );
     
