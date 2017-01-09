@@ -133,9 +133,11 @@ sub new_group {
     	domains_id => $params->{id},
     }) or return undef;
 
-	$group->assign_members($params->{'a'}, 'a');
-	$group->assign_members($params->{'b'}, 'b');
 	$group->assign_members($params->{'send_only'}, 'a', 1, 0);
+	$group->assign_members($params->{'send_only_a'}, 'a', 1, 0);
+	$group->assign_members($params->{'send_only_b'}, 'b', 1, 0);
+	$group->assign_members($params->{'a'}, 'a', 1, 1);
+	$group->assign_members($params->{'b'}, 'b', 1, 1);
     	
 	return ($group, 1);
 }

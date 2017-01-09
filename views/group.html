@@ -38,7 +38,10 @@
 
 				</div>
 				<div class="form-group">
-					<label>Send only (comma separated list)</label> <input placeholder="joe@googl.com, will@gmail.com, Primerjam.si <primerjam@primerjam.si>" class="form-control" type="text" name="send_only" />
+					<label>Send only A (comma separated list)</label> <input placeholder="joe@googl.com, will@gmail.com, Primerjam.si <primerjam@primerjam.si>" class="form-control" type="text" name="send_only_a" />
+				</div>
+				<div class="form-group">
+					<label>Send only B (comma separated list)</label> <input placeholder="joe@googl.com, will@gmail.com, Primerjam.si <primerjam@primerjam.si>" class="form-control" type="text" name="send_only_b" />
 				</div>
 				<div class="form-group">
 					<label>Group ID</label> <input required="1" class="form-control" type="text" name="group_id" />
@@ -81,7 +84,8 @@
 			data = {
 				a : this.a.value.split(','),
 				b : this.b.value.split(','),
-				send_only : [this.send_only.value],
+				send_only_a : this.send_only_a.value.split(','),
+				send_only_b : this.send_only_b.value.split(','),
 				id : this.group_id.value,
 				name : this.group_name.value
 			};
