@@ -16,85 +16,6 @@ sub group_email_list {
 }
 
 
-sub new_group_from_message {
-	my ($domain, $params) = @_;
-
-	return undef unless $params->{group};
-
-	# Create group
-	my ($from_name, $from_email) = extract_email($params->{from});
-	my $group_name = $params->{group}->{name};
- 	my $group_id = $params->{group}->{id};
-	
-	$params->{group}->{send_only} ||= email_str($group_name, $from_email);
-	$params->{group}->{b} ||= $params->{to};
- 	warn "no group ID!" and return undef unless $group_id;
-	my $mail_domain = domain_setting($domain, 'group_domain');
-	unless($mail_domain){
-		$mail_domain = config->{'group_domain'};
-		$group_id .= "_$domain";
-	}
-	
-	my ($group, $new) = new_group($domain, $params->{group});
-
-	# TO mailing list email
-	$params->{from} = email_str($from_name, domain_email($domain));
-	$params->{reply_to} = email_str($group->name, $group->email);
-
-	$params->{direction} = 'o'; 
-
-    # Don't send this message
-    delete $params->{send_queue};
-
-	# Assign message to group	
-	$params->{group_id} = $group->id;
-
-	return $params;
-}
-
-
-sub group_reply_from_message {
-	my ($domain, $params) = @_;
-
-	return undef unless $params->{group};
-
-	# Create group
-	my ($from_name, $from_email) = extract_email($params->{from});
-	$from_name ||= $from_email; # In case there is no name
-	my $group_name = $params->{group}->{name};
- 	my $group_id = $params->{group}->{id};
- 	
- 	warn "no group ID!" and return undef unless $group_id;
-	
-	my ($group, $new) = new_group($domain, $params->{group});
-	
-	$params->{from} = email_str($from_name, domain_email($domain));
-	$params->{reply_to} = email_str($group->name, $group->email);
-	
-	# Conversation info;
-	my $servicator_backend_api = domain_setting($domain, 'servicator_backend_api');
-	my ($req_ident_hash, $uid) = split '-', $group_id;
-	my $req_ident = substr $req_ident_hash, 5;
-	my $req_info = from_json LWP::Simple::get("$servicator_backend_api/request/$uid/$req_ident") or warn 'Unalbe to connect to servicator backend' and return undef;
-	
-	
-	my $to = email_str($req_info->{name}, $req_info->{email});
-	assign_to_group($group, $to, 'a');
-
-	# TO mailing list email
-	$params->{to} = $to;	
-	
-	$params->{direction} = 'o';
-
-    # Don't send this message
-    delete $params->{send_queue};
-
-	# Assign message to group	
-	$params->{group_id} = $group->id;
-
-	return $params;
-}
-
 sub new_group {
 	my ($domain, $params) = @_;
 
@@ -251,23 +172,31 @@ sub send_group {
 	$message->discard_changes;
 		
 	for my $recipient ($message->toccbcc){
-		my $group = schema->resultset('Group')->find({ email => $recipient->email });
+		
+		# Get side from email replied to
+		my ($group_email, $side) = extract_side($recipient->email);
+		my $group = schema->resultset('Group')->find({ email => $group_email });
 		next unless $group;
 
-		my $sender_member = schema->resultset('GroupEmail')->find({ email => $message->frm, group_id => $group->id }) 
-			or warn $message->frm . " not authorized to send to group " . $group->email 
-			and send_info($group, $message)
-			and return "Not authorized to send to group";
+		# Find side from group member
+		unless($side){
+			my $sender_member = schema->resultset('GroupEmail')->find({ email => $message->frm, group_id => $group->id }) 
+				or warn $message->frm . " not authorized to send to group " . $group->email 
+				and send_info($group, $message)
+				and return "Not authorized to send to group";
+				$side ||= $sender_member->side;
+		}
+		next unless $side;
 		
-		my $incoming_message = make_incoming($group, $message, $recipient) 
+		my $incoming_message = make_incoming($group, $message, $recipient, $side) 
 			or warn "Unable to make incoming from id ".$message->id."!" 
 			and return "Unable to make incoming from id";
 			
 		next if $message->source eq 'import_group';
 		
-		my $outgoing_message_data = prepare_outgoing($group, $incoming_message);
-		for my $member ($group->emails->search({side => { '!=' => $sender_member->side }, can_recieve => 1})->all){			
-			make_outgoing($incoming_message, $outgoing_message_data, $member);
+		my $outgoing_message_data = prepare_outgoing($group, $incoming_message, $side);
+		for my $member ($group->emails->search({side => { '!=' => $side }, can_recieve => 1})->all){			
+			make_outgoing($group, $incoming_message, $outgoing_message_data, $member);
 		}
 		return "OK";
 	}
@@ -276,8 +205,23 @@ sub send_group {
 }
 
 
+sub add_side {
+	my ($email, $side) = @_;
+	$email =~ s/@/_$side@/g;
+	return $email;
+}
+
+
+sub extract_side {
+	my ($email) = @_;
+	my ($side) = $email =~ /-.*_(.*)@/;
+	$email =~ s/_$side@/@/g;
+	return ($email, $side);
+}
+
+
 sub make_incoming {
-	my ($group, $message, $recipient) = @_;
+	my ($group, $message, $recipient, $side) = @_;
 	
 	my ($frm_name, $frm_email) = extract_email($message->frm);
 	my $sender = $group->emails->find({email => $frm_email});
@@ -290,10 +234,10 @@ sub make_incoming {
     	plain_body => remove_reply_above_line($message->plain_body, $group->domain, 'plain'),
     	subject => $message->subject,
     	domain => $group->domain,
-		from => $sender->named_email,
+		from => $sender ? $sender->named_email : $message->frm,
 		name => $message->name,
 		date => $message->date,
-		reply_to => $group->name .'<'.$group->email.'>',
+		#reply_to => email_str($group->name, add_side($group->email, $side)),
 		source => undef,
 		group_message_parent_id => $message->id,
 		group_id => $group->id,
@@ -318,7 +262,10 @@ sub make_incoming {
 
 
 sub make_outgoing {
-	my ($message, $message_data, $member) = @_;
+	my ($group, $message, $message_data, $member) = @_;
+	
+	# Set reply to with side indicator
+	$message_data->{reply_to} = email_str($group->name, add_side($group->email, $member->side));
 	
 	my $response = StoreMail::Message::new_message(%$message_data);
 		
@@ -369,7 +316,7 @@ sub send_info {
 
 
 sub prepare_outgoing {
-	my ($group, $message) = @_;
+	my ($group, $message, $side) = @_;
 	
 	my $from_name = $message->name || $message->frm;
 	
@@ -386,8 +333,7 @@ sub prepare_outgoing {
     	plain_body => reply_above_line($plain_body, $group->domain, 'plain'),
     	subject => $message->subject,
     	domain => $group->domain,
-		from => email_str($from_name, domain_email($group->domain)),
-		reply_to => email_str($group->name, $group->email), # '"'.$group->name.'"' .'<'.$group->email.'>'
+		from => email_str($from_name, domain_email($group->domain)),		 
 		source => undef,
 		group_message_parent_id => $message->id,
 		group_id => $group->id,
