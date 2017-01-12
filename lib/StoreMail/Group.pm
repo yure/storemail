@@ -215,7 +215,9 @@ sub add_side {
 sub extract_side {
 	my ($email) = @_;
 	my ($side) = $email =~ /-.*_(.*)@/;
-	$email =~ s/_$side@/@/g;
+	if($side){
+		$email =~ s/_$side@/@/g;
+	}
 	return ($email, $side);
 }
 
@@ -237,7 +239,6 @@ sub make_incoming {
 		from => $sender ? $sender->named_email : $message->frm,
 		name => $message->name,
 		date => $message->date,
-		#reply_to => email_str($group->name, add_side($group->email, $side)),
 		source => undef,
 		group_message_parent_id => $message->id,
 		group_id => $group->id,
