@@ -84,37 +84,51 @@ get '/messages/:comma_separated_phone_numbers' => sub {
 	# Remove duplicates / yes, this happens
 	my %hash   = map { extract_phone($_) => 1 } @numbers;
    	@numbers = keys %hash;
+	
+	# Remove 
+	my @valid_numbers;
+	for my $number (@numbers){
+		next unless $number;
+		push @valid_numbers, $number;
+	}
+	@numbers = @valid_numbers;
 
-	my $options = {order_by => {'-desc' => 'send_timestamp'}};
+	my $message_hashes;
+	if(@numbers){
+		my $options = {order_by => {'-desc' => 'send_timestamp'}};
+		
+		# Limit
+		$options->{rows} = param('limit') if param('limit');
+		
+		my $where = {
+			domain => param('domain'),
+			'-or' => [
+				frm => {'-in' => \@numbers},
+				to => {'-in' => \@numbers},
+			]
+		};
+		
+		# Direction
+		$where->{direction} = param('direction') if param('direction');
+		
+	    	
+		# Date span
+		my $from =  param('from');
+		my $to =  param('to');
+		#my $parser   = schema->storage->datetime_parser;	
+	    $where->{-and} ||= [] and push $where->{-and}, {created => { '<=', $to }} if $to;
+	    $where->{-and} ||= [] and push $where->{-and}, {created => { '>=', $from }} if $from;
 	
-	# Limit
-	$options->{rows} = param('limit') if param('limit');
-	
-	my $where = {
-		domain => param('domain'),
-		'-or' => [
-			frm => {'-in' => \@numbers},
-			to => {'-in' => \@numbers},
-		]
-	};
-	
-	# Direction
-	$where->{direction} = param('direction') if param('direction');
-	
-    	
-	# Date span
-	my $from =  param('from');
-	my $to =  param('to');
-	#my $parser   = schema->storage->datetime_parser;	
-    $where->{-and} ||= [] and push $where->{-and}, {created => { '<=', $to }} if $to;
-    $where->{-and} ||= [] and push $where->{-and}, {created => { '>=', $from }} if $from;
-
-    my $messages = schema->resultset('SMS')->search(
-    	$where,
-    	$options,
-    );
-    
-    my $message_hashes = [map { $_->hash } $messages->all];
+	    my $messages = schema->resultset('SMS')->search(
+	    	$where,
+	    	$options,
+	    );
+	    
+	    $message_hashes = [map { $_->hash } $messages->all];
+	}
+	else{
+		$message_hashes = [];
+	}
     
     return to_json {
     	count => scalar @$message_hashes,
