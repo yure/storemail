@@ -51,6 +51,8 @@ post '/batch/message/send' => sub {
     my $email_distinct = {map {trim($_) => 1} @params_emails};    
     my @sent;
     
+    my $name = $params->{campaign_name} || $params->{subject};
+
     # Remove recently     
     if($params->{not_contacted_since}){
    	
@@ -68,6 +70,7 @@ post '/batch/message/send' => sub {
 			}			
     	)->all;
     	my $emails_to_remove = [map {$_->email} @contacted_since_emails];
+    	debug "Batch $name - removed ".join(', ', @$emails_to_remove);
     	for my $email_to_remove (@$emails_to_remove){
     		delete $email_distinct->{$email_to_remove}; 
     	}
@@ -75,7 +78,6 @@ post '/batch/message/send' => sub {
     }
     
     # Batch 
-    my $name = $params->{campaign_name} || $params->{subject};
     my $batch = schema->resultset('Batch')->create({
     	name => $name,
     	domain => param('domain'),
@@ -84,6 +86,7 @@ post '/batch/message/send' => sub {
     
     
     my @to = keys %$email_distinct;
+    debug "Batch $name - sending to ".join(', ', @to);
     my $error_message;
     try{
 	    for my $email (@to){
