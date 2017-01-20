@@ -45,24 +45,48 @@ post '/batch/message/send' => sub {
     
 	my $rawparams = param('data');
 	my $params = from_json encode('utf8', $rawparams);
-    my @emails = split(',', $params->{to});
+    my @params_emails = split(',', $params->{to});
     
     # Remove duplicates
-    my $email_distinct = {map {trim($_) => 1} @emails};    
-    
+    my $email_distinct = {map {trim($_) => 1} @params_emails};    
     my @sent;
     
+    # Remove recently     
+    if($params->{not_contacted_since}){
+   	
+    	my @contacted_since_emails = schema->resultset('Email')->search(
+    		{
+				'message.domain' => param('domain'),
+				'message.batch_id' => {'-not' => undef},
+				'email' => {'-in' => [keys %$email_distinct]},
+				'date' => {'>' => $params->{not_contacted_since}},
+			},
+			{
+				join => 'message',
+				columns => [ qw/email/ ],
+      			distinct => 1
+			}			
+    	)->all;
+    	my $emails_to_remove = [map {$_->email} @contacted_since_emails];
+    	for my $email_to_remove (@$emails_to_remove){
+    		delete $email_distinct->{$email_to_remove}; 
+    	}
+    	
+    }
+    
     # Batch 
+    my $name = $params->{campaign_name} || $params->{subject};
     my $batch = schema->resultset('Batch')->create({
-    	name => $params->{campaign_name},
+    	name => $name,
     	domain => param('domain'),
     });
     $params->{batch_id} = $batch->id;
     
     
+    my @to = keys %$email_distinct;
     my $error_message;
     try{
-	    for my $email (keys %$email_distinct){
+	    for my $email (@to){
 		    # Unsubscribe msg
 	    	add_unsub_link($params, $email);
 	    	
