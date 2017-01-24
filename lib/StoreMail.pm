@@ -16,6 +16,7 @@ use StoreMail::Auth;
 use StoreMail::Routes::Attachment;
 use StoreMail::Routes::GUI;
 use StoreMail::Routes::Message;
+use StoreMail::Routes::Email;
 use StoreMail::Routes::Provider;
 use StoreMail::Routes::Tag;
 use StoreMail::Routes::Batch;
