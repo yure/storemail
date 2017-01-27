@@ -59,6 +59,8 @@ sub hash {
 	my $hash =  {
 		id => $self->domains_id,
 		email => $self->email,
+		email_from_a => StoreMail::Group::add_side($self->email, 'a'),
+		email_from_b => StoreMail::Group::add_side($self->email, 'b'),
 		domain => $self->domain,
 		name => $self->name,
 		tag => $self->tag,
